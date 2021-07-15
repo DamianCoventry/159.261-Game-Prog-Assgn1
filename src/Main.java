@@ -1,3 +1,4 @@
+import com.snakegame.entrypoint.Application;
 
 /**
  * This class exists purely to allow the online IDE at replit.com to run this game. The software on replit.com wants

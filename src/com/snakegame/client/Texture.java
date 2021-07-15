@@ -1,3 +1,5 @@
+package com.snakegame.client;
+
 import org.lwjgl.BufferUtils;
 
 import java.awt.image.BufferedImage;
@@ -6,14 +8,14 @@ import java.nio.ByteBuffer;
 import static org.lwjgl.opengl.GL11.*;
 
 public class Texture {
-    private int m_Id;
+    private final int m_Id;
 
+    // https://jvm-gaming.org/t/bufferedimage-to-lwjgl-texture/37959
     public Texture(BufferedImage image) {
         int[] pixels = new int[image.getWidth() * image.getHeight()];
         image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
 
         ByteBuffer buffer = BufferUtils.createByteBuffer(image.getWidth() * image.getHeight() * 4);
-
         for(int y = 0; y < image.getHeight(); y++){
             for(int x = 0; x < image.getWidth(); x++){
                 int pixel = pixels[y * image.getWidth() + x];
@@ -32,7 +34,8 @@ public class Texture {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.getWidth(), image.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.getWidth(), image.getHeight(),
+                0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
     }
 
     public void close() {

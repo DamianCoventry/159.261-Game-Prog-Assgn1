@@ -1,8 +1,14 @@
-import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.*;
+package com.snakegame.entrypoint;
+
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWKeyCallback;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.glfw.GLFWWindowSizeCallback;
+import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.glFrustum;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 /**
@@ -19,6 +25,10 @@ public class Application {
     private float m_ActualHeight = (float)s_DesiredWindowHeight;
 
     public Application() {
+        // https://www.glfw.org/docs/latest/window_guide.html
+        // https://github.com/glfw/glfw
+        // https://en.wikipedia.org/wiki/GLFW
+
         glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err));
 
         if (!glfwInit()) {
@@ -37,10 +47,12 @@ public class Application {
             throw new RuntimeException("Failed to create the GLFW window");
         }
 
-        glfwSetWindowPos(m_Window, (vidMode.width() - s_DesiredWindowWidth) / 2, (vidMode.height() - s_DesiredWindowHeight) / 2);
+        glfwSetWindowPos(m_Window,
+                (vidMode.width() - s_DesiredWindowWidth) / 2,
+                (vidMode.height() - s_DesiredWindowHeight) / 2);
         glfwMakeContextCurrent(m_Window);
         GL.createCapabilities();
-        glfwSwapInterval(1);
+        glfwSwapInterval(1); // Sync to monitor's refresh rate
 
         glfwSetWindowSizeCallback(m_Window, new GLFWWindowSizeCallback() {
             @Override
@@ -63,6 +75,7 @@ public class Application {
         });
 
         glViewport(0, 0, s_DesiredWindowWidth, s_DesiredWindowHeight);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glEnable(GL_CULL_FACE);
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_DEPTH_TEST);
@@ -89,6 +102,7 @@ public class Application {
         }
     }
 
+    // https://www.khronos.org/opengl/wiki/GluPerspective_code
     private static void gluPerspective(double fovYDegrees, double aspect, double zNear, double zFar) {
         double tangent = Math.tan(Math.toRadians(fovYDegrees / 2.0));
         double height = zNear * tangent;
@@ -96,6 +110,7 @@ public class Application {
         glFrustum(-width, width, -height, height, zNear, zFar);
     }
 
+    // This is here for convenience.
     public static void main(String[] args) {
         Application app = null;
         try {

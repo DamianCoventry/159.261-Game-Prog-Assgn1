@@ -1,4 +1,8 @@
-import java.io.*;
+package com.snakegame.client;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 
 /**
@@ -6,6 +10,7 @@ import java.util.ArrayList;
  * class. The users of this class can use the public accessors to read the data.
  * */
 
+// https://en.wikipedia.org/wiki/Wavefront_.obj_file
 public class ObjFile {
     private final ArrayList<Object> m_Objects;
     private final ArrayList<String> m_MaterialNames;
