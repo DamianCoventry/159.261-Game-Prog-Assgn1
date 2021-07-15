@@ -3,9 +3,9 @@ package com.snakegame.rules;
 import java.util.Arrays;
 
 public class GameField {
-    public static final int WIDTH = 160;
-    public static final int HEIGHT = 90;
-    public static final int TOTAL_CELLS = 14400;
+    public static final int WIDTH = 80;
+    public static final int HEIGHT = 60;
+    public static final int TOTAL_CELLS = 4800;
 
     private final Cell[] m_Cells;
     private Vector2i m_Player1Start;
@@ -13,10 +13,13 @@ public class GameField {
 
     public GameField() {
         m_Cells = new Cell[TOTAL_CELLS];
-        resetAllCells();
+        reset();
     }
 
     public Vector2i getPlayer1Start() {
+        if (m_Player1Start == null) {
+            throw new RuntimeException("No player 1 start position has been set");
+        }
         return m_Player1Start;
     }
 
@@ -25,35 +28,62 @@ public class GameField {
     }
 
     public Vector2i getPlayer2Start() {
+        if (m_Player2Start == null) {
+            throw new RuntimeException("No player 2 start position has been set");
+        }
         return m_Player2Start;
     }
 
     public void setPlayer2Start(Vector2i start) {
         m_Player2Start = start;
     }
-    
-    public enum Cell { EMPTY, WALL, APPLE, SNAKE }
 
-    public void setCell(int x, int y, Cell cell) {
-        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
-            m_Cells[y * WIDTH + x] = cell;
-        }
-    }
-
-    public void setAllCells(String gameField) {
-        if (gameField.length() != GameField.TOTAL_CELLS) {
-            throw new RuntimeException("Invalid game field string");
-        }
-        resetAllCells();
-        String copy = gameField.toLowerCase();
+    public void removeAllApples() {
         for (int i = 0; i < GameField.TOTAL_CELLS; ++i) {
-            if (copy.charAt(i) == 'w') {
-                m_Cells[i] = Cell.WALL;
+            if (m_Cells[i] == Cell.APPLE) {
+                m_Cells[i] = Cell.EMPTY;
             }
         }
     }
 
-    public void resetAllCells() {
+    public enum Cell { EMPTY, WALL, APPLE }
+
+    public void setCell(Vector2i position, Cell cell) {
+        if (position.m_X >= 0 && position.m_X < WIDTH && position.m_Y >= 0 && position.m_Y < HEIGHT) {
+            m_Cells[position.m_Y * WIDTH + position.m_X] = cell;
+        }
+    }
+
+    public void setAllCells(String gameField, boolean checkForPlayer2StartPosition) {
+        if (gameField.length() != GameField.TOTAL_CELLS) {
+            throw new RuntimeException("Invalid game field string");
+        }
+        reset();
+        String copy = gameField.toLowerCase();
+        for (int i = 0; i < GameField.TOTAL_CELLS; ++i) {
+            switch (copy.charAt(i)) {
+                case 'w':
+                    m_Cells[i] = Cell.WALL;
+                    break;
+                case '1':
+                    m_Player1Start = new Vector2i(i % WIDTH, i / WIDTH);
+                    break;
+                case '2':
+                    m_Player2Start = new Vector2i(i % WIDTH, i / WIDTH);
+                    break;
+            }
+        }
+        if (m_Player1Start == null) {
+            throw new RuntimeException("The game field data do not include a player 1 start position");
+        }
+        if (checkForPlayer2StartPosition && m_Player2Start == null) {
+            throw new RuntimeException("The game field data do not include a player 2 start position");
+        }
+    }
+
+    public void reset() {
+        m_Player1Start = null;
+        m_Player2Start = null;
         Arrays.fill(m_Cells, Cell.EMPTY);
         setWallBorder();
     }
@@ -65,17 +95,8 @@ public class GameField {
         throw new RuntimeException("Invalid coordinates");
     }
 
-    public boolean isCellEmpty(int x, int y) {
-        return getCell(x, y) == Cell.EMPTY;
-    }
-
-    public boolean isCellBlocked(int x, int y) {
-        Cell type = getCell(x, y);
-        return type == Cell.WALL || type == Cell.SNAKE;
-    }
-
-    public boolean isCellApple(int x, int y) {
-        return getCell(x, y) == Cell.APPLE;
+    public Cell getCell(Vector2i position) {
+        return getCell(position.m_X, position.m_Y);
     }
 
     public void setWallBorder() {

@@ -9,6 +9,8 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class Texture {
     private final int m_Id;
+    private final float m_Width;
+    private final float m_Height;
 
     // https://jvm-gaming.org/t/bufferedimage-to-lwjgl-texture/37959
     public Texture(BufferedImage image) {
@@ -28,6 +30,9 @@ public class Texture {
 
         buffer.flip(); // Because OpenGL considers the bottom left pixel to be the 'first' pixel.
 
+        m_Width = image.getWidth();
+        m_Height = image.getHeight();
+
         m_Id = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, m_Id);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -44,5 +49,12 @@ public class Texture {
 
     public int getId() {
         return m_Id;
+    }
+
+    public float getWidth() {
+        return m_Width;
+    }
+    public float getHeight() {
+        return m_Height;
     }
 }
