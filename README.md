@@ -1,8 +1,11 @@
 # 159.261-Game-Prog-Assgn1
 ## Graphics sources
 https://icon-icons.com/icon/snake/100855
+
 https://icons8.com/icon/LPo-oYep4SZR/green-apple
+
 ## Additional Features
+
 ### Graphics
 - ~~OpenGL integration~~
 - GLSL Shaders
@@ -15,12 +18,14 @@ https://icons8.com/icon/LPo-oYep4SZR/green-apple
 - Dynamic lighting
 - Shadow mapping
 - Screen transitions
-- Secret levels
+
 ### Physics
 - Rigid-body dynamics via Bullet3
+
 ### Audio
 - Sounds
 - Music
+
 ### Gameplay
 - ~~Menu system~~
 - Game over/won states
@@ -31,6 +36,8 @@ https://icons8.com/icon/LPo-oYep4SZR/green-apple
 - Speed adjustments
 - Poison fruit
 - Dynamic level geometry
+- Secret levels
+
 ### Level Editor
 - Level files
 - CRUD tools

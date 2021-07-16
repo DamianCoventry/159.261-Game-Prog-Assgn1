@@ -127,10 +127,11 @@ public class PlayingGameAppState implements IAppState {
             m_LastAppleTime = nowMs;
         }
         if (nowMs - m_LastMovementTime >= 100) {
+            m_LastMovementTime = nowMs;
+            Snake[] snakes = m_GameWorld.getSnakes();
             boolean reset = false;
-            for (var snake : m_GameWorld.getSnakes()) {
+            for (var snake : snakes) {
                 snake.moveForwards();
-                m_LastMovementTime = nowMs;
                 if (snake.isCollidingWithItself()) {
                     reset = true;
                 } else {
@@ -144,8 +145,8 @@ public class PlayingGameAppState implements IAppState {
                     }
                 }
             }
-            if (m_GameWorld.getSnakes().length > 1) {
-                reset = m_GameWorld.getSnakes()[0].isCollidingWith(m_GameWorld.getSnakes()[1]);
+            if (snakes.length > 1 && snakes[0].isCollidingWith(snakes[1])) {
+                reset = true;
             }
             if (reset) {
                 m_GameWorld.reset();
