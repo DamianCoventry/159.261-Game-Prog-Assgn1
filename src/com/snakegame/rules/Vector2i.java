@@ -17,4 +17,8 @@ public class Vector2i {
     public boolean equals(Vector2i other) {
         return m_X == other.m_X && m_Y == other.m_Y;
     }
+
+    public boolean notEquals(Vector2i other) {
+        return !equals(other);
+    }
 }

@@ -1,10 +1,18 @@
-package com.snakegame.entrypoint;
+//
+// Snake Game
+// https://en.wikipedia.org/wiki/Snake_(video_game_genre)
+//
+// Based on the 1976 arcade game Blockade, and the 1991 game Nibbles
+// https://en.wikipedia.org/wiki/Blockade_(video_game)
+// https://en.wikipedia.org/wiki/Nibbles_(video_game)
+//
+// This implementation is Copyright (c) 2021, Damian Coventry
+// All rights reserved
+// Designed and implemented for Massey University course 159.261 Game Programming (Assignment 1)
+//
 
-import com.snakegame.client.GameView;
-import com.snakegame.rules.GameField;
-import com.snakegame.rules.SinglePlayerGame;
-import com.snakegame.rules.Snake;
-import com.snakegame.rules.Vector2i;
+package com.snakegame.application;
+
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -12,7 +20,6 @@ import org.lwjgl.glfw.GLFWWindowSizeCallback;
 import org.lwjgl.opengl.GL;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -23,7 +30,8 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * This class keeps the main application objects resident for the lifetime of the application.
  * */
 
-public class Application {
+// https://en.wikipedia.org/wiki/State_pattern
+public class Application implements IAppStateContext {
     private static final int s_DesiredWindowWidth = 1024;
     private static final int s_DesiredWindowHeight = 768;
     private static final double s_FovYDegrees = 60.0;
@@ -32,10 +40,10 @@ public class Application {
     private static final String s_WindowTitle = "159.261 Game Programming (Assignment 1)";
 
     private final long m_Window;
-    private final SinglePlayerGame m_Game;
-    private final GameView m_GameView;
     private float m_ActualWidth = (float)s_DesiredWindowWidth;
     private float m_ActualHeight = (float)s_DesiredWindowHeight;
+    private IAppState m_PendingState;
+    private IAppState m_CurrentState;
 
     public Application() throws IOException {
         // https://www.glfw.org/docs/latest/window_guide.html
@@ -81,31 +89,11 @@ public class Application {
         glfwSetKeyCallback(m_Window, new GLFWKeyCallback() {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
-                if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-                    glfwSetWindowShouldClose(window, true);
-                }
-                if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
-                    if (m_Game.getSnake().getDirection() == Snake.Direction.Left ||
-                        m_Game.getSnake().getDirection() == Snake.Direction.Right) {
-                        m_Game.getSnake().setDirection(Snake.Direction.Up);
-                    }
-                }
-                if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
-                    if (m_Game.getSnake().getDirection() == Snake.Direction.Left ||
-                        m_Game.getSnake().getDirection() == Snake.Direction.Right) {
-                        m_Game.getSnake().setDirection(Snake.Direction.Down);
-                    }
-                }
-                if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
-                    if (m_Game.getSnake().getDirection() == Snake.Direction.Up ||
-                        m_Game.getSnake().getDirection() == Snake.Direction.Down) {
-                        m_Game.getSnake().setDirection(Snake.Direction.Left);
-                    }
-                }
-                if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
-                    if (m_Game.getSnake().getDirection() == Snake.Direction.Up ||
-                        m_Game.getSnake().getDirection() == Snake.Direction.Down) {
-                        m_Game.getSnake().setDirection(Snake.Direction.Right);
+                if (m_CurrentState != null) {
+                    try {
+                        m_CurrentState.processKeyEvent(window, key, scancode, action, mods);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -118,64 +106,55 @@ public class Application {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_DEPTH_TEST);
 
-        m_Game = new SinglePlayerGame();
-        ArrayList<Snake> snakes = new ArrayList<>();
-        snakes.add(m_Game.getSnake());
-        m_GameView = new GameView(m_Game.getGameField(), snakes);
+        m_PendingState = null;
+        m_CurrentState = null;
+        changeStateNow(new RunningMenuAppState(this));
     }
 
     public void close() {
-        m_GameView.close();
         glfwDestroyWindow(m_Window);
         glfwTerminate();
     }
 
-    public void run() {
-        long lastAppleTime = System.currentTimeMillis();
-        long lastMovementTime = lastAppleTime;
-
+    public void run() throws IOException {
         while (!glfwWindowShouldClose(m_Window)) {
+            long nowMs = System.currentTimeMillis();
+
+            m_CurrentState.think(nowMs);
+
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            setPerspectiveProjection(m_ActualWidth / m_ActualHeight);
+            perform3dDrawing(nowMs);
 
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-            glTranslated(0.0, 0.0, -110.0); // Place the camera
-
-            m_GameView.draw();
+            perform2dDrawing(nowMs);
 
             glfwSwapBuffers(m_Window);
             glfwPollEvents();
 
-            long nowMs = System.currentTimeMillis();
-            if (nowMs - lastAppleTime >= 5000) {
-                Vector2i position = m_Game.getEmptyGameFieldCell();
-                m_Game.getGameField().setCell(position, GameField.Cell.APPLE);
-                lastAppleTime = nowMs;
-            }
-            if (nowMs - lastMovementTime >= 100) {
-                m_Game.getSnake().moveForwards();
-                lastMovementTime = nowMs;
-                if (m_Game.getSnake().isCollidingWithItself()) {
-                    m_Game.reset();
-                    lastAppleTime = nowMs;
-                }
-                else {
-                    Vector2i position = m_Game.getSnake().getBodyParts().getFirst();
-                    GameField.Cell cell = m_Game.getGameField().getCell(position);
-                    if (cell == GameField.Cell.APPLE) {
-                        m_Game.getSnake().addOneBodyPart();
-                        m_Game.getGameField().setCell(position, GameField.Cell.EMPTY);
-                    } else if (cell == GameField.Cell.WALL) {
-                        m_Game.reset();
-                        lastAppleTime = nowMs;
-                    }
-                }
-            }
+            performPendingStateChange();
         }
+    }
+
+    private void perform3dDrawing(long nowMs) {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        setPerspectiveProjection(m_ActualWidth / m_ActualHeight);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glTranslated(0.0, 0.0, -110.0); // Place the camera
+        m_CurrentState.perspectiveDrawing(nowMs);
+    }
+
+    private void perform2dDrawing(long nowMs) {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0.0, m_ActualWidth, 0.0, m_ActualHeight, -1.0f, 1.0f);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        // No camera in 2d mode
+        m_CurrentState.orthographicDrawing(nowMs);
     }
 
     // https://www.khronos.org/opengl/wiki/GluPerspective_code
@@ -184,6 +163,38 @@ public class Application {
         double height = s_NearClipPlane * tangent;
         double width = height * aspect;
         glFrustum(-width, width, -height, height, s_NearClipPlane, s_FarClipPlane);
+    }
+
+    @Override
+    public void changeState(IAppState newState) {
+        m_PendingState = newState;
+    }
+
+    @Override
+    public float getWindowWidth() {
+        return m_ActualWidth;
+    }
+
+    @Override
+    public float getWindowHeight() {
+        return m_ActualHeight;
+    }
+
+    public void performPendingStateChange() throws IOException {
+        if (m_PendingState != null) {
+            changeStateNow(m_PendingState);
+            m_PendingState = null;
+        }
+    }
+
+    private void changeStateNow(IAppState newState) throws IOException {
+        if (m_CurrentState != null) {
+            m_CurrentState.onStateEnd();
+        }
+        m_CurrentState = newState;
+        if (m_CurrentState != null) {
+            m_CurrentState.onStateBegin();
+        }
     }
 
     // This is here for convenience.

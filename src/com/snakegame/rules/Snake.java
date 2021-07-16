@@ -1,3 +1,16 @@
+//
+// Snake Game
+// https://en.wikipedia.org/wiki/Snake_(video_game_genre)
+//
+// Based on the 1976 arcade game Blockade, and the 1991 game Nibbles
+// https://en.wikipedia.org/wiki/Blockade_(video_game)
+// https://en.wikipedia.org/wiki/Nibbles_(video_game)
+//
+// This implementation is Copyright (c) 2021, Damian Coventry
+// All rights reserved
+// Designed and implemented for Massey University course 159.261 Game Programming (Assignment 1)
+//
+
 package com.snakegame.rules;
 
 import java.util.LinkedList;
@@ -12,12 +25,14 @@ public class Snake {
     private final Vector2i m_StartPosition;
     private final Direction m_StartDirection;
     private Direction m_CurrentDirection;
+    private Vector2i m_LastDirectionChangeCell;
     private boolean m_AddOneBodyPart;
 
     public Snake(Vector2i startPosition, Direction startDirection, Vector2i minBounds, Vector2i maxBounds) {
         m_StartPosition = startPosition;
         m_StartDirection = startDirection;
         m_CurrentDirection = startDirection;
+        m_LastDirectionChangeCell = startPosition.createCopy();
         m_BodyParts = new LinkedList<>();
         m_MinBounds = minBounds;
         m_MaxBounds = maxBounds;
@@ -30,6 +45,8 @@ public class Snake {
 
         Vector2i movementDelta = getMovementDelta(getOppositeDirection(m_StartDirection));
         Vector2i currentPosition = m_StartPosition.createCopy();
+        m_LastDirectionChangeCell = m_StartPosition.createCopy();
+
         m_BodyParts.clear();
         for (int i = 0; i < s_MinBodyParts; ++i) {
             m_BodyParts.add(currentPosition);
@@ -67,12 +84,27 @@ public class Snake {
         return false;
     }
 
+    public boolean isCollidingWith(Snake otherSnake) {
+        for (var me : m_BodyParts) {
+            for (var other : otherSnake.m_BodyParts) {
+                if (me.equals(other)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public enum Direction { Left, Right, Up, Down }
     public Direction getDirection() {
         return m_CurrentDirection;
     }
     public void setDirection(Direction direction) {
-        m_CurrentDirection = direction;
+        // Prevent more than one direction change per cell
+        if (m_LastDirectionChangeCell.notEquals(m_BodyParts.getFirst())) {
+            m_CurrentDirection = direction;
+            m_LastDirectionChangeCell = m_BodyParts.getFirst().createCopy();
+        }
     }
 
     public LinkedList<Vector2i> getBodyParts() {

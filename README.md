@@ -4,7 +4,7 @@ https://icon-icons.com/icon/snake/100855
 https://icons8.com/icon/LPo-oYep4SZR/green-apple
 ## Additional Features
 ### Graphics
-- OpenGL integration
+- ~~OpenGL integration~~
 - GLSL Shaders
 - Polyhedron meshes
 - Transformation based animations
@@ -22,7 +22,7 @@ https://icons8.com/icon/LPo-oYep4SZR/green-apple
 - Sounds
 - Music
 ### Gameplay
-- Menu system
+- ~~Menu system~~
 - Game over/won states
 - "Get ready!" states
 - Two players
