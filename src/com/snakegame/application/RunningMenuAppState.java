@@ -36,7 +36,7 @@ public class RunningMenuAppState implements IAppState {
     }
 
     @Override
-    public void onStateBegin() throws IOException {
+    public void begin(long nowMs) throws IOException {
         m_FrontMenu = new Texture(ImageIO.read(new File("FrontMenu.png")));
         m_HelpMenu = new Texture(ImageIO.read(new File("HelpMenu.png")));
         m_Page = Page.FRONT;
@@ -46,32 +46,38 @@ public class RunningMenuAppState implements IAppState {
     }
 
     @Override
-    public void onStateEnd() {
-        m_FrontMenu.close();
-        m_HelpMenu.close();
+    public void end(long nowMs) {
+        m_FrontMenu.delete();
+        m_HelpMenu.delete();
     }
 
     @Override
-    public void processKeyEvent(long window, int key, int scanCode, int action, int mods) throws IOException {
+    public void processKey(long window, int key, int scanCode, int action, int mods) throws IOException {
         if (action != GLFW_PRESS) {
             return;
         }
-        if (key == GLFW_KEY_ESCAPE) {
-            if (m_Page == Page.FRONT) {
-                glfwSetWindowShouldClose(window, true);
-            }
-            else {
+
+        if (m_Page == Page.HELP) {
+            if (key == GLFW_KEY_ESCAPE) {
                 setPage(Page.FRONT);
             }
+            return;
         }
-        else if (key == GLFW_KEY_1) {
-            m_AppStateContext.changeState(new PlayingGameAppState(m_AppStateContext, new GameWorld(IGameWorld.Mode.SINGLE_PLAYER)));
-        }
-        else if (key == GLFW_KEY_2) {
-            m_AppStateContext.changeState(new PlayingGameAppState(m_AppStateContext, new GameWorld(IGameWorld.Mode.TWO_PLAYERS)));
-        }
-        else if (key == GLFW_KEY_3) {
-            setPage(Page.HELP);
+
+        switch (key)
+        {
+            case GLFW_KEY_1:
+                startNewGame(IGameWorld.Mode.SINGLE_PLAYER);
+                break;
+            case GLFW_KEY_2:
+                startNewGame(IGameWorld.Mode.TWO_PLAYERS);
+                break;
+            case GLFW_KEY_3:
+                setPage(Page.HELP);
+                break;
+            case GLFW_KEY_ESCAPE:
+                glfwSetWindowShouldClose(window, true);
+                break;
         }
     }
 
@@ -81,12 +87,12 @@ public class RunningMenuAppState implements IAppState {
     }
 
     @Override
-    public void perspectiveDrawing(long nowMs) {
+    public void draw3d(long nowMs) {
         // Nothing to do
     }
 
     @Override
-    public void orthographicDrawing(long nowMs) {
+    public void draw2d(long nowMs) {
         glBegin(GL_QUADS);
         glTexCoord2d(0.0, 0.0); glVertex2f(0.0f, m_AppStateContext.getWindowHeight());
         glTexCoord2d(0.0, 1.0); glVertex2f(0.0f, 0.0f);
@@ -105,5 +111,9 @@ public class RunningMenuAppState implements IAppState {
                 glBindTexture(GL_TEXTURE_2D, m_HelpMenu.getId());
                 break;
         }
+    }
+
+    private void startNewGame(IGameWorld.Mode mode) throws IOException {
+        m_AppStateContext.changeState(new GameLoadingAppState(m_AppStateContext, mode));
     }
 }

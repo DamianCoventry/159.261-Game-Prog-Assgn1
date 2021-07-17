@@ -6,6 +6,23 @@ https://icons8.com/icon/LPo-oYep4SZR/green-apple
 
 ## Additional Features
 
+### Gameplay
+- ~~Menu system~~
+- ~~Game over/won states~~
+- ~~"Snake collided" state~~
+- ~~"Get ready" state~~
+- ~~Two players~~
+- ~~Snake lives~~
+- Power ups
+- Speed adjustments
+- Poison fruit
+- Dynamic level geometry
+- Player status bars
+- Secret levels
+
+### Level Editor
+- Level files
+- CRUD tools
 ### Graphics
 - ~~OpenGL integration~~
 - GLSL Shaders
@@ -26,18 +43,3 @@ https://icons8.com/icon/LPo-oYep4SZR/green-apple
 - Sounds
 - Music
 
-### Gameplay
-- ~~Menu system~~
-- Game over/won states
-- "Get ready!" states
-- Two players
-- Snake lives
-- Power ups
-- Speed adjustments
-- Poison fruit
-- Dynamic level geometry
-- Secret levels
-
-### Level Editor
-- Level files
-- CRUD tools

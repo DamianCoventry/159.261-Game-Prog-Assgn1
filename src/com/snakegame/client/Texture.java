@@ -43,7 +43,7 @@ public class Texture {
                 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
     }
 
-    public void close() {
+    public void delete() {
         glDeleteTextures(m_Id);
     }
 

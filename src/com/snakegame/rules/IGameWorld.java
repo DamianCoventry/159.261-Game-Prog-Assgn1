@@ -13,12 +13,32 @@
 
 package com.snakegame.rules;
 
+import com.snakegame.client.Texture;
+
 import java.io.IOException;
 
 public interface IGameWorld {
+    void close();
+    void reset(long nowMs) throws IOException;
+
     enum Mode { SINGLE_PLAYER, TWO_PLAYERS}
     Mode getMode();
+
     GameField getGameField();
     Snake[] getSnakes();
-    void reset() throws IOException;
+    Texture getGameOverTexture();
+    Texture getGameWonTexture();
+    Texture getGetReadyTexture();
+    Texture getPlayer1DiedTexture();
+    Texture getPlayer2DiedTexture();
+    Texture getBothPlayersDiedTexture();
+
+    enum SubtractSnakeResult {SNAKE_AVAILABLE, NO_SNAKES_REMAIN}
+    SubtractSnakeResult subtractSnake(int player);
+
+    void start(long nowMs);
+    void stop(long nowMs);
+    void think(long nowMs) throws IOException;
+    void draw3d(long nowMs);
+    void draw2d(long nowMs);
 }

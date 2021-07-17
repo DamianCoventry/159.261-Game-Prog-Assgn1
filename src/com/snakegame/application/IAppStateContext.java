@@ -13,9 +13,15 @@
 
 package com.snakegame.application;
 
+import com.snakegame.client.TimeoutManager;
+
+import java.util.function.Function;
+
 // https://en.wikipedia.org/wiki/State_pattern
 public interface IAppStateContext {
     void changeState(IAppState newState);
     float getWindowWidth();
     float getWindowHeight();
+    int addTimeout(long nowMs, long timeoutMs, Function<Integer, TimeoutManager.CallbackResult> callback);
+    void removeTimeout(int timeoutId);
 }
