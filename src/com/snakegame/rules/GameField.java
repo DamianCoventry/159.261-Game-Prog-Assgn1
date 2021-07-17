@@ -13,6 +13,7 @@
 
 package com.snakegame.rules;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class GameField {
@@ -127,5 +128,17 @@ public class GameField {
                 m_Cells[y * WIDTH + x] = Cell.WALL;
             }
         }
+    }
+
+    public ArrayList<Vector2i> getEmptyCells() {
+        ArrayList<Vector2i> emptyCells = new ArrayList<>(GameField.WIDTH * GameField.HEIGHT);
+        for (int x = 0; x < WIDTH; ++x) {
+            for (int y = 0; y < HEIGHT; ++y) {
+                if (m_Cells[y * WIDTH + x] == Cell.EMPTY) {
+                    emptyCells.add(new Vector2i(x, y));
+                }
+            }
+        }
+        return emptyCells;
     }
 }

@@ -22,6 +22,7 @@ import com.snakegame.client.TimeoutManager;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Random;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -129,7 +130,7 @@ public class GameWorld implements IGameWorld {
             snake.reset();
         }
 
-        m_GameField.setCell(getEmptyGameFieldCell(), GameField.Cell.NUM_1);
+        m_GameField.setCell(chooseRandomEmptyCell(), GameField.Cell.NUM_1);
     }
 
     @Override
@@ -206,7 +207,7 @@ public class GameWorld implements IGameWorld {
                 GameField.Cell.DEC_POINTS, GameField.Cell.BERSERK, GameField.Cell.RANDOM
         };
 
-        m_PowerUpCell = getEmptyGameFieldCell();
+        m_PowerUpCell = chooseRandomEmptyCell();
         m_GameField.setCell(m_PowerUpCell, powerUps[m_Rng.nextInt(powerUps.length)]);
 
         scheduleExpirePowerUp(System.currentTimeMillis());
@@ -487,14 +488,14 @@ public class GameWorld implements IGameWorld {
             }
             default:
                 switch (powerUp) {
-                    case NUM_1: m_GameField.setCell(getEmptyGameFieldCell(), GameField.Cell.NUM_2); break;
-                    case NUM_2: m_GameField.setCell(getEmptyGameFieldCell(), GameField.Cell.NUM_3); break;
-                    case NUM_3: m_GameField.setCell(getEmptyGameFieldCell(), GameField.Cell.NUM_4); break;
-                    case NUM_4: m_GameField.setCell(getEmptyGameFieldCell(), GameField.Cell.NUM_5); break;
-                    case NUM_5: m_GameField.setCell(getEmptyGameFieldCell(), GameField.Cell.NUM_6); break;
-                    case NUM_6: m_GameField.setCell(getEmptyGameFieldCell(), GameField.Cell.NUM_7); break;
-                    case NUM_7: m_GameField.setCell(getEmptyGameFieldCell(), GameField.Cell.NUM_8); break;
-                    case NUM_8: m_GameField.setCell(getEmptyGameFieldCell(), GameField.Cell.NUM_9); break;
+                    case NUM_1: m_GameField.setCell(chooseRandomEmptyCell(), GameField.Cell.NUM_2); break;
+                    case NUM_2: m_GameField.setCell(chooseRandomEmptyCell(), GameField.Cell.NUM_3); break;
+                    case NUM_3: m_GameField.setCell(chooseRandomEmptyCell(), GameField.Cell.NUM_4); break;
+                    case NUM_4: m_GameField.setCell(chooseRandomEmptyCell(), GameField.Cell.NUM_5); break;
+                    case NUM_5: m_GameField.setCell(chooseRandomEmptyCell(), GameField.Cell.NUM_6); break;
+                    case NUM_6: m_GameField.setCell(chooseRandomEmptyCell(), GameField.Cell.NUM_7); break;
+                    case NUM_7: m_GameField.setCell(chooseRandomEmptyCell(), GameField.Cell.NUM_8); break;
+                    case NUM_8: m_GameField.setCell(chooseRandomEmptyCell(), GameField.Cell.NUM_9); break;
                     case NUM_9:
                         m_AppStateContext.changeState(new LevelCompleteAppState(m_AppStateContext, this));
                         break;
@@ -504,6 +505,28 @@ public class GameWorld implements IGameWorld {
         }
 
         scheduleNextPowerUpSpawn(powerUp);
+    }
+
+    private Vector2i chooseRandomEmptyCell() {
+        ArrayList<Vector2i> emptyFieldCells = m_GameField.getEmptyCells();
+        ArrayList<Vector2i> emptyCells = new ArrayList<>(emptyFieldCells.size());
+        for (var emptyFieldCell : emptyFieldCells) {
+            if (!isEitherSnakeUsingThisCell(emptyFieldCell)) {
+                emptyCells.add(emptyFieldCell);
+            }
+        }
+        return emptyCells.get(m_Rng.nextInt(emptyCells.size()));
+    }
+
+    private boolean isEitherSnakeUsingThisCell(Vector2i cell) {
+        for (var snake : m_Snakes) {
+            for (var bodyPart : snake.getBodyParts()) {
+                if (bodyPart.equals(cell)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void scheduleNextPowerUpSpawn(GameField.Cell lastPowerUp) {
@@ -553,27 +576,6 @@ public class GameWorld implements IGameWorld {
         glTexCoord2d(1.0, 1.0); glVertex3d(x + w, y, 0.1f);
         glTexCoord2d(1.0, 0.0); glVertex3d(x + w, y + h, 0.1f);
         glEnd();
-    }
-
-    public Vector2i getEmptyGameFieldCell() {
-        boolean found = false;
-        int x, y;
-        do {
-            do {
-                // There's always a border wall, therefore don't bother generating coordinates for the border.
-                x = getRandomNumber(GameField.WIDTH - 2);
-                y = getRandomNumber(GameField.HEIGHT - 2);
-            }
-            while (m_GameField.getCell(x, y) != GameField.Cell.EMPTY);
-
-            for (var snake : m_Snakes) {
-                for (int i = 0; i < snake.getBodyParts().size() && !found; ++i) {
-                    found = snake.getBodyParts().get(i).equals(new Vector2i(x, y));
-                }
-            }
-        }
-        while (found);
-        return new Vector2i(x, y);
     }
 
     // https://stackoverflow.com/questions/5271598/java-generate-random-number-between-two-given-values
