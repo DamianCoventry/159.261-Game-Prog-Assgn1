@@ -32,9 +32,9 @@ public class TimeoutManager {
 
     public enum CallbackResult { KEEP_CALLING, REMOVE_THIS_CALLBACK }
 
-    public int addTimeout(long nowMs, long timeoutMs, Function<Integer, CallbackResult> callback) {
+    public int addTimeout(long timeoutMs, Function<Integer, CallbackResult> callback) {
         int timeoutId = ++s_UniqueId;
-        m_PendingAdditions.put(timeoutId, new TimeoutInfo(nowMs, timeoutMs, callback));
+        m_PendingAdditions.put(timeoutId, new TimeoutInfo(System.currentTimeMillis(), timeoutMs, callback));
         return timeoutId;
     }
 

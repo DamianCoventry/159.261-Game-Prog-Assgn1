@@ -21,6 +21,8 @@ public interface IGameWorld {
     void close();
     void reset(long nowMs) throws IOException;
 
+    boolean isLastLevel();
+
     enum Mode { SINGLE_PLAYER, TWO_PLAYERS}
     Mode getMode();
 
@@ -32,10 +34,12 @@ public interface IGameWorld {
     Texture getPlayer1DiedTexture();
     Texture getPlayer2DiedTexture();
     Texture getBothPlayersDiedTexture();
+    Texture getLevelCompleteTexture();
 
     enum SubtractSnakeResult {SNAKE_AVAILABLE, NO_SNAKES_REMAIN}
     SubtractSnakeResult subtractSnake(int player);
 
+    void incrementLevel();
     void start(long nowMs);
     void stop(long nowMs);
     void think(long nowMs) throws IOException;

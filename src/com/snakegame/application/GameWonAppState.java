@@ -24,16 +24,25 @@ public class GameWonAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameWorld m_GameWorld;
     private final int m_Player;
+    private final boolean m_BothSnakes;
 
     public GameWonAppState(IAppStateContext context, IGameWorld gameWorld, int player) {
         m_AppStateContext = context;
         m_GameWorld = gameWorld;
         m_Player = player;
+        m_BothSnakes = false;
+    }
+
+    public GameWonAppState(IAppStateContext context, IGameWorld gameWorld) {
+        m_AppStateContext = context;
+        m_GameWorld = gameWorld;
+        m_Player = -1;
+        m_BothSnakes = true;
     }
 
     @Override
     public void begin(long nowMs) {
-        m_AppStateContext.addTimeout(nowMs, 2000, (callCount) -> {
+        m_AppStateContext.addTimeout(2000, (callCount) -> {
             m_GameWorld.close();
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
@@ -62,7 +71,7 @@ public class GameWonAppState implements IAppState {
 
     @Override
     public void draw2d(long nowMs) {
-        // TODO: Display who won (check m_Player)
+        // TODO: Display who won (check m_BothSnakes && m_Player)
         glBindTexture(GL_TEXTURE_2D, m_GameWorld.getGameWonTexture().getId());
         var w = m_GameWorld.getGameWonTexture().getWidth();
         var h = m_GameWorld.getGameWonTexture().getHeight();

@@ -22,6 +22,6 @@ public interface IAppStateContext {
     void changeState(IAppState newState);
     float getWindowWidth();
     float getWindowHeight();
-    int addTimeout(long nowMs, long timeoutMs, Function<Integer, TimeoutManager.CallbackResult> callback);
+    int addTimeout(long timeoutMs, Function<Integer, TimeoutManager.CallbackResult> callback);
     void removeTimeout(int timeoutId);
 }

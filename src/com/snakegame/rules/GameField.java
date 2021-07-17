@@ -16,9 +16,9 @@ package com.snakegame.rules;
 import java.util.Arrays;
 
 public class GameField {
-    public static final int WIDTH = 80;
-    public static final int HEIGHT = 60;
-    public static final int TOTAL_CELLS = 4800;
+    public static final int WIDTH = 60;
+    public static final int HEIGHT = 40;
+    public static final int TOTAL_CELLS = 2400;
 
     private final Cell[] m_Cells;
     private Vector2i m_Player1Start;
@@ -51,15 +51,9 @@ public class GameField {
         m_Player2Start = start;
     }
 
-    public void removeAllApples() {
-        for (int i = 0; i < GameField.TOTAL_CELLS; ++i) {
-            if (m_Cells[i] == Cell.APPLE) {
-                m_Cells[i] = Cell.EMPTY;
-            }
-        }
+    public enum Cell { EMPTY, WALL, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7, NUM_8, NUM_9, DEC_LENGTH,
+        INC_SPEED, DEC_SPEED, INC_LIVES, DEC_LIVES, INC_POINTS, DEC_POINTS, BERSERK, RANDOM
     }
-
-    public enum Cell { EMPTY, WALL, APPLE }
 
     public void setCell(Vector2i position, Cell cell) {
         if (position.m_X >= 0 && position.m_X < WIDTH && position.m_Y >= 0 && position.m_Y < HEIGHT) {

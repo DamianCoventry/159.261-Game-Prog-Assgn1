@@ -20,20 +20,25 @@ import java.io.IOException;
 
 import static org.lwjgl.opengl.GL11.*;
 
-public class GetReadyAppState implements IAppState {
+public class LevelCompleteAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameWorld m_GameWorld;
 
-    public GetReadyAppState(IAppStateContext context, IGameWorld gameWorld) {
+    public LevelCompleteAppState(IAppStateContext context, IGameWorld gameWorld) {
         m_AppStateContext = context;
         m_GameWorld = gameWorld;
     }
 
     @Override
-    public void begin(long nowMs) throws IOException {
-        m_GameWorld.reset(nowMs);
+    public void begin(long nowMs) {
         m_AppStateContext.addTimeout(2000, (callCount) -> {
-            m_AppStateContext.changeState(new PlayingGameAppState(m_AppStateContext, m_GameWorld));
+            if (m_GameWorld.isLastLevel()) {
+                m_AppStateContext.changeState(new GameWonAppState(m_AppStateContext, m_GameWorld));
+            }
+            else {
+                m_GameWorld.incrementLevel();
+                m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld));
+            }
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });
     }
@@ -60,9 +65,10 @@ public class GetReadyAppState implements IAppState {
 
     @Override
     public void draw2d(long nowMs) {
-        glBindTexture(GL_TEXTURE_2D, m_GameWorld.getGetReadyTexture().getId());
-        var w = m_GameWorld.getGetReadyTexture().getWidth();
-        var h = m_GameWorld.getGetReadyTexture().getHeight();
+        // TODO: Display who lost (check m_BothSnakes && m_Player)
+        glBindTexture(GL_TEXTURE_2D, m_GameWorld.getLevelCompleteTexture().getId());
+        var w = m_GameWorld.getLevelCompleteTexture().getWidth();
+        var h = m_GameWorld.getLevelCompleteTexture().getHeight();
         var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
         var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
         glBegin(GL_QUADS);

@@ -33,7 +33,7 @@ public class GameOverAppState implements IAppState {
         m_BothSnakes = false;
     }
 
-    public GameOverAppState(IAppStateContext context, IGameWorld gameWorld, boolean bothSnakes) {
+    public GameOverAppState(IAppStateContext context, IGameWorld gameWorld) {
         m_AppStateContext = context;
         m_GameWorld = gameWorld;
         m_Player = -1;
@@ -42,7 +42,7 @@ public class GameOverAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) {
-        m_AppStateContext.addTimeout(nowMs, 2000, (callCount) -> {
+        m_AppStateContext.addTimeout(2000, (callCount) -> {
             m_GameWorld.close();
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
@@ -72,6 +72,7 @@ public class GameOverAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         // TODO: Display who lost (check m_BothSnakes && m_Player)
+        glColor4d(1.0, 1.0, 1.0, 1.0);
         glBindTexture(GL_TEXTURE_2D, m_GameWorld.getGameOverTexture().getId());
         var w = m_GameWorld.getGameOverTexture().getWidth();
         var h = m_GameWorld.getGameOverTexture().getHeight();

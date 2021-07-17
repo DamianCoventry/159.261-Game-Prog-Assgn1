@@ -14,33 +14,42 @@
 package com.snakegame.rules;
 
 import java.util.LinkedList;
+import java.util.Random;
 
 public class Snake {
+    private static final int s_NumStartingLives = 3;
+    private static final int s_MaxNumLives = 5;
     private static final int s_MinBodyParts = 3;
-    private static final int s_MaxBodyParts = 20;
+    private static final float s_BodyPartScale = 1.5f;
+    private static final int s_NumBodyPartsToRemove = 3;
+    private static final long s_PowerUpPointsBonus = 1000;
 
     private final LinkedList<Vector2i> m_BodyParts;
     private final Vector2i m_MinBounds;
     private final Vector2i m_MaxBounds;
     private final Vector2i m_StartPosition;
     private final Direction m_StartDirection;
+
     private Direction m_CurrentDirection;
     private Vector2i m_LastDirectionChangeCell;
-    private boolean m_AddOneBodyPart;
+    private int m_NumLives;
+    private int m_AddBodyParts;
+    private int m_RemoveBodyParts;
+    private long m_Points;
 
     public Snake(Vector2i startPosition, Direction startDirection, Vector2i minBounds, Vector2i maxBounds) {
         m_StartPosition = startPosition;
         m_StartDirection = startDirection;
-        m_CurrentDirection = startDirection;
         m_LastDirectionChangeCell = startPosition.createCopy();
         m_BodyParts = new LinkedList<>();
         m_MinBounds = minBounds;
         m_MaxBounds = maxBounds;
+        m_NumLives = s_NumStartingLives - 1; // Allocate a life immediately
         reset();
     }
 
     public void reset() {
-        m_AddOneBodyPart = false;
+        m_AddBodyParts = m_RemoveBodyParts = 0;
         m_CurrentDirection = m_StartDirection;
 
         Vector2i movementDelta = getMovementDelta(getOppositeDirection(m_StartDirection));
@@ -55,19 +64,80 @@ public class Snake {
         }
     }
 
-    public void addOneBodyPart() {
-        if (m_BodyParts.size() < s_MaxBodyParts) {
-            m_AddOneBodyPart = true;
+    public int getNumLives() {
+        return m_NumLives;
+    }
+
+    public void incrementLives() {
+        if (m_NumLives < s_MaxNumLives) {
+            ++m_NumLives;
+        }
+    }
+
+    public void decrementLives() {
+        if (m_NumLives > 0) {
+            --m_NumLives;
+        }
+    }
+
+    public long getPoints() {
+        return m_Points;
+    }
+
+    public void incrementPoints(long points) {
+        if (points > 0) {
+            m_Points += points;
+        }
+    }
+
+    public void decrementPoints(long points) {
+        if (points > 0) {
+            m_Points = Math.max(0, m_Points - points);
+        }
+    }
+
+    public void collectPowerUp(GameField.Cell powerUp) {
+        switch (powerUp) {
+            case NUM_1: m_AddBodyParts = (int)s_BodyPartScale; break;
+            case NUM_2: m_AddBodyParts = (int)(2.0f * s_BodyPartScale); break;
+            case NUM_3: m_AddBodyParts = (int)(3.0f * s_BodyPartScale); break;
+            case NUM_4: m_AddBodyParts = (int)(4.0f * s_BodyPartScale); break;
+            case NUM_5: m_AddBodyParts = (int)(5.0f * s_BodyPartScale); break;
+            case NUM_6: m_AddBodyParts = (int)(6.0f * s_BodyPartScale); break;
+            case NUM_7: m_AddBodyParts = (int)(7.0f * s_BodyPartScale); break;
+            case NUM_8: m_AddBodyParts = (int)(8.0f * s_BodyPartScale); break;
+            case NUM_9: m_AddBodyParts = (int)(9.0f * s_BodyPartScale); break;
+            case DEC_LENGTH:
+                if (m_BodyParts.size() > s_MinBodyParts) {
+                    m_RemoveBodyParts = Math.min(m_BodyParts.size() - s_MinBodyParts, s_NumBodyPartsToRemove);
+                }
+                break;
+            case INC_LIVES:
+                incrementLives();
+                break;
+            case DEC_LIVES:
+                decrementLives();
+                break;
+            case INC_POINTS:
+                incrementPoints(s_PowerUpPointsBonus);
+                break;
+            case DEC_POINTS:
+                decrementPoints(s_PowerUpPointsBonus);
+                break;
         }
     }
 
     public void moveForwards() {
         Vector2i movementDelta = getMovementDelta(m_CurrentDirection);
         m_BodyParts.addFirst(clipToBounds(m_BodyParts.getFirst().add(movementDelta)));
-        if (m_AddOneBodyPart) {
-            m_AddOneBodyPart = false;
+        if (m_AddBodyParts > 0) {
+            --m_AddBodyParts;
         }
         else {
+            if (m_RemoveBodyParts > 0) {
+                --m_RemoveBodyParts;
+                m_BodyParts.removeLast();
+            }
             m_BodyParts.removeLast();
         }
     }

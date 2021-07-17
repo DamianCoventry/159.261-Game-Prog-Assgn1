@@ -43,7 +43,7 @@ public class SnakeDyingAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) {
-        m_AppStateContext.addTimeout(nowMs, 2000, (callCount) -> {
+        m_AppStateContext.addTimeout(2000, (callCount) -> {
             if (m_GameWorld.getMode() == IGameWorld.Mode.TWO_PLAYERS) {
                 subtractSnakeTwoPlayersGame();
             }
@@ -127,7 +127,7 @@ public class SnakeDyingAppState implements IAppState {
         if (player1Result == IGameWorld.SubtractSnakeResult.NO_SNAKES_REMAIN) {
             if (player2Result == IGameWorld.SubtractSnakeResult.NO_SNAKES_REMAIN) {
                 // Then it's a joint loss
-                m_AppStateContext.changeState(new GameOverAppState(m_AppStateContext, m_GameWorld, true));
+                m_AppStateContext.changeState(new GameOverAppState(m_AppStateContext, m_GameWorld));
             }
             else {
                 // Then player 2 won

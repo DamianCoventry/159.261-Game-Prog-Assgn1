@@ -36,6 +36,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 public class Application implements IAppStateContext {
     private static final int s_DesiredWindowWidth = 1024;
     private static final int s_DesiredWindowHeight = 768;
+    private static final double s_CameraZCoordinate = -120.0;
     private static final double s_FovYDegrees = 60.0;
     private static final double s_NearClipPlane = 1.0;
     private static final double s_FarClipPlane = 1000.0;
@@ -111,9 +112,9 @@ public class Application implements IAppStateContext {
         glViewport(0, 0, s_DesiredWindowWidth, s_DesiredWindowHeight);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glEnable(GL_CULL_FACE);
+        glEnable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
     }
 
     public void close() {
@@ -147,7 +148,7 @@ public class Application implements IAppStateContext {
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        glTranslated(0.0, 0.0, -110.0); // Place the camera
+        glTranslated(0.0, 0.0, s_CameraZCoordinate); // Place the camera
         m_CurrentState.draw3d(nowMs);
     }
 
@@ -186,8 +187,8 @@ public class Application implements IAppStateContext {
     }
 
     @Override
-    public int addTimeout(long nowMs, long timeoutMs, Function<Integer, TimeoutManager.CallbackResult> callback) {
-        return m_TimeoutManager.addTimeout(nowMs, timeoutMs, callback);
+    public int addTimeout(long timeoutMs, Function<Integer, TimeoutManager.CallbackResult> callback) {
+        return m_TimeoutManager.addTimeout(timeoutMs, callback);
     }
 
     @Override
