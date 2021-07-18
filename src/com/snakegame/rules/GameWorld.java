@@ -24,6 +24,7 @@ import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Random;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -31,7 +32,6 @@ import static org.lwjgl.opengl.GL11.*;
 public class GameWorld implements IGameWorld {
     private static final float s_CellSize = 3.0f;
     private static final int s_NumApples = 9;
-    private static final int s_NumLevels = 10; // TODO: discover levels dynamically
     private static final int s_MaxPlayers = 2;
     private static final long s_MaxSnakeSpeedTimeoutMs = 150;
     private static final long s_MinSnakeSpeedTimeoutMs = 75;
@@ -40,6 +40,7 @@ public class GameWorld implements IGameWorld {
     private static final long s_PowerUpInitialTimeoutMs = 3750;
     private static final long s_PowerUpSubsequentTimeoutMs = 15000;
     private static final long s_PowerUpExpireTimeoutMs = 6000;
+    private static final long s_InsertWallsTimeoutMs = 12000;
 
     private final IAppStateContext m_AppStateContext;
     private final Random m_Rng;
@@ -59,6 +60,7 @@ public class GameWorld implements IGameWorld {
     private final Texture m_GamePausedTexture;
     private final Texture[] m_PowerUpTextures;
     private final NumberFont m_NumberFont;
+    private final ArrayList<String> m_LevelFileNames;
 
     private GameField m_GameField;
     private PowerUp m_PowerUp;
@@ -66,6 +68,7 @@ public class GameWorld implements IGameWorld {
     private long m_SnakeTimeoutMs;
     private int m_SnakeTimeoutId;
     private int m_PowerUpTimeoutId;
+    private int m_WallsTimeoutId;
     private int m_CurrentLevel;
 
     public GameWorld(IAppStateContext appStateContext, Mode mode) throws IOException {
@@ -75,6 +78,18 @@ public class GameWorld implements IGameWorld {
         m_CurrentLevel = 0;
         m_SnakeTimeoutId = 0;
         m_PowerUpTimeoutId = 0;
+
+        m_LevelFileNames = new ArrayList<>();
+        File directory = new File("levels");
+        for (var file : Objects.requireNonNull(directory.listFiles())) {
+            if (file.isFile() && file.getName().endsWith(".txt")) {
+                m_LevelFileNames.add(file.getName());
+            }
+        }
+        if (m_LevelFileNames.isEmpty()) {
+            throw new RuntimeException("There are no level files");
+        }
+        m_LevelFileNames.sort(String::compareToIgnoreCase);
 
         m_AppleTextures = new Texture[s_NumApples];
         for (int i = 0; i < s_NumApples; ++i) {
@@ -145,7 +160,7 @@ public class GameWorld implements IGameWorld {
 
     @Override
     public void loadNextLevel(long nowMs) throws IOException {
-        if (m_CurrentLevel < s_NumLevels - 1) {
+        if (m_CurrentLevel < m_LevelFileNames.size() - 1) {
             ++m_CurrentLevel;
         }
         loadLevelFile(m_CurrentLevel);
@@ -172,7 +187,7 @@ public class GameWorld implements IGameWorld {
 
     @Override
     public boolean isLastLevel() {
-        return m_CurrentLevel == s_NumLevels - 1;
+        return m_CurrentLevel == m_LevelFileNames.size() - 1;
     }
 
     @Override
@@ -190,12 +205,14 @@ public class GameWorld implements IGameWorld {
         stop(nowMs);
         scheduleSnakeMovement();
         scheduleInsertPowerUp(s_PowerUpInitialTimeoutMs);
+        scheduleInsertWalls();
     }
 
     @Override
     public void stop(long nowMs) {
         removeSnakeMovementTimeout();
         removePowerUpTimeout();
+        removeWallsTimeout();
     }
 
     @Override
@@ -305,10 +322,20 @@ public class GameWorld implements IGameWorld {
     @Override
     public void draw2d(long nowMs) {
         float y = m_AppStateContext.getWindowHeight() - NumberFont.s_FrameHeight;
+
+        // Draw the level's state
+        float width = m_NumberFont.calculateWidth(m_CurrentLevel + 1);
+        m_NumberFont.drawNumber(m_CurrentLevel + 1, (m_AppStateContext.getWindowWidth() / 2.0f) - (2.0f * width), y);
+        width = m_NumberFont.calculateWidth(m_LevelFileNames.size());
+        m_NumberFont.drawNumber(m_LevelFileNames.size(), (m_AppStateContext.getWindowWidth() / 2.0f) + width, y);
+
+        // Draw player 1's state
         m_NumberFont.drawNumber(m_Snakes[0].getNumLives(), 0.0f, y);
         m_NumberFont.drawNumber(m_Snakes[0].getPoints(), 100.0f, y);
+
         if (m_Snakes.length > 1) {
-            float width = m_NumberFont.calculateWidth(m_Snakes[1].getNumLives());
+            // Draw player 2's state
+            width = m_NumberFont.calculateWidth(m_Snakes[1].getNumLives());
             m_NumberFont.drawNumber(m_Snakes[1].getNumLives(), m_AppStateContext.getWindowWidth() - width, y);
             width = m_NumberFont.calculateWidth(m_Snakes[1].getPoints()) + (2.0f * width);
             m_NumberFont.drawNumber(m_Snakes[1].getPoints(), m_AppStateContext.getWindowWidth() - width, y);
@@ -384,7 +411,7 @@ public class GameWorld implements IGameWorld {
     }
 
     private void loadLevelFile(int level) throws IOException {
-        GameFieldFile file = new GameFieldFile(makeLevelFileName(level), m_Mode == Mode.TWO_PLAYERS);
+        GameFieldFile file = new GameFieldFile("levels\\" + m_LevelFileNames.get(level), m_Mode == Mode.TWO_PLAYERS);
         m_GameField = file.getGameField();
         m_GameField.setWallBorder();
         m_Snakes[0].setStartPosition(m_GameField.getPlayer1Start());
@@ -457,6 +484,45 @@ public class GameWorld implements IGameWorld {
             scheduleInsertPowerUp(s_PowerUpInitialTimeoutMs);
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });
+    }
+
+    private void scheduleInsertWalls() {
+        removeWallsTimeout();
+        m_WallsTimeoutId = m_AppStateContext.addTimeout(s_InsertWallsTimeoutMs, (callCount1) -> {
+            insertWalls();
+            return TimeoutManager.CallbackResult.KEEP_CALLING;
+        });
+    }
+
+    public void insertWalls() {
+        Snake.Direction[] directions = {
+                Snake.Direction.Left, Snake.Direction.Up,
+                Snake.Direction.Right, Snake.Direction.Down
+        };
+
+        Vector2i increment;
+        switch (directions[m_Rng.nextInt(4)]) {
+            case Left: increment = new Vector2i(-1, 0); break;
+            case Right: increment = new Vector2i(1, 0); break;
+            case Up: increment = new Vector2i(0, 1); break;
+            default: case Down: increment = new Vector2i(0, -1); break;
+        }
+
+        Vector2i location = chooseRandomEmptyCell();
+        int numWalls = m_Rng.nextInt(4) + 1;
+        for (int i = 0; i < numWalls; ++i) {
+            if (isCellEmpty(location)) {
+                m_GameField.insertWall(location);
+            }
+            location = m_GameField.clampCoordinates(location.add(increment));
+        }
+    }
+
+    private void removeWallsTimeout() {
+        if (m_WallsTimeoutId != 0) {
+            m_AppStateContext.removeTimeout(m_WallsTimeoutId);
+            m_WallsTimeoutId = 0;
+        }
     }
 
     private void removeSnakeMovementTimeout() {
@@ -663,8 +729,8 @@ public class GameWorld implements IGameWorld {
         return false;
     }
 
-    private String makeLevelFileName(int level) {
-        return String.format("levels\\Level%02d.txt", level);
+    private boolean isCellEmpty(Vector2i location) {
+        return m_GameField.getCellType(location) == GameField.CellType.EMPTY && !isEitherSnakeUsingThisCell(location);
     }
 
     private void drawTexturedQuad(double x, double y, double w, double h, double u0, double v0, double u1, double v1, Texture texture) {

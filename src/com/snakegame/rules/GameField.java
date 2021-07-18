@@ -134,6 +134,10 @@ public class GameField {
         }
     }
 
+    public void insertWall(Vector2i location) {
+        m_CellInfo[location.m_Y * WIDTH + location.m_X] = new CellInfo(CellType.WALL);
+    }
+
     public void setAllCells(String gameField, boolean checkForPlayer2StartPosition) {
         if (gameField.length() != GameField.TOTAL_CELLS) {
             throw new RuntimeException("Invalid game field string");
@@ -233,5 +237,12 @@ public class GameField {
             }
         }
         return emptyCells;
+    }
+
+    public Vector2i clampCoordinates(Vector2i coordinates) {
+        return new Vector2i(
+                Math.max(0, Math.min(WIDTH - 1, coordinates.m_X)),
+                Math.max(0, Math.min(HEIGHT - 1, coordinates.m_Y))
+        );
     }
 }

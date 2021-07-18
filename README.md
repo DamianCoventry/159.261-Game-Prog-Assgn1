@@ -23,10 +23,9 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
     - ~~Points +/-~~
     - ~~Random~~
 - ~~Player status bars~~
-- Dynamic level geometry
-- Pause screen
-- Cheat codes
-- Level info on toolbar
+- ~~Dynamic level geometry~~
+- ~~Pause screen~~
+- ~~Level info on toolbar~~
 
 ### Graphics
 - ~~OpenGL integration~~
