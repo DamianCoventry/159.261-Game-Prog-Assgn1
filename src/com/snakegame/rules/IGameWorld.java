@@ -37,6 +37,7 @@ public interface IGameWorld {
     Texture getPlayer2DiedTexture();
     Texture getBothPlayersDiedTexture();
     Texture getLevelCompleteTexture();
+    Texture getGamePausedTexture();
 
     enum SubtractSnakeResult {SNAKE_AVAILABLE, NO_SNAKES_REMAIN}
     SubtractSnakeResult subtractSnake(int player);

@@ -18,33 +18,21 @@ import com.snakegame.rules.IGameWorld;
 
 import java.io.IOException;
 
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
-public class LevelCompleteAppState implements IAppState {
+public class GamePausedAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameWorld m_GameWorld;
 
-    public LevelCompleteAppState(IAppStateContext context, IGameWorld gameWorld) {
+    public GamePausedAppState(IAppStateContext context, IGameWorld gameWorld) {
         m_AppStateContext = context;
         m_GameWorld = gameWorld;
     }
 
     @Override
     public void begin(long nowMs) {
-        m_AppStateContext.addTimeout(2000, (callCount) -> {
-            if (m_GameWorld.isLastLevel()) {
-                m_AppStateContext.changeState(new GameWonAppState(m_AppStateContext, m_GameWorld));
-            }
-            else {
-                try {
-                    m_GameWorld.loadNextLevel(nowMs);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld, true));
-            }
-            return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
-        });
+        // No work to do
     }
 
     @Override
@@ -54,7 +42,16 @@ public class LevelCompleteAppState implements IAppState {
 
     @Override
     public void processKey(long window, int key, int scanCode, int action, int mods) {
-        // No work to do
+        if (action != GLFW_PRESS) {
+            return;
+        }
+        if (key == GLFW_KEY_ESCAPE) {
+            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld, false));
+        }
+        else if (key == GLFW_KEY_Q) {
+            m_GameWorld.freeNativeResources();
+            m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
+        }
     }
 
     @Override
@@ -69,10 +66,10 @@ public class LevelCompleteAppState implements IAppState {
 
     @Override
     public void draw2d(long nowMs) {
-        // TODO: Display who lost (check m_BothSnakes && m_Player)
-        glBindTexture(GL_TEXTURE_2D, m_GameWorld.getLevelCompleteTexture().getId());
-        var w = m_GameWorld.getLevelCompleteTexture().getWidth();
-        var h = m_GameWorld.getLevelCompleteTexture().getHeight();
+        glColor4d(1.0, 1.0, 1.0, 1.0);
+        glBindTexture(GL_TEXTURE_2D, m_GameWorld.getGamePausedTexture().getId());
+        var w = m_GameWorld.getGamePausedTexture().getWidth();
+        var h = m_GameWorld.getGamePausedTexture().getHeight();
         var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
         var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
         glBegin(GL_QUADS);

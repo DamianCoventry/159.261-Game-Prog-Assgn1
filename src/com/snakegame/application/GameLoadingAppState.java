@@ -46,7 +46,7 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void think(long nowMs) throws IOException {
-        m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld));
+        m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld, true));
     }
 
     @Override

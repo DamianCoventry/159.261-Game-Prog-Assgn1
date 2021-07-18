@@ -56,6 +56,7 @@ public class GameWorld implements IGameWorld {
     private final Texture m_Player2DiedTexture;
     private final Texture m_BothPlayersDiedTexture;
     private final Texture m_LevelCompleteTexture;
+    private final Texture m_GamePausedTexture;
     private final Texture[] m_PowerUpTextures;
     private final NumberFont m_NumberFont;
 
@@ -100,6 +101,7 @@ public class GameWorld implements IGameWorld {
         m_Player2DiedTexture = new Texture(ImageIO.read(new File("images\\Player2Died.png")));
         m_BothPlayersDiedTexture = new Texture(ImageIO.read(new File("images\\BothSnakesDied.png")));
         m_LevelCompleteTexture = new Texture(ImageIO.read(new File("images\\LevelComplete.png")));
+        m_GamePausedTexture = new Texture(ImageIO.read(new File("images\\GamePaused.png")));
         m_NumberFont = new NumberFont();
 
         Vector2i minBounds = new Vector2i(0, 0);
@@ -130,6 +132,7 @@ public class GameWorld implements IGameWorld {
         m_Player2DiedTexture.freeNativeResource();
         m_BothPlayersDiedTexture.freeNativeResource();
         m_LevelCompleteTexture.freeNativeResource();
+        m_GamePausedTexture.freeNativeResource();
         m_NumberFont.freeNativeResource();
     }
 
@@ -345,6 +348,11 @@ public class GameWorld implements IGameWorld {
     @Override
     public Texture getLevelCompleteTexture() {
         return m_LevelCompleteTexture;
+    }
+
+    @Override
+    public Texture getGamePausedTexture() {
+        return m_GamePausedTexture;
     }
 
     @Override

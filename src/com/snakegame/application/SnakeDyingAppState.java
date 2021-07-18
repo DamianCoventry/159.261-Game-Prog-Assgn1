@@ -101,7 +101,7 @@ public class SnakeDyingAppState implements IAppState {
 
     private void subtractSnakeSinglePlayerGame() {
         if (m_GameWorld.subtractSnake(0) == IGameWorld.SubtractSnakeResult.SNAKE_AVAILABLE) {
-            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld));
+            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld, true));
         }
         else {
             m_AppStateContext.changeState(new GameOverAppState(m_AppStateContext, m_GameWorld, 0));
@@ -117,7 +117,7 @@ public class SnakeDyingAppState implements IAppState {
             m_AppStateContext.changeState(new GameWonAppState(m_AppStateContext, m_GameWorld, m_Player == 0 ? 1 : 0));
         }
         else {
-            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld));
+            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld, true));
         }
     }
 
@@ -139,7 +139,7 @@ public class SnakeDyingAppState implements IAppState {
             m_AppStateContext.changeState(new GameWonAppState(m_AppStateContext, m_GameWorld, 0));
         }
         else {
-            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld));
+            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld, true));
         }
     }
 }

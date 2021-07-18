@@ -45,9 +45,8 @@ public class PlayingGameAppState implements IAppState {
             return;
         }
         if (key == GLFW_KEY_ESCAPE) {
-            // TODO: Need an "are you sure?" question here.
-            m_GameWorld.freeNativeResources();
-            m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
+            m_AppStateContext.changeState(new GamePausedAppState(m_AppStateContext, m_GameWorld));
+            return;
         }
         
         processKeyPress(m_GameWorld.getSnakes()[0], GLFW_KEY_W, GLFW_KEY_S, GLFW_KEY_A, GLFW_KEY_D, key);

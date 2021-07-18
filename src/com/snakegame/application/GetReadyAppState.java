@@ -23,15 +23,19 @@ import static org.lwjgl.opengl.GL11.*;
 public class GetReadyAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameWorld m_GameWorld;
+    private final boolean m_ResetState;
 
-    public GetReadyAppState(IAppStateContext context, IGameWorld gameWorld) {
+    public GetReadyAppState(IAppStateContext context, IGameWorld gameWorld, boolean resetState) {
         m_AppStateContext = context;
         m_GameWorld = gameWorld;
+        m_ResetState = resetState;
     }
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_GameWorld.resetAfterSnakeDeath(nowMs);
+        if (m_ResetState) {
+            m_GameWorld.resetAfterSnakeDeath(nowMs);
+        }
         m_AppStateContext.addTimeout(2000, (callCount) -> {
             m_AppStateContext.changeState(new PlayingGameAppState(m_AppStateContext, m_GameWorld));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
