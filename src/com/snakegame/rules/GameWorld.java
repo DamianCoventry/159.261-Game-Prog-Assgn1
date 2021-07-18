@@ -711,26 +711,26 @@ public class GameWorld implements IGameWorld {
         ArrayList<Vector2i> emptyFieldCells = m_GameField.getEmptyCells();
         ArrayList<Vector2i> emptyCells = new ArrayList<>(emptyFieldCells.size());
         for (var emptyFieldCell : emptyFieldCells) {
-            if (!isEitherSnakeUsingThisCell(emptyFieldCell)) {
+            if (isNeitherSnakeUsingThisCell(emptyFieldCell)) {
                 emptyCells.add(emptyFieldCell);
             }
         }
         return emptyCells.get(m_Rng.nextInt(emptyCells.size()));
     }
 
-    private boolean isEitherSnakeUsingThisCell(Vector2i cell) {
+    private boolean isNeitherSnakeUsingThisCell(Vector2i cell) {
         for (var snake : m_Snakes) {
             for (var bodyPart : snake.getBodyParts()) {
                 if (bodyPart.equals(cell)) {
-                    return true;
+                    return false;
                 }
             }
         }
-        return false;
+        return true;
     }
 
     private boolean isCellEmpty(Vector2i location) {
-        return m_GameField.getCellType(location) == GameField.CellType.EMPTY && !isEitherSnakeUsingThisCell(location);
+        return m_GameField.getCellType(location) == GameField.CellType.EMPTY && isNeitherSnakeUsingThisCell(location);
     }
 
     private void drawTexturedQuad(double x, double y, double w, double h, double u0, double v0, double u1, double v1, Texture texture) {

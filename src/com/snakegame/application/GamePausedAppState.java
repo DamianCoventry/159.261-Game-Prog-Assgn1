@@ -13,7 +13,6 @@
 
 package com.snakegame.application;
 
-import com.snakegame.client.TimeoutManager;
 import com.snakegame.rules.IGameWorld;
 
 import java.io.IOException;
