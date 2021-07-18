@@ -8,7 +8,7 @@
 //
 // This implementation is Copyright (c) 2021, Damian Coventry
 // All rights reserved
-// Designed and implemented for Massey University course 159.261 Game Programming (Assignment 1)
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
 //
 
 package com.snakegame.rules;
@@ -16,6 +16,7 @@ package com.snakegame.rules;
 import com.snakegame.application.IAppStateContext;
 import com.snakegame.application.LevelCompleteAppState;
 import com.snakegame.application.SnakeDyingAppState;
+import com.snakegame.client.NumberFont;
 import com.snakegame.client.Texture;
 import com.snakegame.client.TimeoutManager;
 
@@ -36,7 +37,7 @@ public class GameWorld implements IGameWorld {
     private static final long s_MaxSnakeSpeedTimeoutMs = 150;
     private static final long s_MinSnakeSpeedTimeoutMs = 75;
     private static final long s_SnakeSpeedPowerUpAdjustment = 8;
-    private static final long s_SnakeSpeedLevelAdjustment = 4;
+    private static final long s_SnakeSpeedLevelAdjustment = 6;
     private static final long s_PowerUpInitialTimeoutMs = 3750;
     private static final long s_PowerUpSubsequentTimeoutMs = 15000;
     private static final long s_PowerUpExpireTimeoutMs = 6000;
@@ -56,13 +57,14 @@ public class GameWorld implements IGameWorld {
     private final Texture m_Player2DiedTexture;
     private final Texture m_BothPlayersDiedTexture;
     private final Texture m_LevelCompleteTexture;
-    private final Texture m_PowerUpTexture;
+    private final Texture[] m_PowerUpTextures;
+    private final NumberFont m_NumberFont;
 
     private GameField m_GameField;
     private long m_SnakeMovementTimeoutMs;
-    private int m_SnakeMovementTimeoutId = 0;
-    private int m_SpawnPowerUpTimeoutId = 0;
-    private int m_ExpirePowerUpTimeoutId = 0;
+    private int m_SnakeMovementTimeoutId;
+    private int m_SpawnPowerUpTimeoutId;
+    private int m_ExpirePowerUpTimeoutId;
     private int m_CurrentLevel;
     private Vector2i m_PowerUpCell;
 
@@ -71,66 +73,100 @@ public class GameWorld implements IGameWorld {
         m_Rng = new Random();
         m_Mode = mode;
         m_CurrentLevel = 0;
+        m_SnakeMovementTimeoutId = 0;
+        m_SpawnPowerUpTimeoutId = 0;
+        m_ExpirePowerUpTimeoutId = 0;
 
         m_AppleTextures = new Texture[s_NumApples];
         for (int i = 0; i < s_NumApples; ++i) {
-            m_AppleTextures[i] = new Texture(ImageIO.read(new File(String.format("Apple%d.png", i + 1))));
+            m_AppleTextures[i] = new Texture(ImageIO.read(new File(String.format("images\\Apple%d.png", i + 1))));
         }
-        m_WallTexture = new Texture(ImageIO.read(new File("soil-seamless-texture.jpg")));
-        m_DotTexture = new Texture(ImageIO.read(new File("dot.png")));
-        m_HeadTexture = new Texture(ImageIO.read(new File("head.png")));
-        m_GameOverTexture = new Texture(ImageIO.read(new File("GameOver.png")));
-        m_GameWonTexture = new Texture(ImageIO.read(new File("GameWon.png")));
-        m_GetReadyTexture = new Texture(ImageIO.read(new File("GetReady.png")));
-        m_Player1DiedTexture = new Texture(ImageIO.read(new File("Player1Died.png")));
-        m_Player2DiedTexture = new Texture(ImageIO.read(new File("Player2Died.png")));
-        m_BothPlayersDiedTexture = new Texture(ImageIO.read(new File("BothSnakesDied.png")));
-        m_LevelCompleteTexture = new Texture(ImageIO.read(new File("LevelComplete.png")));
-        m_PowerUpTexture = new Texture(ImageIO.read(new File("PowerUp.png")));
 
-        GameFieldFile file = new GameFieldFile(makeLevelFileName(), m_Mode == Mode.TWO_PLAYERS);
-        m_GameField = file.getGameField();
+        m_PowerUpTextures = new Texture[GameField.s_NumPowerUps];
+        m_PowerUpTextures[0] = new Texture(ImageIO.read(new File("images\\DecreaseLength.png")));
+        m_PowerUpTextures[1] = new Texture(ImageIO.read(new File("images\\IncreaseSpeed.png")));
+        m_PowerUpTextures[2] = new Texture(ImageIO.read(new File("images\\DecreaseSpeed.png")));
+        m_PowerUpTextures[3] = new Texture(ImageIO.read(new File("images\\IncreaseLives.png")));
+        m_PowerUpTextures[4] = new Texture(ImageIO.read(new File("images\\DecreaseLives.png")));
+        m_PowerUpTextures[5] = new Texture(ImageIO.read(new File("images\\IncreasePoints.png")));
+        m_PowerUpTextures[6] = new Texture(ImageIO.read(new File("images\\DecreasePoints.png")));
+        m_PowerUpTextures[7] = new Texture(ImageIO.read(new File("images\\Random.png")));
+
+        m_WallTexture = new Texture(ImageIO.read(new File("images\\soil-seamless-texture.jpg")));
+        m_DotTexture = new Texture(ImageIO.read(new File("images\\dot.png")));
+        m_HeadTexture = new Texture(ImageIO.read(new File("images\\head.png")));
+        m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOver.png")));
+        m_GameWonTexture = new Texture(ImageIO.read(new File("images\\GameWon.png")));
+        m_GetReadyTexture = new Texture(ImageIO.read(new File("images\\GetReady.png")));
+        m_Player1DiedTexture = new Texture(ImageIO.read(new File("images\\Player1Died.png")));
+        m_Player2DiedTexture = new Texture(ImageIO.read(new File("images\\Player2Died.png")));
+        m_BothPlayersDiedTexture = new Texture(ImageIO.read(new File("images\\BothSnakesDied.png")));
+        m_LevelCompleteTexture = new Texture(ImageIO.read(new File("images\\LevelComplete.png")));
+        m_NumberFont = new NumberFont();
 
         Vector2i minBounds = new Vector2i(0, 0);
         Vector2i maxBounds = new Vector2i(GameField.WIDTH - 1, GameField.HEIGHT - 1);
 
         m_Snakes = new Snake[m_Mode == Mode.TWO_PLAYERS ? 2 : 1];
-        m_Snakes[0] = new Snake(m_GameField.getPlayer1Start(), Snake.Direction.Right, minBounds, maxBounds);
+        m_Snakes[0] = new Snake(Snake.Direction.Right, minBounds, maxBounds);
         if (m_Mode == Mode.TWO_PLAYERS) {
-            m_Snakes[1] = new Snake(m_GameField.getPlayer2Start(), Snake.Direction.Left, minBounds, maxBounds);
+            m_Snakes[1] = new Snake(Snake.Direction.Left, minBounds, maxBounds);
         }
     }
 
     @Override
-    public void close() {
+    public void freeNativeResources() {
         for (int i = 0; i < s_NumApples; ++i) {
-            m_AppleTextures[i].delete();
+            m_AppleTextures[i].freeNativeResource();
         }
-        m_WallTexture.delete();
-        m_DotTexture.delete();
-        m_HeadTexture.delete();
-        m_GameOverTexture.delete();
-        m_GameWonTexture.delete();
-        m_GetReadyTexture.delete();
-        m_Player1DiedTexture.delete();
-        m_Player2DiedTexture.delete();
-        m_BothPlayersDiedTexture.delete();
-        m_LevelCompleteTexture.delete();
-        m_PowerUpTexture.delete();
+        for (int i = 0; i < GameField.s_NumPowerUps; ++i) {
+            m_PowerUpTextures[i].freeNativeResource();
+        }
+        m_WallTexture.freeNativeResource();
+        m_DotTexture.freeNativeResource();
+        m_HeadTexture.freeNativeResource();
+        m_GameOverTexture.freeNativeResource();
+        m_GameWonTexture.freeNativeResource();
+        m_GetReadyTexture.freeNativeResource();
+        m_Player1DiedTexture.freeNativeResource();
+        m_Player2DiedTexture.freeNativeResource();
+        m_BothPlayersDiedTexture.freeNativeResource();
+        m_LevelCompleteTexture.freeNativeResource();
+        m_NumberFont.freeNativeResource();
     }
 
     @Override
-    public void reset(long nowMs) throws IOException {
-        GameFieldFile file = new GameFieldFile(makeLevelFileName(), m_Mode == Mode.TWO_PLAYERS);
-        m_GameField = file.getGameField();
+    public void loadFirstLevel(long nowMs) throws IOException {
+        m_CurrentLevel = 0;
+        loadLevelFile(m_CurrentLevel);
+        resetForNewLevel(nowMs);
+    }
 
-        m_SnakeMovementTimeoutMs = s_MaxSnakeSpeedTimeoutMs - (s_SnakeSpeedLevelAdjustment * m_CurrentLevel);
-
-        for (var snake : m_Snakes) {
-            snake.reset();
+    @Override
+    public void loadNextLevel(long nowMs) throws IOException {
+        if (m_CurrentLevel < s_NumLevels - 1) {
+            ++m_CurrentLevel;
         }
+        loadLevelFile(m_CurrentLevel);
+        resetForNewLevel(nowMs);
+    }
 
+    @Override
+    public void resetForNewLevel(long nowMs) {
+        m_SnakeMovementTimeoutMs = s_MaxSnakeSpeedTimeoutMs - (s_SnakeSpeedLevelAdjustment * m_CurrentLevel);
         m_GameField.setCell(chooseRandomEmptyCell(), GameField.Cell.NUM_1);
+        for (var snake : m_Snakes) {
+            snake.resetToInitialState();
+        }
+    }
+
+    @Override
+    public void resetAfterSnakeDeath(long nowMs) {
+        m_GameField.resetToInitialState();
+        m_GameField.setCell(chooseRandomEmptyCell(), GameField.Cell.NUM_1);
+        for (var snake : m_Snakes) {
+            snake.resetToInitialState();
+        }
     }
 
     @Override
@@ -144,20 +180,8 @@ public class GameWorld implements IGameWorld {
     }
 
     @Override
-    public GameField getGameField() {
-        return m_GameField;
-    }
-
-    @Override
     public Snake[] getSnakes() {
         return m_Snakes;
-    }
-
-    @Override
-    public void incrementLevel() {
-        if (m_CurrentLevel < s_NumLevels - 1) {
-            ++m_CurrentLevel;
-        }
     }
 
     @Override
@@ -165,6 +189,15 @@ public class GameWorld implements IGameWorld {
         stop(nowMs);
         scheduleSnakeMovement(nowMs);
         scheduleSpawnPowerUp(nowMs, s_PowerUpInitialTimeoutMs);
+    }
+
+    private void loadLevelFile(int level) throws IOException {
+        GameFieldFile file = new GameFieldFile(makeLevelFileName(level), m_Mode == Mode.TWO_PLAYERS);
+        m_GameField = file.getGameField();
+        m_Snakes[0].setStartPosition(m_GameField.getPlayer1Start());
+        if (m_Mode == Mode.TWO_PLAYERS) {
+            m_Snakes[1].setStartPosition(m_GameField.getPlayer2Start());
+        }
     }
 
     private void scheduleSnakeMovement(long nowMs) {
@@ -204,7 +237,7 @@ public class GameWorld implements IGameWorld {
         final GameField.Cell[] powerUps = {
                 GameField.Cell.DEC_LENGTH, GameField.Cell.INC_SPEED, GameField.Cell.DEC_SPEED,
                 GameField.Cell.INC_LIVES, GameField.Cell.DEC_LIVES, GameField.Cell.INC_POINTS,
-                GameField.Cell.DEC_POINTS, GameField.Cell.BERSERK, GameField.Cell.RANDOM
+                GameField.Cell.DEC_POINTS, GameField.Cell.RANDOM
         };
 
         m_PowerUpCell = chooseRandomEmptyCell();
@@ -232,6 +265,7 @@ public class GameWorld implements IGameWorld {
 
     private void removeExpirePowerUpTimeout() {
         if (m_ExpirePowerUpTimeoutId != 0) {
+            m_GameField.setCell(m_PowerUpCell, GameField.Cell.EMPTY);
             m_AppStateContext.removeTimeout(m_ExpirePowerUpTimeoutId);
             m_ExpirePowerUpTimeoutId = 0;
         }
@@ -289,8 +323,29 @@ public class GameWorld implements IGameWorld {
                     case NUM_9:
                         drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_AppleTextures[8]);
                         break;
-                    default:
-                        drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTexture);
+                    case DEC_LENGTH:
+                        drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[0]);
+                        break;
+                    case INC_SPEED:
+                        drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[1]);
+                        break;
+                    case DEC_SPEED:
+                        drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[2]);
+                        break;
+                    case INC_LIVES:
+                        drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[3]);
+                        break;
+                    case DEC_LIVES:
+                        drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[4]);
+                        break;
+                    case INC_POINTS:
+                        drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[5]);
+                        break;
+                    case DEC_POINTS:
+                        drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[6]);
+                        break;
+                    case RANDOM:
+                        drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[7]);
                         break;
                 }
             }
@@ -310,7 +365,15 @@ public class GameWorld implements IGameWorld {
 
     @Override
     public void draw2d(long nowMs) {
-        // TODO
+        float y = m_AppStateContext.getWindowHeight() - NumberFont.s_FrameHeight;
+        m_NumberFont.drawNumber(m_Snakes[0].getNumLives(), 0.0f, y);
+        m_NumberFont.drawNumber(m_Snakes[0].getPoints(), 100.0f, y);
+        if (m_Snakes.length > 1) {
+            float width = m_NumberFont.calculateWidth(m_Snakes[1].getNumLives());
+            m_NumberFont.drawNumber(m_Snakes[1].getNumLives(), m_AppStateContext.getWindowWidth() - width, y);
+            width = m_NumberFont.calculateWidth(m_Snakes[1].getPoints()) + (2.0f * width);
+            m_NumberFont.drawNumber(m_Snakes[1].getPoints(), m_AppStateContext.getWindowWidth() - width, y);
+        }
     }
 
     @Override
@@ -418,7 +481,7 @@ public class GameWorld implements IGameWorld {
             }
             return new CollisionResult(false, 0);
         }
-        else if (player2Colliding) {
+        if (player2Colliding) {
             return new CollisionResult(false, 1);
         }
         return new CollisionResult();
@@ -433,15 +496,25 @@ public class GameWorld implements IGameWorld {
             }
             return new CollisionResult(false, 0);
         }
-        else if (player2Colliding) {
+        if (player2Colliding) {
             return new CollisionResult(false, 1);
         }
         return new CollisionResult();
     }
 
     private CollisionResult collideSnakesWithEachOther() {
-        if (m_Snakes.length > 1 && m_Snakes[0].isCollidingWith(m_Snakes[1])) {
-            return new CollisionResult(true, -1);
+        if (m_Snakes.length > 1) {
+            boolean player1Colliding = m_Snakes[0].isCollidingWith(m_Snakes[1]);
+            boolean player2Colliding = m_Snakes[1].isCollidingWith(m_Snakes[0]);
+            if (player1Colliding) {
+                if (player2Colliding) {
+                    return new CollisionResult(true, -1);
+                }
+                return new CollisionResult(false, 0);
+            }
+            if (player2Colliding) {
+                return new CollisionResult(false, 1);
+            }
         }
         return new CollisionResult();
     }
@@ -473,15 +546,11 @@ public class GameWorld implements IGameWorld {
                 m_SnakeMovementTimeoutMs = Math.min(s_MaxSnakeSpeedTimeoutMs, m_SnakeMovementTimeoutMs + s_SnakeSpeedPowerUpAdjustment);
                 start(nowMs);
                 break;
-            case BERSERK:
-                // TODO
-                break;
             case RANDOM: {
                 final GameField.Cell[] powerUps = {
-                        GameField.Cell.DEC_LENGTH, GameField.Cell.BERSERK,
-                        GameField.Cell.INC_SPEED, GameField.Cell.DEC_SPEED,
-                        GameField.Cell.INC_LIVES, GameField.Cell.DEC_LIVES,
-                        GameField.Cell.INC_POINTS, GameField.Cell.DEC_POINTS
+                        GameField.Cell.DEC_LENGTH, GameField.Cell.INC_SPEED, GameField.Cell.DEC_SPEED,
+                        GameField.Cell.INC_LIVES, GameField.Cell.DEC_LIVES, GameField.Cell.INC_POINTS,
+                        GameField.Cell.DEC_POINTS
                 };
                 collectPowerUp(nowMs, powerUps[m_Rng.nextInt(powerUps.length)], snake);
                 break;
@@ -538,7 +607,6 @@ public class GameWorld implements IGameWorld {
             case DEC_LIVES:
             case INC_POINTS:
             case DEC_POINTS:
-            case BERSERK:
             case RANDOM:
                 removeExpirePowerUpTimeout();
                 scheduleSpawnPowerUp(System.currentTimeMillis(), s_PowerUpSubsequentTimeoutMs);
@@ -548,8 +616,8 @@ public class GameWorld implements IGameWorld {
         }
     }
 
-    private String makeLevelFileName() {
-        return String.format("Level%02d.txt", m_CurrentLevel);
+    private String makeLevelFileName(int level) {
+        return String.format("levels\\Level%02d.txt", level);
     }
 
     private void drawTexturedQuad(double x, double y, double w, double h, double u0, double v0, double u1, double v1, Texture texture) {

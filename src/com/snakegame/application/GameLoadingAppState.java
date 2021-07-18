@@ -8,7 +8,7 @@
 //
 // This implementation is Copyright (c) 2021, Damian Coventry
 // All rights reserved
-// Designed and implemented for Massey University course 159.261 Game Programming (Assignment 1)
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
 //
 
 package com.snakegame.application;
@@ -23,7 +23,7 @@ public class GameLoadingAppState implements IAppState {
     private final IGameWorld.Mode m_Mode;
     private IGameWorld m_GameWorld;
 
-    public GameLoadingAppState(IAppStateContext context, IGameWorld.Mode mode) throws IOException {
+    public GameLoadingAppState(IAppStateContext context, IGameWorld.Mode mode) {
         m_AppStateContext = context;
         m_Mode = mode;
     }
@@ -31,6 +31,7 @@ public class GameLoadingAppState implements IAppState {
     @Override
     public void begin(long nowMs) throws IOException {
         m_GameWorld = new GameWorld(m_AppStateContext, m_Mode);
+        m_GameWorld.loadFirstLevel(nowMs);
     }
 
     @Override

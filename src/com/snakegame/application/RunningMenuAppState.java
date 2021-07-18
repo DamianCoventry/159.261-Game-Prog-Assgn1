@@ -8,13 +8,12 @@
 //
 // This implementation is Copyright (c) 2021, Damian Coventry
 // All rights reserved
-// Designed and implemented for Massey University course 159.261 Game Programming (Assignment 1)
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
 //
 
 package com.snakegame.application;
 
 import com.snakegame.client.Texture;
-import com.snakegame.rules.GameWorld;
 import com.snakegame.rules.IGameWorld;
 
 import javax.imageio.ImageIO;
@@ -26,9 +25,9 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class RunningMenuAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
-    private Texture m_FrontMenu;
-    private Texture m_HelpMenu;
-    private enum Page { FRONT, HELP }
+    private Texture m_MainMenuTexture;
+    private Texture m_HelpMenuTexture;
+    private enum Page {MAIN, HELP }
     private Page m_Page;
 
     public RunningMenuAppState(IAppStateContext context) {
@@ -37,18 +36,18 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_FrontMenu = new Texture(ImageIO.read(new File("FrontMenu.png")));
-        m_HelpMenu = new Texture(ImageIO.read(new File("HelpMenu.png")));
-        m_Page = Page.FRONT;
+        m_MainMenuTexture = new Texture(ImageIO.read(new File("images\\FrontMenu.png")));
+        m_HelpMenuTexture = new Texture(ImageIO.read(new File("images\\HelpMenu.png")));
+        m_Page = Page.MAIN;
         glColor4d(1.0, 1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
-        setPage(Page.FRONT);
+        setPage(Page.MAIN);
     }
 
     @Override
     public void end(long nowMs) {
-        m_FrontMenu.delete();
-        m_HelpMenu.delete();
+        m_MainMenuTexture.freeNativeResource();
+        m_HelpMenuTexture.freeNativeResource();
     }
 
     @Override
@@ -59,7 +58,7 @@ public class RunningMenuAppState implements IAppState {
 
         if (m_Page == Page.HELP) {
             if (key == GLFW_KEY_ESCAPE) {
-                setPage(Page.FRONT);
+                setPage(Page.MAIN);
             }
             return;
         }
@@ -104,16 +103,16 @@ public class RunningMenuAppState implements IAppState {
     private void setPage(Page page) {
         m_Page = page;
         switch (m_Page) {
-            case FRONT:
-                glBindTexture(GL_TEXTURE_2D, m_FrontMenu.getId());
+            case MAIN:
+                glBindTexture(GL_TEXTURE_2D, m_MainMenuTexture.getId());
                 break;
             case HELP:
-                glBindTexture(GL_TEXTURE_2D, m_HelpMenu.getId());
+                glBindTexture(GL_TEXTURE_2D, m_HelpMenuTexture.getId());
                 break;
         }
     }
 
-    private void startNewGame(IGameWorld.Mode mode) throws IOException {
+    private void startNewGame(IGameWorld.Mode mode) {
         m_AppStateContext.changeState(new GameLoadingAppState(m_AppStateContext, mode));
     }
 }

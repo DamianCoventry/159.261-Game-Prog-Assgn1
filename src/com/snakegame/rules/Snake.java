@@ -8,13 +8,12 @@
 //
 // This implementation is Copyright (c) 2021, Damian Coventry
 // All rights reserved
-// Designed and implemented for Massey University course 159.261 Game Programming (Assignment 1)
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
 //
 
 package com.snakegame.rules;
 
 import java.util.LinkedList;
-import java.util.Random;
 
 public class Snake {
     private static final int s_NumStartingLives = 3;
@@ -23,13 +22,14 @@ public class Snake {
     private static final float s_BodyPartScale = 1.5f;
     private static final int s_NumBodyPartsToRemove = 3;
     private static final long s_PowerUpPointsBonus = 1000;
+    private static final long s_PowerUpPoints = 100;
 
     private final LinkedList<Vector2i> m_BodyParts;
     private final Vector2i m_MinBounds;
     private final Vector2i m_MaxBounds;
-    private final Vector2i m_StartPosition;
     private final Direction m_StartDirection;
 
+    private Vector2i m_StartPosition = null;
     private Direction m_CurrentDirection;
     private Vector2i m_LastDirectionChangeCell;
     private int m_NumLives;
@@ -37,18 +37,23 @@ public class Snake {
     private int m_RemoveBodyParts;
     private long m_Points;
 
-    public Snake(Vector2i startPosition, Direction startDirection, Vector2i minBounds, Vector2i maxBounds) {
-        m_StartPosition = startPosition;
+    public Snake(Direction startDirection, Vector2i minBounds, Vector2i maxBounds) {
         m_StartDirection = startDirection;
-        m_LastDirectionChangeCell = startPosition.createCopy();
         m_BodyParts = new LinkedList<>();
         m_MinBounds = minBounds;
         m_MaxBounds = maxBounds;
         m_NumLives = s_NumStartingLives - 1; // Allocate a life immediately
-        reset();
     }
 
-    public void reset() {
+    public void setStartPosition(Vector2i startPosition) {
+        m_StartPosition = startPosition;
+        m_LastDirectionChangeCell = startPosition.createCopy();
+    }
+
+    public void resetToInitialState() {
+        if (m_StartPosition == null) {
+            throw new RuntimeException("Start position hasn't been set");
+        }
         m_AddBodyParts = m_RemoveBodyParts = 0;
         m_CurrentDirection = m_StartDirection;
 
@@ -98,15 +103,42 @@ public class Snake {
 
     public void collectPowerUp(GameField.Cell powerUp) {
         switch (powerUp) {
-            case NUM_1: m_AddBodyParts = (int)s_BodyPartScale; break;
-            case NUM_2: m_AddBodyParts = (int)(2.0f * s_BodyPartScale); break;
-            case NUM_3: m_AddBodyParts = (int)(3.0f * s_BodyPartScale); break;
-            case NUM_4: m_AddBodyParts = (int)(4.0f * s_BodyPartScale); break;
-            case NUM_5: m_AddBodyParts = (int)(5.0f * s_BodyPartScale); break;
-            case NUM_6: m_AddBodyParts = (int)(6.0f * s_BodyPartScale); break;
-            case NUM_7: m_AddBodyParts = (int)(7.0f * s_BodyPartScale); break;
-            case NUM_8: m_AddBodyParts = (int)(8.0f * s_BodyPartScale); break;
-            case NUM_9: m_AddBodyParts = (int)(9.0f * s_BodyPartScale); break;
+            case NUM_1:
+                m_AddBodyParts = (int) s_BodyPartScale;
+                incrementPoints(s_PowerUpPoints);
+                break;
+            case NUM_2:
+                m_AddBodyParts = (int) (2.0f * s_BodyPartScale);
+                incrementPoints(2 * s_PowerUpPoints);
+                break;
+            case NUM_3:
+                m_AddBodyParts = (int) (3.0f * s_BodyPartScale);
+                incrementPoints(3 * s_PowerUpPoints);
+                break;
+            case NUM_4:
+                m_AddBodyParts = (int) (4.0f * s_BodyPartScale);
+                incrementPoints(4 * s_PowerUpPoints);
+                break;
+            case NUM_5:
+                m_AddBodyParts = (int) (5.0f * s_BodyPartScale);
+                incrementPoints(5 * s_PowerUpPoints);
+                break;
+            case NUM_6:
+                m_AddBodyParts = (int) (6.0f * s_BodyPartScale);
+                incrementPoints(6 * s_PowerUpPoints);
+                break;
+            case NUM_7:
+                m_AddBodyParts = (int) (7.0f * s_BodyPartScale);
+                incrementPoints(7 * s_PowerUpPoints);
+                break;
+            case NUM_8:
+                m_AddBodyParts = (int) (8.0f * s_BodyPartScale);
+                incrementPoints(8 * s_PowerUpPoints);
+                break;
+            case NUM_9:
+                m_AddBodyParts = (int) (9.0f * s_BodyPartScale);
+                incrementPoints(9 * s_PowerUpPoints);
+                break;
             case DEC_LENGTH:
                 if (m_BodyParts.size() > s_MinBodyParts) {
                     m_RemoveBodyParts = Math.min(m_BodyParts.size() - s_MinBodyParts, s_NumBodyPartsToRemove);
@@ -155,11 +187,9 @@ public class Snake {
     }
 
     public boolean isCollidingWith(Snake otherSnake) {
-        for (var me : m_BodyParts) {
-            for (var other : otherSnake.m_BodyParts) {
-                if (me.equals(other)) {
-                    return true;
-                }
+        for (var other : otherSnake.m_BodyParts) {
+            if (m_BodyParts.getFirst().equals(other)) {
+                return true;
             }
         }
         return false;

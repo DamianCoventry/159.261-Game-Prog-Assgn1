@@ -8,7 +8,7 @@
 //
 // This implementation is Copyright (c) 2021, Damian Coventry
 // All rights reserved
-// Designed and implemented for Massey University course 159.261 Game Programming (Assignment 1)
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
 //
 
 package com.snakegame.application;
@@ -31,7 +31,7 @@ public class GetReadyAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_GameWorld.reset(nowMs);
+        m_GameWorld.resetAfterSnakeDeath(nowMs);
         m_AppStateContext.addTimeout(2000, (callCount) -> {
             m_AppStateContext.changeState(new PlayingGameAppState(m_AppStateContext, m_GameWorld));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;

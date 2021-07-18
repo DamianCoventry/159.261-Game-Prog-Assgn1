@@ -8,7 +8,7 @@
 //
 // This implementation is Copyright (c) 2021, Damian Coventry
 // All rights reserved
-// Designed and implemented for Massey University course 159.261 Game Programming (Assignment 1)
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
 //
 
 package com.snakegame.rules;
@@ -52,8 +52,19 @@ public class GameField {
         m_Player2Start = start;
     }
 
-    public enum Cell { EMPTY, WALL, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7, NUM_8, NUM_9, DEC_LENGTH,
-        INC_SPEED, DEC_SPEED, INC_LIVES, DEC_LIVES, INC_POINTS, DEC_POINTS, BERSERK, RANDOM
+    public void resetToInitialState() {
+        for (int i = 0; i < GameField.TOTAL_CELLS; ++i) {
+            if (m_Cells[i] != Cell.EMPTY && m_Cells[i] != Cell.WALL) {
+                m_Cells[i] = Cell.EMPTY;
+            }
+        }
+    }
+
+    public static int s_NumPowerUps = 8;
+
+    public enum Cell {
+        EMPTY, WALL, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7, NUM_8, NUM_9, DEC_LENGTH,
+        INC_SPEED, DEC_SPEED, INC_LIVES, DEC_LIVES, INC_POINTS, DEC_POINTS, RANDOM
     }
 
     public void setCell(Vector2i position, Cell cell) {

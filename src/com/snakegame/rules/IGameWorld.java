@@ -8,7 +8,7 @@
 //
 // This implementation is Copyright (c) 2021, Damian Coventry
 // All rights reserved
-// Designed and implemented for Massey University course 159.261 Game Programming (Assignment 1)
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
 //
 
 package com.snakegame.rules;
@@ -18,15 +18,17 @@ import com.snakegame.client.Texture;
 import java.io.IOException;
 
 public interface IGameWorld {
-    void close();
-    void reset(long nowMs) throws IOException;
+    void freeNativeResources();
 
+    void loadFirstLevel(long nowMs) throws IOException;
+    void loadNextLevel(long nowMs) throws IOException;
+    void resetForNewLevel(long nowMs) throws IOException;
+    void resetAfterSnakeDeath(long nowMs);
     boolean isLastLevel();
 
     enum Mode { SINGLE_PLAYER, TWO_PLAYERS}
     Mode getMode();
 
-    GameField getGameField();
     Snake[] getSnakes();
     Texture getGameOverTexture();
     Texture getGameWonTexture();
@@ -39,7 +41,6 @@ public interface IGameWorld {
     enum SubtractSnakeResult {SNAKE_AVAILABLE, NO_SNAKES_REMAIN}
     SubtractSnakeResult subtractSnake(int player);
 
-    void incrementLevel();
     void start(long nowMs);
     void stop(long nowMs);
     void think(long nowMs) throws IOException;

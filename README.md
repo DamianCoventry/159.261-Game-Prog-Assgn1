@@ -1,4 +1,4 @@
-# 159.261-Game-Prog-Assgn1
+# 159.261 Game Programming (Assignment 1)
 ## Graphics sources
 https://icon-icons.com/icon/snake/100855
 
@@ -11,19 +11,18 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 ### Gameplay
 - ~~Menu system~~
 - ~~Game over/won states~~
-- ~~"Snake collided" state~~
-- ~~"Get ready" state~~
+- ~~Snake collided state~~
+- ~~Get ready state~~
 - ~~Two players~~
 - ~~Snake lives~~
-- Power ups
+- ~~Power ups~~
     - ~~Numbers~~
     - ~~Shorten Length~~
     - ~~Speed +/-~~
     - ~~Lives +/-~~
     - ~~Points +/-~~
-    - Berserk
     - ~~Random~~
-- Player status bars
+- ~~Player status bars~~
 - Dynamic level geometry
 - Secret levels
 

@@ -8,7 +8,7 @@
 //
 // This implementation is Copyright (c) 2021, Damian Coventry
 // All rights reserved
-// Designed and implemented for Massey University course 159.261 Game Programming (Assignment 1)
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
 //
 
 package com.snakegame.application;
@@ -36,7 +36,11 @@ public class LevelCompleteAppState implements IAppState {
                 m_AppStateContext.changeState(new GameWonAppState(m_AppStateContext, m_GameWorld));
             }
             else {
-                m_GameWorld.incrementLevel();
+                try {
+                    m_GameWorld.loadNextLevel(nowMs);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld));
             }
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;

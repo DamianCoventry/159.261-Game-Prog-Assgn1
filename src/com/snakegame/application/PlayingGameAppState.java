@@ -8,7 +8,7 @@
 //
 // This implementation is Copyright (c) 2021, Damian Coventry
 // All rights reserved
-// Designed and implemented for Massey University course 159.261 Game Programming (Assignment 1)
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
 //
 
 package com.snakegame.application;
@@ -46,7 +46,7 @@ public class PlayingGameAppState implements IAppState {
         }
         if (key == GLFW_KEY_ESCAPE) {
             // TODO: Need an "are you sure?" question here.
-            m_GameWorld.close();
+            m_GameWorld.freeNativeResources();
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
         }
         
