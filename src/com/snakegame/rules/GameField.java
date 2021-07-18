@@ -14,20 +14,67 @@
 package com.snakegame.rules;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class GameField {
     public static final int WIDTH = 60;
     public static final int HEIGHT = 40;
     public static final int TOTAL_CELLS = 2400;
 
-    private final Cell[] m_Cells;
+    private static class CellInfo {
+        private CellType m_CellType;
+        private PowerUp m_PowerUp;
+        private Number m_Number;
+        public CellInfo(CellType cellType) {
+            m_CellType = cellType;
+            m_PowerUp = null;
+            m_Number = null;
+        }
+        public boolean isEmpty() {
+            return m_CellType == CellType.EMPTY;
+        }
+        public PowerUp getPowerUp() {
+            return m_PowerUp;
+        }
+        public Number getNumber() {
+            return m_Number;
+        }
+        public void setPowerUp(PowerUp powerUp) {
+            if (m_CellType == CellType.EMPTY) {
+                m_CellType = CellType.POWER_UP;
+                m_PowerUp = powerUp;
+            }
+        }
+        public void clearPowerUp() {
+            if (m_CellType == CellType.POWER_UP) {
+                m_CellType = CellType.EMPTY;
+                m_PowerUp = null;
+            }
+        }
+        public void setNumber(Number Number) {
+            if (m_CellType == CellType.EMPTY) {
+                m_CellType = CellType.NUMBER;
+                m_Number = Number;
+            }
+        }
+        public void clearNumber() {
+            if (m_CellType == CellType.NUMBER) {
+                m_CellType = CellType.EMPTY;
+                m_Number = null;
+            }
+        }
+    }
+    
+    private final CellInfo[] m_CellInfo;
     private Vector2i m_Player1Start;
     private Vector2i m_Player2Start;
 
     public GameField() {
-        m_Cells = new Cell[TOTAL_CELLS];
+        m_CellInfo = new CellInfo[TOTAL_CELLS];
         reset();
+    }
+
+    public enum CellType {
+        EMPTY, WALL, POWER_UP, NUMBER
     }
 
     public Vector2i getPlayer1Start() {
@@ -37,10 +84,6 @@ public class GameField {
         return m_Player1Start;
     }
 
-    public void setPlayer1Start(Vector2i start) {
-        m_Player1Start = start;
-    }
-
     public Vector2i getPlayer2Start() {
         if (m_Player2Start == null) {
             throw new RuntimeException("No player 2 start position has been set");
@@ -48,28 +91,46 @@ public class GameField {
         return m_Player2Start;
     }
 
-    public void setPlayer2Start(Vector2i start) {
-        m_Player2Start = start;
-    }
-
-    public void resetToInitialState() {
+    public void clearPowerUpsAndNumbers() {
         for (int i = 0; i < GameField.TOTAL_CELLS; ++i) {
-            if (m_Cells[i] != Cell.EMPTY && m_Cells[i] != Cell.WALL) {
-                m_Cells[i] = Cell.EMPTY;
-            }
+            m_CellInfo[i].clearPowerUp();
+            m_CellInfo[i].clearNumber();
         }
     }
 
-    public static int s_NumPowerUps = 8;
-
-    public enum Cell {
-        EMPTY, WALL, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7, NUM_8, NUM_9, DEC_LENGTH,
-        INC_SPEED, DEC_SPEED, INC_LIVES, DEC_LIVES, INC_POINTS, DEC_POINTS, RANDOM
+    public void insertPowerUp(PowerUp powerUp) {
+        if (powerUp.getLocation().m_X >= 0 &&
+            powerUp.getLocation().m_X < WIDTH &&
+            powerUp.getLocation().m_Y >= 0 &&
+            powerUp.getLocation().m_Y < HEIGHT) {
+            m_CellInfo[powerUp.getLocation().m_Y * WIDTH + powerUp.getLocation().m_X].setPowerUp(powerUp);
+        }
     }
 
-    public void setCell(Vector2i position, Cell cell) {
-        if (position.m_X >= 0 && position.m_X < WIDTH && position.m_Y >= 0 && position.m_Y < HEIGHT) {
-            m_Cells[position.m_Y * WIDTH + position.m_X] = cell;
+    public void removePowerUp(PowerUp powerUp) {
+        if (powerUp.getLocation().m_X >= 0 &&
+                powerUp.getLocation().m_X < WIDTH &&
+                powerUp.getLocation().m_Y >= 0 &&
+                powerUp.getLocation().m_Y < HEIGHT) {
+            m_CellInfo[powerUp.getLocation().m_Y * WIDTH + powerUp.getLocation().m_X].clearPowerUp();
+        }
+    }
+
+    public void insertNumber(Number number) {
+        if (number.getLocation().m_X >= 0 &&
+            number.getLocation().m_X < WIDTH &&
+            number.getLocation().m_Y >= 0 &&
+            number.getLocation().m_Y < HEIGHT) {
+            m_CellInfo[number.getLocation().m_Y * WIDTH + number.getLocation().m_X].setNumber(number);
+        }
+    }
+
+    public void removeNumber(Number number) {
+        if (number.getLocation().m_X >= 0 &&
+                number.getLocation().m_X < WIDTH &&
+                number.getLocation().m_Y >= 0 &&
+                number.getLocation().m_Y < HEIGHT) {
+            m_CellInfo[number.getLocation().m_Y * WIDTH + number.getLocation().m_X].clearNumber();
         }
     }
 
@@ -82,13 +143,18 @@ public class GameField {
         for (int i = 0; i < GameField.TOTAL_CELLS; ++i) {
             switch (copy.charAt(i)) {
                 case 'w':
-                    m_Cells[i] = Cell.WALL;
+                    m_CellInfo[i] = new CellInfo(CellType.WALL);
                     break;
                 case '1':
                     m_Player1Start = new Vector2i(i % WIDTH, i / WIDTH);
+                    m_CellInfo[i] = new CellInfo(CellType.EMPTY);
                     break;
                 case '2':
                     m_Player2Start = new Vector2i(i % WIDTH, i / WIDTH);
+                    m_CellInfo[i] = new CellInfo(CellType.EMPTY);
+                    break;
+                default:
+                    m_CellInfo[i] = new CellInfo(CellType.EMPTY);
                     break;
             }
         }
@@ -103,19 +169,35 @@ public class GameField {
     public void reset() {
         m_Player1Start = null;
         m_Player2Start = null;
-        Arrays.fill(m_Cells, Cell.EMPTY);
+        for (int i = 0; i < GameField.TOTAL_CELLS; ++i) {
+            m_CellInfo[i] = new CellInfo(CellType.EMPTY);
+        }
         setWallBorder();
     }
 
-    public Cell getCell(int x, int y) {
+    public PowerUp getPowerUp(int x, int y) {
         if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
-            return m_Cells[y * WIDTH + x];
+            return m_CellInfo[y * WIDTH + x].getPowerUp();
         }
         throw new RuntimeException("Invalid coordinates");
     }
 
-    public Cell getCell(Vector2i position) {
-        return getCell(position.m_X, position.m_Y);
+    public Number getNumber(int x, int y) {
+        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+            return m_CellInfo[y * WIDTH + x].getNumber();
+        }
+        throw new RuntimeException("Invalid coordinates");
+    }
+
+    public CellType getCellType(int x, int y) {
+        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+            return m_CellInfo[y * WIDTH + x].m_CellType;
+        }
+        throw new RuntimeException("Invalid coordinates");
+    }
+
+    public CellType getCellType(Vector2i position) {
+        return getCellType(position.m_X, position.m_Y);
     }
 
     public void setWallBorder() {
@@ -128,7 +210,7 @@ public class GameField {
     public void setVerticalWall(int x) {
         if (x >= 0 && x < WIDTH) {
             for (int y = 0; y < HEIGHT; ++y) {
-                m_Cells[y * WIDTH + x] = Cell.WALL;
+                m_CellInfo[y * WIDTH + x] = new CellInfo(CellType.WALL);
             }
         }
     }
@@ -136,7 +218,7 @@ public class GameField {
     public void setHorizontalWall(int y) {
         if (y >= 0 && y < HEIGHT) {
             for (int x = 0; x < WIDTH; ++x) {
-                m_Cells[y * WIDTH + x] = Cell.WALL;
+                m_CellInfo[y * WIDTH + x] = new CellInfo(CellType.WALL);
             }
         }
     }
@@ -145,7 +227,7 @@ public class GameField {
         ArrayList<Vector2i> emptyCells = new ArrayList<>(GameField.WIDTH * GameField.HEIGHT);
         for (int x = 0; x < WIDTH; ++x) {
             for (int y = 0; y < HEIGHT; ++y) {
-                if (m_Cells[y * WIDTH + x] == Cell.EMPTY) {
+                if (m_CellInfo[y * WIDTH + x].isEmpty()) {
                     emptyCells.add(new Vector2i(x, y));
                 }
             }

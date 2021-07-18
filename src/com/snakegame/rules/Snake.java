@@ -101,44 +101,49 @@ public class Snake {
         }
     }
 
-    public void collectPowerUp(GameField.Cell powerUp) {
-        switch (powerUp) {
+    public void awardNumber(Number.Type numberType) {
+        switch (numberType) {
             case NUM_1:
-                m_AddBodyParts = (int) s_BodyPartScale;
+                m_AddBodyParts = (int)s_BodyPartScale;
                 incrementPoints(s_PowerUpPoints);
                 break;
             case NUM_2:
-                m_AddBodyParts = (int) (2.0f * s_BodyPartScale);
+                m_AddBodyParts = (int)(2.0f * s_BodyPartScale);
                 incrementPoints(2 * s_PowerUpPoints);
                 break;
             case NUM_3:
-                m_AddBodyParts = (int) (3.0f * s_BodyPartScale);
+                m_AddBodyParts = (int)(3.0f * s_BodyPartScale);
                 incrementPoints(3 * s_PowerUpPoints);
                 break;
             case NUM_4:
-                m_AddBodyParts = (int) (4.0f * s_BodyPartScale);
+                m_AddBodyParts = (int)(4.0f * s_BodyPartScale);
                 incrementPoints(4 * s_PowerUpPoints);
                 break;
             case NUM_5:
-                m_AddBodyParts = (int) (5.0f * s_BodyPartScale);
+                m_AddBodyParts = (int)(5.0f * s_BodyPartScale);
                 incrementPoints(5 * s_PowerUpPoints);
                 break;
             case NUM_6:
-                m_AddBodyParts = (int) (6.0f * s_BodyPartScale);
+                m_AddBodyParts = (int)(6.0f * s_BodyPartScale);
                 incrementPoints(6 * s_PowerUpPoints);
                 break;
             case NUM_7:
-                m_AddBodyParts = (int) (7.0f * s_BodyPartScale);
+                m_AddBodyParts = (int)(7.0f * s_BodyPartScale);
                 incrementPoints(7 * s_PowerUpPoints);
                 break;
             case NUM_8:
-                m_AddBodyParts = (int) (8.0f * s_BodyPartScale);
+                m_AddBodyParts = (int)(8.0f * s_BodyPartScale);
                 incrementPoints(8 * s_PowerUpPoints);
                 break;
             case NUM_9:
-                m_AddBodyParts = (int) (9.0f * s_BodyPartScale);
+                m_AddBodyParts = (int)(9.0f * s_BodyPartScale);
                 incrementPoints(9 * s_PowerUpPoints);
                 break;
+        }
+    }
+
+    public void awardPowerUp(PowerUp.Type powerUp) {
+        switch (powerUp) {
             case DEC_LENGTH:
                 if (m_BodyParts.size() > s_MinBodyParts) {
                     m_RemoveBodyParts = Math.min(m_BodyParts.size() - s_MinBodyParts, s_NumBodyPartsToRemove);

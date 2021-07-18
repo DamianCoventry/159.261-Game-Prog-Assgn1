@@ -24,11 +24,6 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
     - ~~Random~~
 - ~~Player status bars~~
 - Dynamic level geometry
-- Secret levels
-
-### Level Editor
-- Level files
-- CRUD tools
 
 ### Graphics
 - ~~OpenGL integration~~
