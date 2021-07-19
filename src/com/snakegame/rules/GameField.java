@@ -18,7 +18,7 @@ import java.util.ArrayList;
 public class GameField {
     public static final int WIDTH = 60;
     public static final int HEIGHT = 40;
-    public static final int TOTAL_CELLS = 2400;
+    public static final int TOTAL_CELLS = WIDTH * HEIGHT;
 
     private static class CellInfo {
         private CellType m_CellType;
@@ -32,11 +32,9 @@ public class GameField {
         public boolean isEmpty() {
             return m_CellType == CellType.EMPTY;
         }
+
         public PowerUp getPowerUp() {
             return m_PowerUp;
-        }
-        public Number getNumber() {
-            return m_Number;
         }
         public void setPowerUp(PowerUp powerUp) {
             if (m_CellType == CellType.EMPTY) {
@@ -49,6 +47,10 @@ public class GameField {
                 m_CellType = CellType.EMPTY;
                 m_PowerUp = null;
             }
+        }
+
+        public Number getNumber() {
+            return m_Number;
         }
         public void setNumber(Number Number) {
             if (m_CellType == CellType.EMPTY) {
@@ -70,7 +72,7 @@ public class GameField {
 
     public GameField() {
         m_CellInfo = new CellInfo[TOTAL_CELLS];
-        reset();
+        makeEmptyFieldWithBorderWall();
     }
 
     public enum CellType {
@@ -79,14 +81,14 @@ public class GameField {
 
     public Vector2i getPlayer1Start() {
         if (m_Player1Start == null) {
-            throw new RuntimeException("No player 1 start position has been set");
+            throw new RuntimeException("Player 1 start position has not been set");
         }
         return m_Player1Start;
     }
 
     public Vector2i getPlayer2Start() {
         if (m_Player2Start == null) {
-            throw new RuntimeException("No player 2 start position has been set");
+            throw new RuntimeException("Player 2 start position has not been set");
         }
         return m_Player2Start;
     }
@@ -99,37 +101,25 @@ public class GameField {
     }
 
     public void insertPowerUp(PowerUp powerUp) {
-        if (powerUp.getLocation().m_X >= 0 &&
-            powerUp.getLocation().m_X < WIDTH &&
-            powerUp.getLocation().m_Y >= 0 &&
-            powerUp.getLocation().m_Y < HEIGHT) {
+        if (isValidLocation(powerUp.getLocation())) {
             m_CellInfo[powerUp.getLocation().m_Y * WIDTH + powerUp.getLocation().m_X].setPowerUp(powerUp);
         }
     }
 
     public void removePowerUp(PowerUp powerUp) {
-        if (powerUp.getLocation().m_X >= 0 &&
-                powerUp.getLocation().m_X < WIDTH &&
-                powerUp.getLocation().m_Y >= 0 &&
-                powerUp.getLocation().m_Y < HEIGHT) {
+        if (isValidLocation(powerUp.getLocation())) {
             m_CellInfo[powerUp.getLocation().m_Y * WIDTH + powerUp.getLocation().m_X].clearPowerUp();
         }
     }
 
     public void insertNumber(Number number) {
-        if (number.getLocation().m_X >= 0 &&
-            number.getLocation().m_X < WIDTH &&
-            number.getLocation().m_Y >= 0 &&
-            number.getLocation().m_Y < HEIGHT) {
+        if (isValidLocation(number.getLocation())) {
             m_CellInfo[number.getLocation().m_Y * WIDTH + number.getLocation().m_X].setNumber(number);
         }
     }
 
     public void removeNumber(Number number) {
-        if (number.getLocation().m_X >= 0 &&
-                number.getLocation().m_X < WIDTH &&
-                number.getLocation().m_Y >= 0 &&
-                number.getLocation().m_Y < HEIGHT) {
+        if (isValidLocation(number.getLocation())) {
             m_CellInfo[number.getLocation().m_Y * WIDTH + number.getLocation().m_X].clearNumber();
         }
     }
@@ -138,11 +128,11 @@ public class GameField {
         m_CellInfo[location.m_Y * WIDTH + location.m_X] = new CellInfo(CellType.WALL);
     }
 
-    public void setAllCells(String gameField, boolean checkForPlayer2StartPosition) {
+    public void setAllCells(String gameField, boolean requirePlayer2) {
         if (gameField.length() != GameField.TOTAL_CELLS) {
-            throw new RuntimeException("Invalid game field string");
+            throw new RuntimeException(String.format("Invalid game field supplied (%d characters present, %d required)", gameField.length(), GameField.TOTAL_CELLS));
         }
-        reset();
+        makeEmptyFieldWithBorderWall();
         String copy = gameField.toLowerCase();
         for (int i = 0; i < GameField.TOTAL_CELLS; ++i) {
             switch (copy.charAt(i)) {
@@ -165,12 +155,12 @@ public class GameField {
         if (m_Player1Start == null) {
             throw new RuntimeException("The game field data do not include a player 1 start position");
         }
-        if (checkForPlayer2StartPosition && m_Player2Start == null) {
+        if (requirePlayer2 && m_Player2Start == null) {
             throw new RuntimeException("The game field data do not include a player 2 start position");
         }
     }
 
-    public void reset() {
+    public void makeEmptyFieldWithBorderWall() {
         m_Player1Start = null;
         m_Player2Start = null;
         for (int i = 0; i < GameField.TOTAL_CELLS; ++i) {
@@ -180,21 +170,21 @@ public class GameField {
     }
 
     public PowerUp getPowerUp(int x, int y) {
-        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+        if (isValidLocation(x, y)) {
             return m_CellInfo[y * WIDTH + x].getPowerUp();
         }
         throw new RuntimeException("Invalid coordinates");
     }
 
     public Number getNumber(int x, int y) {
-        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+        if (isValidLocation(x, y)) {
             return m_CellInfo[y * WIDTH + x].getNumber();
         }
         throw new RuntimeException("Invalid coordinates");
     }
 
     public CellType getCellType(int x, int y) {
-        if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+        if (isValidLocation(x, y)) {
             return m_CellInfo[y * WIDTH + x].m_CellType;
         }
         throw new RuntimeException("Invalid coordinates");
@@ -228,7 +218,7 @@ public class GameField {
     }
 
     public ArrayList<Vector2i> getEmptyCells() {
-        ArrayList<Vector2i> emptyCells = new ArrayList<>(GameField.WIDTH * GameField.HEIGHT);
+        ArrayList<Vector2i> emptyCells = new ArrayList<>(TOTAL_CELLS);
         for (int x = 0; x < WIDTH; ++x) {
             for (int y = 0; y < HEIGHT; ++y) {
                 if (m_CellInfo[y * WIDTH + x].isEmpty()) {
@@ -244,5 +234,13 @@ public class GameField {
                 Math.max(0, Math.min(WIDTH - 1, coordinates.m_X)),
                 Math.max(0, Math.min(HEIGHT - 1, coordinates.m_Y))
         );
+    }
+
+    private boolean isValidLocation(Vector2i location) {
+        return isValidLocation(location.m_X, location.m_Y);
+    }
+
+    private boolean isValidLocation(int x, int y) {
+        return x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT;
     }
 }

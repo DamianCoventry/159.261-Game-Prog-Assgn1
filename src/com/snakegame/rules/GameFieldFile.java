@@ -18,31 +18,31 @@ import java.io.*;
 public class GameFieldFile {
     private final GameField m_GameField;
 
-    public GameFieldFile(String fileName, boolean checkForPlayer2StartPosition) throws IOException {
+    public GameFieldFile(String fileName, boolean requirePlayer2) throws IOException {
         m_GameField = new GameField();
         File file = new File(fileName);
-        readGameField(new BufferedReader(new FileReader(file)), checkForPlayer2StartPosition);
+        readGameField(new BufferedReader(new FileReader(file)), requirePlayer2);
     }
 
     public GameField getGameField() {
         return m_GameField;
     }
 
-    private void readGameField(BufferedReader reader, boolean checkForPlayer2StartPosition) throws IOException {
+    private void readGameField(BufferedReader reader, boolean requirePlayer2) throws IOException {
         int count = 0;
         StringBuilder stringBuilder = new StringBuilder();
         String line = reader.readLine();
         while (line != null) {
             if (line.length() != GameField.WIDTH) {
-                throw new RuntimeException("Invalid game field file");
+                throw new RuntimeException(String.format("Invalid game field file (line %d has %d characters, but %d required)", count, line.length(), GameField.WIDTH));
             }
             stringBuilder.insert(0, line);
             ++count;
             line = reader.readLine();
         }
         if (count != GameField.HEIGHT) {
-            throw new RuntimeException("Invalid game field file");
+            throw new RuntimeException(String.format("Invalid game field file (%d lines found, but %d required)", count, GameField.HEIGHT));
         }
-        m_GameField.setAllCells(stringBuilder.toString(), checkForPlayer2StartPosition);
+        m_GameField.setAllCells(stringBuilder.toString(), requirePlayer2);
     }
 }

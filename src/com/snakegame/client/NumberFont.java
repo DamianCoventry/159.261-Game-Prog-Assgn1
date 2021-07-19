@@ -10,6 +10,7 @@ import static org.lwjgl.opengl.GL11.glEnd;
 public class NumberFont {
     public static final float s_FrameWidth = 26.0f;
     public static final float s_FrameHeight = 37.0f;
+    private static final int s_NumDigits = 10;
     private final Texture m_NumberTexture;
     private final Character[] m_Characters;
     
@@ -24,17 +25,17 @@ public class NumberFont {
     
     public NumberFont() throws IOException {
         m_NumberTexture = new Texture(ImageIO.read(new File("images\\Numbers.png")));
-        m_Characters = new Character[10];
+        m_Characters = new Character[s_NumDigits];
         final float deltaU = s_FrameWidth / m_NumberTexture.getWidth();
         final float deltaV = s_FrameHeight / m_NumberTexture.getHeight();
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < s_NumDigits; ++i) {
             m_Characters[i] = new Character(
                     i * deltaU,0.0f,
                     (i * deltaU) + deltaU, deltaV
             );
         }
     }
-    
+
     public void freeNativeResource() {
         m_NumberTexture.freeNativeResource();
     }
@@ -46,7 +47,7 @@ public class NumberFont {
         String text = String.valueOf(number);
         glBegin(GL_QUADS);
         for (int i = 0; i < text.length(); ++i) {
-            int j = text.charAt(i) - '0';
+            int j = text.charAt(i) - '0'; // Convert the character to an index into the m_Characters array
             glTexCoord2d(m_Characters[j].m_U0, m_Characters[j].m_V0); glVertex2d(x, y + s_FrameHeight);
             glTexCoord2d(m_Characters[j].m_U0, m_Characters[j].m_V1); glVertex2d(x , y);
             glTexCoord2d(m_Characters[j].m_U1, m_Characters[j].m_V1); glVertex2d(x + s_FrameWidth, y);

@@ -13,7 +13,7 @@
 
 package com.snakegame.application;
 
-import com.snakegame.rules.IGameWorld;
+import com.snakegame.client.IGameView;
 
 import java.io.IOException;
 
@@ -22,11 +22,11 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class GamePausedAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
-    private final IGameWorld m_GameWorld;
+    private final IGameView m_View;
 
-    public GamePausedAppState(IAppStateContext context, IGameWorld gameWorld) {
+    public GamePausedAppState(IAppStateContext context) {
         m_AppStateContext = context;
-        m_GameWorld = gameWorld;
+        m_View = m_AppStateContext.getView();
     }
 
     @Override
@@ -45,10 +45,10 @@ public class GamePausedAppState implements IAppState {
             return;
         }
         if (key == GLFW_KEY_ESCAPE) {
-            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld, false));
+            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, false));
         }
         else if (key == GLFW_KEY_Q) {
-            m_GameWorld.freeNativeResources();
+            m_View.freeNativeResources();
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
         }
     }
@@ -60,15 +60,17 @@ public class GamePausedAppState implements IAppState {
 
     @Override
     public void draw3d(long nowMs) {
-        m_GameWorld.draw3d(nowMs);
+        m_View.draw3d(nowMs);
     }
 
     @Override
     public void draw2d(long nowMs) {
+        m_View.draw2d(nowMs);
+
         glColor4d(1.0, 1.0, 1.0, 1.0);
-        glBindTexture(GL_TEXTURE_2D, m_GameWorld.getGamePausedTexture().getId());
-        var w = m_GameWorld.getGamePausedTexture().getWidth();
-        var h = m_GameWorld.getGamePausedTexture().getHeight();
+        glBindTexture(GL_TEXTURE_2D, m_View.getGamePausedTexture().getId());
+        var w = m_View.getGamePausedTexture().getWidth();
+        var h = m_View.getGamePausedTexture().getHeight();
         var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
         var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
         glBegin(GL_QUADS);

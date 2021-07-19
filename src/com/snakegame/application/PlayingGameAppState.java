@@ -13,8 +13,8 @@
 
 package com.snakegame.application;
 
-import com.snakegame.rules.IGameWorld;
-import com.snakegame.rules.Snake;
+import com.snakegame.client.IGameView;
+import com.snakegame.rules.*;
 
 import java.io.IOException;
 
@@ -22,21 +22,23 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class PlayingGameAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
-    private final IGameWorld m_GameWorld;
+    private final IGameController m_Controller;
+    private final IGameView m_View;
 
-    public PlayingGameAppState(IAppStateContext context, IGameWorld gameWorld) {
+    public PlayingGameAppState(IAppStateContext context) {
         m_AppStateContext = context;
-        m_GameWorld = gameWorld;
+        m_Controller = m_AppStateContext.getController();
+        m_View = m_AppStateContext.getView();
     }
 
     @Override
     public void begin(long nowMs) {
-        m_GameWorld.start(nowMs);
+        m_Controller.start(nowMs);
     }
 
     @Override
     public void end(long nowMs) {
-        m_GameWorld.stop(nowMs);
+        m_Controller.stop(nowMs);
     }
 
     @Override
@@ -45,15 +47,30 @@ public class PlayingGameAppState implements IAppState {
             return;
         }
         if (key == GLFW_KEY_ESCAPE) {
-            m_AppStateContext.changeState(new GamePausedAppState(m_AppStateContext, m_GameWorld));
+            m_AppStateContext.changeState(new GamePausedAppState(m_AppStateContext));
             return;
         }
         
-        processKeyPress(m_GameWorld.getSnakes()[0], GLFW_KEY_W, GLFW_KEY_S, GLFW_KEY_A, GLFW_KEY_D, key);
+        processKeyPress(m_Controller.getSnakes()[0], GLFW_KEY_W, GLFW_KEY_S, GLFW_KEY_A, GLFW_KEY_D, key);
 
-        if (m_GameWorld.getMode() == IGameWorld.Mode.TWO_PLAYERS) {
-            processKeyPress(m_GameWorld.getSnakes()[1], GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, key);
+        if (m_Controller.getMode() == IGameController.Mode.TWO_PLAYERS) {
+            processKeyPress(m_Controller.getSnakes()[1], GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, key);
         }
+    }
+
+    @Override
+    public void think(long nowMs) throws IOException {
+        m_Controller.think(nowMs);
+    }
+
+    @Override
+    public void draw3d(long nowMs) {
+        m_View.draw3d(nowMs);
+    }
+
+    @Override
+    public void draw2d(long nowMs) {
+        m_View.draw2d(nowMs);
     }
 
     private void processKeyPress(Snake snake, int upKey, int downKey, int leftKey, int rightKey, int keyPressed) {
@@ -73,20 +90,5 @@ public class PlayingGameAppState implements IAppState {
                 snake.setDirection(Snake.Direction.Right);
             }
         }
-    }
-
-    @Override
-    public void think(long nowMs) throws IOException {
-        m_GameWorld.think(nowMs);
-    }
-
-    @Override
-    public void draw3d(long nowMs) {
-        m_GameWorld.draw3d(nowMs);
-    }
-
-    @Override
-    public void draw2d(long nowMs) {
-        m_GameWorld.draw2d(nowMs);
     }
 }

@@ -64,7 +64,7 @@ public class TimeoutManager {
 
     private void dispatchCurrentTimeouts(long nowMs) {
         for (var timeout : m_CurrentTimeouts.entrySet()) {
-            var info = timeout.getValue();
+            TimeoutInfo info = timeout.getValue();
             if (nowMs - info.m_LastCallTimeMs >= info.m_TimeoutMs) {
                 info.m_LastCallTimeMs = nowMs;
                 TimeoutManager.CallbackResult result = info.m_Callback.apply(++info.m_CallCount);

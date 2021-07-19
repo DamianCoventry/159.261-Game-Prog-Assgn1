@@ -13,8 +13,8 @@
 
 package com.snakegame.application;
 
-import com.snakegame.client.TimeoutManager;
-import com.snakegame.rules.IGameWorld;
+import com.snakegame.client.*;
+import com.snakegame.rules.IGameController;
 
 import java.io.IOException;
 
@@ -22,20 +22,23 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class GameWonAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
-    private final IGameWorld m_GameWorld;
+    private final IGameController m_Controller;
+    private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
 
-    public GameWonAppState(IAppStateContext context, IGameWorld gameWorld, int player) {
+    public GameWonAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
-        m_GameWorld = gameWorld;
+        m_Controller = m_AppStateContext.getController();
+        m_View = m_AppStateContext.getView();
         m_Player = player;
         m_BothSnakes = false;
     }
 
-    public GameWonAppState(IAppStateContext context, IGameWorld gameWorld) {
+    public GameWonAppState(IAppStateContext context) {
         m_AppStateContext = context;
-        m_GameWorld = gameWorld;
+        m_Controller = m_AppStateContext.getController();
+        m_View = m_AppStateContext.getView();
         m_Player = -1;
         m_BothSnakes = true;
     }
@@ -43,7 +46,7 @@ public class GameWonAppState implements IAppState {
     @Override
     public void begin(long nowMs) {
         m_AppStateContext.addTimeout(2000, (callCount) -> {
-            m_GameWorld.freeNativeResources();
+            m_View.freeNativeResources();
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });
@@ -66,15 +69,17 @@ public class GameWonAppState implements IAppState {
 
     @Override
     public void draw3d(long nowMs) {
-        m_GameWorld.draw3d(nowMs);
+        m_View.draw3d(nowMs);
     }
 
     @Override
     public void draw2d(long nowMs) {
+        m_View.draw2d(nowMs);
+
         // TODO: Display who won (check m_BothSnakes && m_Player)
-        glBindTexture(GL_TEXTURE_2D, m_GameWorld.getGameWonTexture().getId());
-        var w = m_GameWorld.getGameWonTexture().getWidth();
-        var h = m_GameWorld.getGameWonTexture().getHeight();
+        glBindTexture(GL_TEXTURE_2D, m_View.getGameWonTexture().getId());
+        var w = m_View.getGameWonTexture().getWidth();
+        var h = m_View.getGameWonTexture().getHeight();
         var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
         var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
         glBegin(GL_QUADS);

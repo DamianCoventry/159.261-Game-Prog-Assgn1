@@ -13,25 +13,22 @@
 
 package com.snakegame.application;
 
-import com.snakegame.rules.GameWorld;
-import com.snakegame.rules.IGameWorld;
+import com.snakegame.rules.IGameController;
 
 import java.io.IOException;
 
 public class GameLoadingAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
-    private final IGameWorld.Mode m_Mode;
-    private IGameWorld m_GameWorld;
+    private final IGameController.Mode m_Mode;
 
-    public GameLoadingAppState(IAppStateContext context, IGameWorld.Mode mode) {
+    public GameLoadingAppState(IAppStateContext context, IGameController.Mode mode) {
         m_AppStateContext = context;
         m_Mode = mode;
     }
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_GameWorld = new GameWorld(m_AppStateContext, m_Mode);
-        m_GameWorld.loadFirstLevel(nowMs);
+        m_AppStateContext.getController().startNewGame(nowMs, m_Mode);
     }
 
     @Override
@@ -46,7 +43,7 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void think(long nowMs) throws IOException {
-        m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, m_GameWorld, true));
+        m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, true));
     }
 
     @Override

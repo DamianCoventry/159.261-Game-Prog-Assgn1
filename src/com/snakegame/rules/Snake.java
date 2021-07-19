@@ -50,7 +50,7 @@ public class Snake {
         m_LastDirectionChangeCell = startPosition.createCopy();
     }
 
-    public void resetToInitialState() {
+    public void resetToStartPosition() {
         if (m_StartPosition == null) {
             throw new RuntimeException("Start position hasn't been set");
         }
@@ -166,7 +166,7 @@ public class Snake {
 
     public void moveForwards() {
         Vector2i movementDelta = getMovementDelta(m_CurrentDirection);
-        m_BodyParts.addFirst(clipToBounds(m_BodyParts.getFirst().add(movementDelta)));
+        m_BodyParts.addFirst(clampCoordinates(m_BodyParts.getFirst().add(movementDelta)));
         if (m_AddBodyParts > 0) {
             --m_AddBodyParts;
         }
@@ -231,7 +231,7 @@ public class Snake {
         }
     }
 
-    private Vector2i clipToBounds(Vector2i position) {
+    private Vector2i clampCoordinates(Vector2i position) {
         Vector2i newVector = position.createCopy();
         if (position.m_X < m_MinBounds.m_X) {
             newVector.m_X = m_MinBounds.m_X;

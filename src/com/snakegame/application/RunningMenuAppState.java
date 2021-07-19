@@ -14,11 +14,10 @@
 package com.snakegame.application;
 
 import com.snakegame.client.Texture;
-import com.snakegame.rules.IGameWorld;
+import com.snakegame.rules.IGameController;
 
 import javax.imageio.ImageIO;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -36,11 +35,12 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_MainMenuTexture = new Texture(ImageIO.read(new File("images\\FrontMenu.png")));
+        m_MainMenuTexture = new Texture(ImageIO.read(new File("images\\MainMenu.png")));
         m_HelpMenuTexture = new Texture(ImageIO.read(new File("images\\HelpMenu.png")));
-        m_Page = Page.MAIN;
+
         glColor4d(1.0, 1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
+
         setPage(Page.MAIN);
     }
 
@@ -66,10 +66,10 @@ public class RunningMenuAppState implements IAppState {
         switch (key)
         {
             case GLFW_KEY_1:
-                startNewGame(IGameWorld.Mode.SINGLE_PLAYER);
+                startNewGame(IGameController.Mode.SINGLE_PLAYER);
                 break;
             case GLFW_KEY_2:
-                startNewGame(IGameWorld.Mode.TWO_PLAYERS);
+                startNewGame(IGameController.Mode.TWO_PLAYERS);
                 break;
             case GLFW_KEY_3:
                 setPage(Page.HELP);
@@ -112,7 +112,7 @@ public class RunningMenuAppState implements IAppState {
         }
     }
 
-    private void startNewGame(IGameWorld.Mode mode) {
+    private void startNewGame(IGameController.Mode mode) {
         m_AppStateContext.changeState(new GameLoadingAppState(m_AppStateContext, mode));
     }
 }
