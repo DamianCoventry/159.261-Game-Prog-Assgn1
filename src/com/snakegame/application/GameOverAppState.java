@@ -47,7 +47,6 @@ public class GameOverAppState implements IAppState {
     public void begin(long nowMs) throws IOException {
         m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOver.png")));
         m_AppStateContext.addTimeout(2000, (callCount) -> {
-            m_View.freeNativeResources();
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });

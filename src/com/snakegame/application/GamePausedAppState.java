@@ -52,7 +52,6 @@ public class GamePausedAppState implements IAppState {
             m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, false));
         }
         else if (key == GLFW_KEY_Q) {
-            m_View.freeNativeResources();
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
         }
     }

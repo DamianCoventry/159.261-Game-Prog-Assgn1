@@ -103,22 +103,6 @@ public class GameController implements IGameController {
     public void startNewGame(long nowMs, Mode mode) throws IOException {
         m_CurrentLevel = 0;
         m_Mode = mode;
-        loadLevelFile(m_CurrentLevel);
-        resetForNewLevel(nowMs);
-    }
-
-    @Override
-    public void loadNextLevel(long nowMs) throws IOException {
-        if (m_CurrentLevel < m_LevelFileNames.size() - 1) {
-            ++m_CurrentLevel;
-        }
-        loadLevelFile(m_CurrentLevel);
-        resetForNewLevel(nowMs);
-    }
-
-    @Override
-    public void resetForNewLevel(long nowMs) {
-        m_SnakeTimeoutMs = s_MaxSnakeSpeedTimeoutMs - (s_SnakeSpeedLevelAdjustment * m_CurrentLevel);
 
         Vector2i minBounds = new Vector2i(0, 0);
         Vector2i maxBounds = new Vector2i(GameField.WIDTH - 1, GameField.HEIGHT - 1);
@@ -128,6 +112,23 @@ public class GameController implements IGameController {
         if (m_Mode == Mode.TWO_PLAYERS) {
             m_Snakes[1] = new Snake(Snake.Direction.Left, minBounds, maxBounds);
         }
+
+        loadLevelFile(m_CurrentLevel);
+        setupNewLevel(nowMs);
+    }
+
+    @Override
+    public void loadNextLevel(long nowMs) throws IOException {
+        if (m_CurrentLevel < m_LevelFileNames.size() - 1) {
+            ++m_CurrentLevel;
+        }
+        loadLevelFile(m_CurrentLevel);
+        setupNewLevel(nowMs);
+    }
+
+    @Override
+    public void setupNewLevel(long nowMs) {
+        m_SnakeTimeoutMs = s_MaxSnakeSpeedTimeoutMs - (s_SnakeSpeedLevelAdjustment * m_CurrentLevel);
 
         insertNumber(Number.Type.NUM_1);
 
@@ -199,10 +200,13 @@ public class GameController implements IGameController {
         GameFieldFile file = new GameFieldFile("levels\\" + m_LevelFileNames.get(level), m_Mode == Mode.TWO_PLAYERS);
         m_GameField = file.getGameField();
         m_GameField.setWallBorder();
+
         m_Snakes[0].setStartPosition(m_GameField.getPlayer1Start());
         if (m_Mode == Mode.TWO_PLAYERS) {
             m_Snakes[1].setStartPosition(m_GameField.getPlayer2Start());
         }
+
+        m_AppStateContext.getView().setAppStateContext(m_AppStateContext);
     }
 
     private void scheduleSnakeMovement() {

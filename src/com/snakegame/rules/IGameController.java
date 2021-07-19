@@ -29,7 +29,7 @@ public interface IGameController {
     int getLevelCount();
     void startNewGame(long nowMs, Mode mode) throws IOException;
     void loadNextLevel(long nowMs) throws IOException;
-    void resetForNewLevel(long nowMs) throws IOException;
+    void setupNewLevel(long nowMs) throws IOException;
     void resetAfterSnakeDeath(long nowMs);
     void start(long nowMs);
     void stop(long nowMs);

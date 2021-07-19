@@ -14,10 +14,10 @@ public class GameView implements IGameView {
     private static final int s_NumNumbers = 9;
     private static final float s_CellSize = 3.0f;
 
-    private final IAppStateContext m_AppStateContext;
-    private final IGameController m_Controller;
-    private final GameField m_GameField;
-    private final Snake[] m_Snakes;
+    private IAppStateContext m_AppStateContext;
+    private IGameController m_Controller;
+    private GameField m_GameField;
+    private Snake[] m_Snakes;
 
     private final Texture[] m_NumberTextures;
     private final Texture[] m_PowerUpTextures;
@@ -26,12 +26,7 @@ public class GameView implements IGameView {
     private final Texture m_HeadTexture;
     private final NumberFont m_NumberFont;
 
-    public GameView(IAppStateContext appStateContext) throws IOException {
-        m_AppStateContext = appStateContext;
-        m_Controller = m_AppStateContext.getController();
-        m_GameField = m_Controller.getGameField();
-        m_Snakes = m_Controller.getSnakes();
-
+    public GameView() throws IOException {
         m_NumberTextures = new Texture[s_NumNumbers];
         for (int i = 0; i < s_NumNumbers; ++i) {
             m_NumberTextures[i] = new Texture(ImageIO.read(new File(String.format("images\\Apple%d.png", i + 1))));
@@ -54,6 +49,14 @@ public class GameView implements IGameView {
     }
 
     @Override
+    public void setAppStateContext(IAppStateContext appStateContext) {
+        m_AppStateContext = appStateContext;
+        m_Controller = m_AppStateContext.getController();
+        m_GameField = m_Controller.getGameField();
+        m_Snakes = m_Controller.getSnakes();
+    }
+
+    @Override
     public void freeNativeResources() {
         for (int i = 0; i < s_NumNumbers; ++i) {
             m_NumberTextures[i].freeNativeResource();
@@ -69,6 +72,10 @@ public class GameView implements IGameView {
 
     @Override
     public void draw3d(long nowMs) {
+        if (m_AppStateContext == null) {
+            throw new RuntimeException("Application state context hasn't been set");
+        }
+
         float maxWidth = GameField.WIDTH * s_CellSize;
         float maxHeight = GameField.HEIGHT * s_CellSize;
         float startX = -maxWidth / 2.0f;
@@ -168,6 +175,9 @@ public class GameView implements IGameView {
 
     @Override
     public void draw2d(long nowMs) {
+        if (m_AppStateContext == null) {
+            throw new RuntimeException("Application state context hasn't been set");
+        }
         float y = m_AppStateContext.getWindowHeight() - NumberFont.s_FrameHeight;
 
         // Draw the level's state

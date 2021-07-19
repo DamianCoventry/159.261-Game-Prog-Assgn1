@@ -19,6 +19,7 @@ import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F5;
 import static org.lwjgl.opengl.GL11.*;
 
 public class GetReadyAppState implements IAppState {
@@ -52,7 +53,9 @@ public class GetReadyAppState implements IAppState {
 
     @Override
     public void processKey(long window, int key, int scanCode, int action, int mods) {
-        // No work to do
+        if (key == GLFW_KEY_F5) {
+            m_AppStateContext.changeState(new LevelCompleteAppState(m_AppStateContext));
+        }
     }
 
     @Override

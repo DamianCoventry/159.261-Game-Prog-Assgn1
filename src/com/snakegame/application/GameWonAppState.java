@@ -46,7 +46,6 @@ public class GameWonAppState implements IAppState {
     public void begin(long nowMs) throws IOException {
         m_GameWonTexture = new Texture(ImageIO.read(new File("images\\GameWon.png")));
         m_AppStateContext.addTimeout(2000, (callCount) -> {
-            m_View.freeNativeResources();
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });

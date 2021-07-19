@@ -38,7 +38,7 @@ public class GameLoadingAppState implements IAppState {
     public void begin(long nowMs) throws IOException {
         m_LoadingTexture = new Texture(ImageIO.read(new File("images\\Loading.png")));
         m_AppStateContext.getController().startNewGame(nowMs, m_Mode);
-        m_AppStateContext.addTimeout(1000, (callCount) ->{
+        m_AppStateContext.addTimeout(500, (callCount) ->{
             m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, true));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });

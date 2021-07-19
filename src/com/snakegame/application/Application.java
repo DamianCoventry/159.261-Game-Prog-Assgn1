@@ -55,13 +55,14 @@ public class Application implements IAppStateContext {
         });
 
         m_Controller = new GameController(this);
-        m_View = new GameView(this);
+        m_View = new GameView();
         m_TimeoutManager = new TimeoutManager();
 
         changeStateNow(new RunningMenuAppState(this), System.currentTimeMillis());
     }
 
     public void close() {
+        m_View.freeNativeResources();
         m_GLWindow.freeNativeResources();
     }
 
