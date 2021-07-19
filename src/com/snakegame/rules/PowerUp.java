@@ -11,10 +11,7 @@ public class PowerUp {
     }
 
     public enum Type {
-        INC_SPEED, DEC_SPEED,
-        INC_LIVES, DEC_LIVES,
-        INC_POINTS, DEC_POINTS,
-        DEC_LENGTH, RANDOM
+        INC_SPEED, DEC_SPEED, INC_LIVES, DEC_LIVES, INC_POINTS, DEC_POINTS, DEC_LENGTH, RANDOM
     }
 
     public Type getType() {

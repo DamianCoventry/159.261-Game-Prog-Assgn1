@@ -16,14 +16,9 @@ package com.snakegame.application;
 import com.snakegame.client.*;
 import com.snakegame.rules.*;
 import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.GL;
 
 import java.io.IOException;
 import java.util.function.Function;
-
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.MemoryUtil.NULL;
 
 /**
  * This class keeps the main application objects resident for the lifetime of the application.
@@ -45,10 +40,6 @@ public class Application implements IAppStateContext {
     private IAppState m_CurrentState = null;
 
     public Application() throws IOException {
-        m_Controller = new GameController(this);
-        m_View = new GameView(this);
-        m_TimeoutManager = new TimeoutManager();
-
         m_GLWindow = new OpenGLWindow(s_DesiredWindowWidth, s_DesiredWindowHeight, s_WindowTitle);
         m_GLWindow.setKeyCallback(new GLFWKeyCallback() {
             @Override
@@ -63,6 +54,10 @@ public class Application implements IAppStateContext {
             }
         });
 
+        m_Controller = new GameController(this);
+        m_View = new GameView(this);
+        m_TimeoutManager = new TimeoutManager();
+
         changeStateNow(new RunningMenuAppState(this), System.currentTimeMillis());
     }
 
@@ -74,7 +69,6 @@ public class Application implements IAppStateContext {
         long nowMs;
         while (!m_GLWindow.quitRequested()) {
             nowMs = System.currentTimeMillis();
-
             m_TimeoutManager.dispatchTimeouts(nowMs);
             m_CurrentState.think(nowMs);
 

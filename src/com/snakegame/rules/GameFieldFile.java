@@ -20,8 +20,8 @@ public class GameFieldFile {
 
     public GameFieldFile(String fileName, boolean requirePlayer2) throws IOException {
         m_GameField = new GameField();
-        File file = new File(fileName);
-        readGameField(new BufferedReader(new FileReader(file)), requirePlayer2);
+        BufferedReader reader = new BufferedReader(new FileReader(fileName));
+        readGameField(reader, requirePlayer2);
     }
 
     public GameField getGameField() {

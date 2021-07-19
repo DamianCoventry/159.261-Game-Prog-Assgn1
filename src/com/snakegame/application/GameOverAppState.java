@@ -13,8 +13,7 @@
 
 package com.snakegame.application;
 
-import com.snakegame.client.IGameView;
-import com.snakegame.client.TimeoutManager;
+import com.snakegame.client.*;
 import com.snakegame.rules.IGameController;
 
 import java.io.IOException;
@@ -23,14 +22,12 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class GameOverAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
-    private final IGameController m_Controller;
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
 
     public GameOverAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
-        m_Controller = m_AppStateContext.getController();
         m_View = m_AppStateContext.getView();
         m_Player = player;
         m_BothSnakes = false;
@@ -38,7 +35,6 @@ public class GameOverAppState implements IAppState {
 
     public GameOverAppState(IAppStateContext context) {
         m_AppStateContext = context;
-        m_Controller = m_AppStateContext.getController();
         m_View = m_AppStateContext.getView();
         m_Player = -1;
         m_BothSnakes = true;

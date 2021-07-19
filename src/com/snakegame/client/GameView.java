@@ -42,7 +42,7 @@ public class GameView implements IGameView {
 
         m_NumberTextures = new Texture[s_NumNumbers];
         for (int i = 0; i < s_NumNumbers; ++i) {
-            m_NumberTextures[i] = new Texture(ImageIO.read(new File(String.format("images\\Number%d.png", i + 1))));
+            m_NumberTextures[i] = new Texture(ImageIO.read(new File(String.format("images\\Apple%d.png", i + 1))));
         }
 
         m_PowerUpTextures = new Texture[PowerUp.s_NumPowerUps];

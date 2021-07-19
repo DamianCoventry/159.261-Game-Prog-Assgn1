@@ -30,9 +30,7 @@ public interface IGameController {
     void startNewGame(long nowMs, Mode mode) throws IOException;
     void loadNextLevel(long nowMs) throws IOException;
     void resetForNewLevel(long nowMs) throws IOException;
-
     void resetAfterSnakeDeath(long nowMs);
-
     void start(long nowMs);
     void stop(long nowMs);
     void think(long nowMs) throws IOException;

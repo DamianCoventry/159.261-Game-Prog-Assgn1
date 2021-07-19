@@ -10,40 +10,42 @@ public class Number {
     }
 
     public enum Type {
-        NUM_1, NUM_2, NUM_3,
-        NUM_4, NUM_5, NUM_6,
-        NUM_7, NUM_8, NUM_9
+        NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7, NUM_8, NUM_9
     }
 
     public static class Result {
         public boolean m_LevelComplete;
         public Type m_Type;
-        public Result(boolean levelComplete, Type type) {
-            m_LevelComplete = levelComplete;
+        public Result(Type type) {
+            m_LevelComplete = false;
             m_Type = type;
+        }
+        public Result() {
+            m_LevelComplete = true;
+            m_Type = Type.NUM_1;
         }
     }
 
     public static Result getNextInSeries(Type type) {
         switch (type) {
             case NUM_1:
-                return new Result(false, Type.NUM_2);
+                return new Result(Type.NUM_2);
             case NUM_2:
-                return new Result(false, Type.NUM_3);
+                return new Result(Type.NUM_3);
             case NUM_3:
-                return new Result(false, Type.NUM_4);
+                return new Result(Type.NUM_4);
             case NUM_4:
-                return new Result(false, Type.NUM_5);
+                return new Result(Type.NUM_5);
             case NUM_5:
-                return new Result(false, Type.NUM_6);
+                return new Result(Type.NUM_6);
             case NUM_6:
-                return new Result(false, Type.NUM_7);
+                return new Result(Type.NUM_7);
             case NUM_7:
-                return new Result(false, Type.NUM_8);
+                return new Result(Type.NUM_8);
             case NUM_8:
-                return new Result(false, Type.NUM_9);
+                return new Result(Type.NUM_9);
         }
-        return new Result(true, Type.NUM_1);
+        return new Result();
     }
 
     public Type getType() {
