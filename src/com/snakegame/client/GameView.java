@@ -201,6 +201,9 @@ public class GameView implements IGameView {
 
     @Override
     public void drawCenteredImage(Texture texture) {
+        if (m_AppStateContext == null) {
+            throw new RuntimeException("Application state context hasn't been set");
+        }
         glColor4d(1.0, 1.0, 1.0, 1.0);
         glBindTexture(GL_TEXTURE_2D, texture.getId());
         var w = texture.getWidth();

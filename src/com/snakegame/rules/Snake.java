@@ -50,7 +50,7 @@ public class Snake {
         m_LastDirectionChangeCell = startPosition.createCopy();
     }
 
-    public void resetToStartPosition() {
+    public void moveToStartPosition() {
         if (m_StartPosition == null) {
             throw new RuntimeException("Start position hasn't been set");
         }

@@ -23,8 +23,8 @@ public class GameController implements IGameController {
     private static final int s_MaxPlayers = 2;
     private static final long s_MaxSnakeSpeedTimeoutMs = 150;
     private static final long s_MinSnakeSpeedTimeoutMs = 75;
-    private static final long s_SnakeSpeedPowerUpAdjustment = 8;
-    private static final long s_SnakeSpeedLevelAdjustment = 6;
+    private static final long s_SnakeSpeedPowerUpAdjustment = 25;
+    private static final long s_SnakeSpeedLevelAdjustment = 8;
     private static final long s_PowerUpInitialTimeoutMs = 3750;
     private static final long s_PowerUpSubsequentTimeoutMs = 15000;
     private static final long s_PowerUpExpireTimeoutMs = 6000;
@@ -114,7 +114,6 @@ public class GameController implements IGameController {
         }
 
         loadLevelFile(m_CurrentLevel);
-        setupNewLevel(nowMs);
     }
 
     @Override
@@ -123,26 +122,14 @@ public class GameController implements IGameController {
             ++m_CurrentLevel;
         }
         loadLevelFile(m_CurrentLevel);
-        setupNewLevel(nowMs);
     }
 
-    @Override
-    public void setupNewLevel(long nowMs) {
-        m_SnakeTimeoutMs = s_MaxSnakeSpeedTimeoutMs - (s_SnakeSpeedLevelAdjustment * m_CurrentLevel);
-
-        insertNumber(Number.Type.NUM_1);
-
-        for (var snake : m_Snakes) {
-            snake.resetToStartPosition();
-        }
-    }
-    
     @Override
     public void resetAfterSnakeDeath(long nowMs) {
         m_GameField.clearPowerUpsAndNumbers();
         insertNumber(Number.Type.NUM_1);
         for (var snake : m_Snakes) {
-            snake.resetToStartPosition();
+            snake.moveToStartPosition();
         }
     }
 
@@ -201,12 +188,24 @@ public class GameController implements IGameController {
         m_GameField = file.getGameField();
         m_GameField.setWallBorder();
 
-        m_Snakes[0].setStartPosition(m_GameField.getPlayer1Start());
-        if (m_Mode == Mode.TWO_PLAYERS) {
-            m_Snakes[1].setStartPosition(m_GameField.getPlayer2Start());
-        }
+        moveSnakesToNewStartPositions();
+        setSnakeMovementSpeedForCurrentLevel();
+        insertNumber(Number.Type.NUM_1);
 
         m_AppStateContext.getView().setAppStateContext(m_AppStateContext);
+    }
+
+    private void setSnakeMovementSpeedForCurrentLevel() {
+        m_SnakeTimeoutMs = Math.max(s_MinSnakeSpeedTimeoutMs, s_MaxSnakeSpeedTimeoutMs - (s_SnakeSpeedLevelAdjustment * m_CurrentLevel));
+    }
+
+    private void moveSnakesToNewStartPositions() {
+        m_Snakes[0].setStartPosition(m_GameField.getPlayer1Start());
+        m_Snakes[0].moveToStartPosition();
+        if (m_Mode == Mode.TWO_PLAYERS) {
+            m_Snakes[1].setStartPosition(m_GameField.getPlayer2Start());
+            m_Snakes[1].moveToStartPosition();
+        }
     }
 
     private void scheduleSnakeMovement() {
@@ -240,20 +239,16 @@ public class GameController implements IGameController {
 
     private PowerUp.Type chooseRandomPowerUpType() {
         final PowerUp.Type[] powerUps = {
-                PowerUp.Type.INC_SPEED, PowerUp.Type.DEC_SPEED,
-                PowerUp.Type.INC_LIVES, PowerUp.Type.DEC_LIVES,
-                PowerUp.Type.INC_POINTS, PowerUp.Type.DEC_POINTS,
-                PowerUp.Type.DEC_LENGTH, PowerUp.Type.RANDOM
+                PowerUp.Type.INC_SPEED, PowerUp.Type.DEC_SPEED, PowerUp.Type.INC_LIVES, PowerUp.Type.DEC_LIVES,
+                PowerUp.Type.INC_POINTS, PowerUp.Type.DEC_POINTS, PowerUp.Type.DEC_LENGTH, PowerUp.Type.RANDOM
         };
         return powerUps[m_Rng.nextInt(powerUps.length)];
     }
 
     private PowerUp.Type chooseRandomPowerUpTypeExceptForRandom() {
         final PowerUp.Type[] powerUps = {
-                PowerUp.Type.INC_SPEED, PowerUp.Type.DEC_SPEED,
-                PowerUp.Type.INC_LIVES, PowerUp.Type.DEC_LIVES,
-                PowerUp.Type.INC_POINTS, PowerUp.Type.DEC_POINTS,
-                PowerUp.Type.DEC_LENGTH
+                PowerUp.Type.INC_SPEED, PowerUp.Type.DEC_SPEED, PowerUp.Type.INC_LIVES, PowerUp.Type.DEC_LIVES,
+                PowerUp.Type.INC_POINTS, PowerUp.Type.DEC_POINTS, PowerUp.Type.DEC_LENGTH
         };
         return powerUps[m_Rng.nextInt(powerUps.length)];
     }
