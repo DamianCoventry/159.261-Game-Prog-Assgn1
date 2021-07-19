@@ -13,9 +13,10 @@
 
 package com.snakegame.application;
 
-import com.snakegame.client.IGameView;
-import com.snakegame.client.TimeoutManager;
+import com.snakegame.client.*;
 
+import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.IOException;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -24,6 +25,7 @@ public class GetReadyAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
     private final boolean m_ResetState;
+    private Texture m_GetReadyTexture;
 
     public GetReadyAppState(IAppStateContext context, boolean resetState) {
         m_AppStateContext = context;
@@ -33,6 +35,7 @@ public class GetReadyAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
+        m_GetReadyTexture = new Texture(ImageIO.read(new File("images\\GetReady.png")));
         if (m_ResetState) {
             m_AppStateContext.getController().resetAfterSnakeDeath(nowMs);
         }
@@ -44,7 +47,7 @@ public class GetReadyAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
-        // No work to do
+        m_GetReadyTexture.freeNativeResource();
     }
 
     @Override
@@ -65,17 +68,6 @@ public class GetReadyAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-
-        glBindTexture(GL_TEXTURE_2D, m_View.getGetReadyTexture().getId());
-        var w = m_View.getGetReadyTexture().getWidth();
-        var h = m_View.getGetReadyTexture().getHeight();
-        var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
-        var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
-        glBegin(GL_QUADS);
-        glTexCoord2d(0.0, 0.0); glVertex3d(x, y + h, 0.1f);
-        glTexCoord2d(0.0, 1.0); glVertex3d(x , y, 0.1f);
-        glTexCoord2d(1.0, 1.0); glVertex3d(x + w, y, 0.1f);
-        glTexCoord2d(1.0, 0.0); glVertex3d(x + w, y + h, 0.1f);
-        glEnd();
+        m_View.drawCenteredImage(m_GetReadyTexture);
     }
 }

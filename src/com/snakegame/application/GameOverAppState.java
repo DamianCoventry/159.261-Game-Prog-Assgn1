@@ -16,6 +16,8 @@ package com.snakegame.application;
 import com.snakegame.client.*;
 import com.snakegame.rules.IGameController;
 
+import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.IOException;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -25,6 +27,7 @@ public class GameOverAppState implements IAppState {
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
+    private Texture m_GameOverTexture;
 
     public GameOverAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
@@ -41,7 +44,8 @@ public class GameOverAppState implements IAppState {
     }
 
     @Override
-    public void begin(long nowMs) {
+    public void begin(long nowMs) throws IOException {
+        m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOver.png")));
         m_AppStateContext.addTimeout(2000, (callCount) -> {
             m_View.freeNativeResources();
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
@@ -51,7 +55,7 @@ public class GameOverAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
-        // No work to do
+        m_GameOverTexture.freeNativeResource();
     }
 
     @Override
@@ -72,19 +76,7 @@ public class GameOverAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-
         // TODO: Display who lost (check m_BothSnakes && m_Player)
-        glColor4d(1.0, 1.0, 1.0, 1.0);
-        glBindTexture(GL_TEXTURE_2D, m_View.getGameOverTexture().getId());
-        var w = m_View.getGameOverTexture().getWidth();
-        var h = m_View.getGameOverTexture().getHeight();
-        var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
-        var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
-        glBegin(GL_QUADS);
-        glTexCoord2d(0.0, 0.0); glVertex3d(x, y + h, 0.1f);
-        glTexCoord2d(0.0, 1.0); glVertex3d(x , y, 0.1f);
-        glTexCoord2d(1.0, 1.0); glVertex3d(x + w, y, 0.1f);
-        glTexCoord2d(1.0, 0.0); glVertex3d(x + w, y + h, 0.1f);
-        glEnd();
+        m_View.drawCenteredImage(m_GameOverTexture);
     }
 }

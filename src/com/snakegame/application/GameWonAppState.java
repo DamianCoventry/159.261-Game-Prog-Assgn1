@@ -14,22 +14,22 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
-import com.snakegame.rules.IGameController;
 
+import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.IOException;
 
 import static org.lwjgl.opengl.GL11.*;
 
 public class GameWonAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
-    private final IGameController m_Controller;
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
+    private Texture m_GameWonTexture;
 
     public GameWonAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
-        m_Controller = m_AppStateContext.getController();
         m_View = m_AppStateContext.getView();
         m_Player = player;
         m_BothSnakes = false;
@@ -37,14 +37,14 @@ public class GameWonAppState implements IAppState {
 
     public GameWonAppState(IAppStateContext context) {
         m_AppStateContext = context;
-        m_Controller = m_AppStateContext.getController();
         m_View = m_AppStateContext.getView();
         m_Player = -1;
         m_BothSnakes = true;
     }
 
     @Override
-    public void begin(long nowMs) {
+    public void begin(long nowMs) throws IOException {
+        m_GameWonTexture = new Texture(ImageIO.read(new File("images\\GameWon.png")));
         m_AppStateContext.addTimeout(2000, (callCount) -> {
             m_View.freeNativeResources();
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
@@ -54,7 +54,7 @@ public class GameWonAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
-        // No work to do
+        m_GameWonTexture.freeNativeResource();
     }
 
     @Override
@@ -75,18 +75,7 @@ public class GameWonAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-
         // TODO: Display who won (check m_BothSnakes && m_Player)
-        glBindTexture(GL_TEXTURE_2D, m_View.getGameWonTexture().getId());
-        var w = m_View.getGameWonTexture().getWidth();
-        var h = m_View.getGameWonTexture().getHeight();
-        var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
-        var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
-        glBegin(GL_QUADS);
-        glTexCoord2d(0.0, 0.0); glVertex3d(x, y + h, 0.1f);
-        glTexCoord2d(0.0, 1.0); glVertex3d(x , y, 0.1f);
-        glTexCoord2d(1.0, 1.0); glVertex3d(x + w, y, 0.1f);
-        glTexCoord2d(1.0, 0.0); glVertex3d(x + w, y + h, 0.1f);
-        glEnd();
+        m_View.drawCenteredImage(m_GameWonTexture);
     }
 }

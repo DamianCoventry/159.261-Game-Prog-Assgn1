@@ -24,14 +24,6 @@ public class GameView implements IGameView {
     private final Texture m_WallTexture;
     private final Texture m_DotTexture;
     private final Texture m_HeadTexture;
-    private final Texture m_GameOverTexture;
-    private final Texture m_GameWonTexture;
-    private final Texture m_GetReadyTexture;
-    private final Texture m_Player1DiedTexture;
-    private final Texture m_Player2DiedTexture;
-    private final Texture m_BothPlayersDiedTexture;
-    private final Texture m_LevelCompleteTexture;
-    private final Texture m_GamePausedTexture;
     private final NumberFont m_NumberFont;
 
     public GameView(IAppStateContext appStateContext) throws IOException {
@@ -55,58 +47,10 @@ public class GameView implements IGameView {
         m_PowerUpTextures[6] = new Texture(ImageIO.read(new File("images\\DecreasePoints.png")));
         m_PowerUpTextures[7] = new Texture(ImageIO.read(new File("images\\Random.png")));
 
-        m_WallTexture = new Texture(ImageIO.read(new File("images\\soil-seamless-texture.jpg")));
+        m_WallTexture = new Texture(ImageIO.read(new File("images\\Wall.jpg")));
         m_DotTexture = new Texture(ImageIO.read(new File("images\\dot.png")));
         m_HeadTexture = new Texture(ImageIO.read(new File("images\\head.png")));
-        m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOver.png")));
-        m_GameWonTexture = new Texture(ImageIO.read(new File("images\\GameWon.png")));
-        m_GetReadyTexture = new Texture(ImageIO.read(new File("images\\GetReady.png")));
-        m_Player1DiedTexture = new Texture(ImageIO.read(new File("images\\Player1Died.png")));
-        m_Player2DiedTexture = new Texture(ImageIO.read(new File("images\\Player2Died.png")));
-        m_BothPlayersDiedTexture = new Texture(ImageIO.read(new File("images\\BothSnakesDied.png")));
-        m_LevelCompleteTexture = new Texture(ImageIO.read(new File("images\\LevelComplete.png")));
-        m_GamePausedTexture = new Texture(ImageIO.read(new File("images\\GamePaused.png")));
         m_NumberFont = new NumberFont();
-    }
-
-    @Override
-    public Texture getGameOverTexture() {
-        return m_GameOverTexture;
-    }
-
-    @Override
-    public Texture getGameWonTexture() {
-        return m_GameWonTexture;
-    }
-
-    @Override
-    public Texture getGetReadyTexture() {
-        return m_GetReadyTexture;
-    }
-
-    @Override
-    public Texture getPlayer1DiedTexture() {
-        return m_Player1DiedTexture;
-    }
-
-    @Override
-    public Texture getPlayer2DiedTexture() {
-        return m_Player2DiedTexture;
-    }
-
-    @Override
-    public Texture getBothPlayersDiedTexture() {
-        return m_BothPlayersDiedTexture;
-    }
-
-    @Override
-    public Texture getLevelCompleteTexture() {
-        return m_LevelCompleteTexture;
-    }
-
-    @Override
-    public Texture getGamePausedTexture() {
-        return m_GamePausedTexture;
     }
 
     @Override
@@ -120,14 +64,6 @@ public class GameView implements IGameView {
         m_WallTexture.freeNativeResource();
         m_DotTexture.freeNativeResource();
         m_HeadTexture.freeNativeResource();
-        m_GameOverTexture.freeNativeResource();
-        m_GameWonTexture.freeNativeResource();
-        m_GetReadyTexture.freeNativeResource();
-        m_Player1DiedTexture.freeNativeResource();
-        m_Player2DiedTexture.freeNativeResource();
-        m_BothPlayersDiedTexture.freeNativeResource();
-        m_LevelCompleteTexture.freeNativeResource();
-        m_GamePausedTexture.freeNativeResource();
         m_NumberFont.freeNativeResource();
     }
 
@@ -251,6 +187,22 @@ public class GameView implements IGameView {
             width = m_NumberFont.calculateWidth(m_Snakes[1].getPoints()) + (2.0f * width);
             m_NumberFont.drawNumber(m_Snakes[1].getPoints(), m_AppStateContext.getWindowWidth() - width, y);
         }
+    }
+
+    @Override
+    public void drawCenteredImage(Texture texture) {
+        glColor4d(1.0, 1.0, 1.0, 1.0);
+        glBindTexture(GL_TEXTURE_2D, texture.getId());
+        var w = texture.getWidth();
+        var h = texture.getHeight();
+        var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
+        var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
+        glBegin(GL_QUADS);
+        glTexCoord2d(0.0, 0.0); glVertex3d(x, y + h, 0.1f);
+        glTexCoord2d(0.0, 1.0); glVertex3d(x , y, 0.1f);
+        glTexCoord2d(1.0, 1.0); glVertex3d(x + w, y, 0.1f);
+        glTexCoord2d(1.0, 0.0); glVertex3d(x + w, y + h, 0.1f);
+        glEnd();
     }
 
     private void drawTexturedQuad(double x, double y, double w, double h, double u0, double v0, double u1, double v1, Texture texture) {

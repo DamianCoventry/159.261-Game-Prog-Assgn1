@@ -13,11 +13,11 @@
 
 package com.snakegame.application;
 
-import com.snakegame.client.IGameView;
-import com.snakegame.client.Texture;
-import com.snakegame.client.TimeoutManager;
+import com.snakegame.client.*;
 import com.snakegame.rules.IGameController;
 
+import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.IOException;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -28,6 +28,9 @@ public class SnakeDyingAppState implements IAppState {
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
+    private Texture m_Player1DiedTexture;
+    private Texture m_Player2DiedTexture;
+    private Texture m_BothPlayersDiedTexture;
 
     public SnakeDyingAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
@@ -46,7 +49,10 @@ public class SnakeDyingAppState implements IAppState {
     }
 
     @Override
-    public void begin(long nowMs) {
+    public void begin(long nowMs) throws IOException {
+        m_Player1DiedTexture = new Texture(ImageIO.read(new File("images\\Player1Died.png")));
+        m_Player2DiedTexture = new Texture(ImageIO.read(new File("images\\Player2Died.png")));
+        m_BothPlayersDiedTexture = new Texture(ImageIO.read(new File("images\\BothSnakesDied.png")));
         m_AppStateContext.addTimeout(2000, (callCount) -> {
             if (m_Controller.getMode() == IGameController.Mode.TWO_PLAYERS) {
                 subtractSnakeTwoPlayersGame();
@@ -60,7 +66,9 @@ public class SnakeDyingAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
-        // No work to do
+        m_Player1DiedTexture.freeNativeResource();
+        m_Player2DiedTexture.freeNativeResource();
+        m_BothPlayersDiedTexture.freeNativeResource();
     }
 
     @Override
@@ -81,28 +89,15 @@ public class SnakeDyingAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-
-        Texture texture;
         if (m_BothSnakes) {
-            texture = m_View.getBothPlayersDiedTexture();
+            m_View.drawCenteredImage(m_BothPlayersDiedTexture);
         }
         else if (m_Player == 0) {
-            texture = m_View.getPlayer1DiedTexture();
+            m_View.drawCenteredImage(m_Player1DiedTexture);
         }
         else {
-            texture = m_View.getPlayer2DiedTexture();
+            m_View.drawCenteredImage(m_Player2DiedTexture);
         }
-        glBindTexture(GL_TEXTURE_2D, texture.getId());
-        var w = texture.getWidth();
-        var h = texture.getHeight();
-        var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
-        var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
-        glBegin(GL_QUADS);
-        glTexCoord2d(0.0, 0.0); glVertex3d(x, y + h, 0.1f);
-        glTexCoord2d(0.0, 1.0); glVertex3d(x , y, 0.1f);
-        glTexCoord2d(1.0, 1.0); glVertex3d(x + w, y, 0.1f);
-        glTexCoord2d(1.0, 0.0); glVertex3d(x + w, y + h, 0.1f);
-        glEnd();
     }
 
     private void subtractSnakeSinglePlayerGame() {
