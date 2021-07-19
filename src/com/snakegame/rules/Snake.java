@@ -18,7 +18,7 @@ import java.util.LinkedList;
 public class Snake {
     private static final int s_NumStartingLives = 3;
     private static final int s_MaxNumLives = 5;
-    private static final int s_MinBodyParts = 3;
+    public static final int s_MinBodyParts = 3;
     private static final float s_BodyPartScale = 1.5f;
     private static final int s_NumBodyPartsToRemove = 3;
     private static final long s_PowerUpPointsBonus = 1000;

@@ -27,6 +27,7 @@ public class GetReadyAppState implements IAppState {
     private final IGameView m_View;
     private final boolean m_ResetState;
     private Texture m_GetReadyTexture;
+    private int m_TimeoutId;
 
     public GetReadyAppState(IAppStateContext context, boolean resetState) {
         m_AppStateContext = context;
@@ -40,7 +41,7 @@ public class GetReadyAppState implements IAppState {
         if (m_ResetState) {
             m_AppStateContext.getController().resetAfterSnakeDeath(nowMs);
         }
-        m_AppStateContext.addTimeout(2000, (callCount) -> {
+        m_TimeoutId = m_AppStateContext.addTimeout(2000, (callCount) -> {
             m_AppStateContext.changeState(new PlayingGameAppState(m_AppStateContext));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });
@@ -53,7 +54,11 @@ public class GetReadyAppState implements IAppState {
 
     @Override
     public void processKey(long window, int key, int scanCode, int action, int mods) {
-        if (key == GLFW_KEY_F5) {
+        if (key == GLFW_KEY_F5) { // temp cheat key
+            if (m_TimeoutId != 0) {
+                m_AppStateContext.removeTimeout(m_TimeoutId);
+                m_TimeoutId = 0;
+            }
             m_AppStateContext.changeState(new LevelCompleteAppState(m_AppStateContext));
         }
     }

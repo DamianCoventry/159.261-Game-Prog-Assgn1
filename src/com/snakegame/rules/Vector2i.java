@@ -21,4 +21,10 @@ public class Vector2i {
     public boolean notEquals(Vector2i other) {
         return !equals(other);
     }
+
+    public int magntiude(Vector2i other) {
+        double deltaX = Math.abs(m_X - other.m_X);
+        double deltaY = Math.abs(m_Y - other.m_Y);
+        return (int)Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    }
 }

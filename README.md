@@ -46,6 +46,3 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 ### Audio
 - Sounds
 - Music
-
-Player spawn can have wall generated upon it
-Consider what it means to have more points but dying first

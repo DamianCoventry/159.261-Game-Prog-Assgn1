@@ -184,7 +184,7 @@ public class GameController implements IGameController {
         if (m_PowerUp != null) {
             m_GameField.removePowerUp(m_PowerUp);
         }
-        m_PowerUp = new PowerUp(type, chooseRandomEmptyCell());
+        m_PowerUp = new PowerUp(type, chooseRandomEmptyCell(false));
         m_GameField.insertPowerUp(m_PowerUp);
     }
 
@@ -192,7 +192,7 @@ public class GameController implements IGameController {
         if (m_Number != null) {
             m_GameField.removeNumber(m_Number);
         }
-        m_Number = new Number(type, chooseRandomEmptyCell());
+        m_Number = new Number(type, chooseRandomEmptyCell(false));
         m_GameField.insertNumber(m_Number);
     }
 
@@ -297,7 +297,7 @@ public class GameController implements IGameController {
             default: case Down: increment = new Vector2i(0, -1); break;
         }
 
-        Vector2i location = chooseRandomEmptyCell();
+        Vector2i location = chooseRandomEmptyCell(true);
         int numWalls = m_Rng.nextInt(4) + 1;
         for (int i = 0; i < numWalls; ++i) {
             if (isCellEmpty(location)) {
@@ -496,15 +496,33 @@ public class GameController implements IGameController {
         }
     }
 
-    private Vector2i chooseRandomEmptyCell() {
+    private Vector2i chooseRandomEmptyCell(boolean removeCellsCloseToPlayerStartPositions) {
         ArrayList<Vector2i> emptyFieldCells = m_GameField.getEmptyCells();
+        if (removeCellsCloseToPlayerStartPositions) {
+            emptyFieldCells = removeCellsCloseToCell(emptyFieldCells, m_GameField.getPlayer1Start());
+            if (m_Mode == Mode.TWO_PLAYERS) {
+                emptyFieldCells = removeCellsCloseToCell(emptyFieldCells, m_GameField.getPlayer2Start());
+            }
+        }
+
         ArrayList<Vector2i> emptyCells = new ArrayList<>(emptyFieldCells.size());
         for (var emptyFieldCell : emptyFieldCells) {
             if (isNeitherSnakeUsingThisCell(emptyFieldCell)) {
                 emptyCells.add(emptyFieldCell);
             }
         }
+
         return emptyCells.get(m_Rng.nextInt(emptyCells.size()));
+    }
+
+    private ArrayList<Vector2i> removeCellsCloseToCell(ArrayList<Vector2i> inCells, Vector2i compareMe) {
+        ArrayList<Vector2i> outCells = new ArrayList<>(inCells.size());
+        for (var inCell : inCells) {
+            if (compareMe.magntiude(inCell) >= (Snake.s_MinBodyParts * 2)) {
+                outCells.add(inCell);
+            }
+        }
+        return outCells;
     }
 
     private boolean isNeitherSnakeUsingThisCell(Vector2i cell) {
