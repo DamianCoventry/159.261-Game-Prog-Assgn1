@@ -20,8 +20,6 @@ import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 
-import static org.lwjgl.opengl.GL11.*;
-
 public class GameOverAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
@@ -45,8 +43,19 @@ public class GameOverAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOver.png")));
-        m_AppStateContext.addTimeout(2000, (callCount) -> {
+        if (m_AppStateContext.getController().getMode() == IGameController.Mode.TWO_PLAYERS) {
+            if (m_BothSnakes) {
+                m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOverBothPlayersLost.png")));
+            } else if (m_Player == 0) {
+                m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOverPlayer1Lost.png")));
+            } else {
+                m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOverPlayer2Lost.png")));
+            }
+        }
+        else {
+            m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOver.png")));
+        }
+        m_AppStateContext.addTimeout(3500, (callCount) -> {
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });
@@ -75,7 +84,6 @@ public class GameOverAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-        // TODO: Display who lost (check m_BothSnakes && m_Player)
         m_View.drawCenteredImage(m_GameOverTexture);
     }
 }

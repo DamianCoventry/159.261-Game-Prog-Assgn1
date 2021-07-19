@@ -20,8 +20,6 @@ import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 
-import static org.lwjgl.opengl.GL11.*;
-
 public class LevelCompleteAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameController m_Controller;
@@ -76,7 +74,6 @@ public class LevelCompleteAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-        // TODO: Display who lost (check m_BothSnakes && m_Player)
         m_View.drawCenteredImage(m_LevelCompleteTexture);
     }
 }
