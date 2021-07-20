@@ -31,6 +31,6 @@ public interface IAppStateContext {
 
     IGameController getController();
     IGameView getView();
-    Matrix4f getProjectionMatrix();
+    Matrix4f getPerspectiveMatrix();
     Matrix4f getOrthographicMatrix();
 }

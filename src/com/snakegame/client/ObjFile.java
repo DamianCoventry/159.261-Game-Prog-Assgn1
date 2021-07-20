@@ -51,8 +51,8 @@ public class ObjFile {
     }
 
     public static class Vertex {
-        public double m_X, m_Y, m_Z;
-        public Vertex(double x, double y, double z) {
+        public float m_X, m_Y, m_Z;
+        public Vertex(float x, float y, float z) {
             m_X = x;
             m_Y = y;
             m_Z = z;
@@ -60,8 +60,8 @@ public class ObjFile {
     }
 
     public static class TexCoordinate {
-        public double m_S, m_T;
-        public TexCoordinate(double s, double t) {
+        public float m_S, m_T;
+        public TexCoordinate(float s, float t) {
             m_S = s;
             m_T = t;
         }
@@ -156,9 +156,9 @@ public class ObjFile {
     private void parseVertex(String[] words) {
         if (words.length == 4) {
             m_Vertices.add(new Vertex(
-                    Double.parseDouble(words[1]),
-                    Double.parseDouble(words[2]),
-                    Double.parseDouble(words[3])
+                    Float.parseFloat(words[1]),
+                    Float.parseFloat(words[2]),
+                    Float.parseFloat(words[3])
             ));
         }
     }
@@ -166,8 +166,8 @@ public class ObjFile {
     private void parseTexCoordinate(String[] words) {
         if (words.length == 3) {
             m_TexCoordinates.add(new TexCoordinate(
-                    Double.parseDouble(words[1]),
-                    Double.parseDouble(words[2])
+                    Float.parseFloat(words[1]),
+                    Float.parseFloat(words[2])
             ));
         }
     }
@@ -175,9 +175,9 @@ public class ObjFile {
     private void parseNormal(String[] words) {
         if (words.length == 4) {
             m_Normals.add(new Vertex(
-                    Double.parseDouble(words[1]),
-                    Double.parseDouble(words[2]),
-                    Double.parseDouble(words[3])
+                    Float.parseFloat(words[1]),
+                    Float.parseFloat(words[2]),
+                    Float.parseFloat(words[3])
             ));
         }
     }
@@ -189,7 +189,7 @@ public class ObjFile {
     }
 
     private void parseSmoothingGroup(String[] words) {
-        if (words.length == 2 && !m_Objects.isEmpty()) {
+        if (words.length == 2 && !words[1].equals("off") && !m_Objects.isEmpty()) {
             m_Objects.get(m_Objects.size() - 1).setSmoothingGroup(Integer.parseInt(words[1]));
         }
     }

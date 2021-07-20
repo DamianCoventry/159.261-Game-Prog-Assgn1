@@ -12,7 +12,7 @@ import static org.lwjgl.opengl.GL13.*;
 public class TexturedShaderProgram extends GLProgram {
     private final int m_TextureLocation;
     private final int m_ColourLocation;
-    private final Vector4f m_DiffuseColour;
+    private Vector4f m_DiffuseColour;
 
     public TexturedShaderProgram() throws IOException {
         super(Files.readString(Paths.get("shaders\\BasicVertexShader.vert"), StandardCharsets.US_ASCII),
@@ -21,6 +21,10 @@ public class TexturedShaderProgram extends GLProgram {
         m_TextureLocation = getUniformLocation("diffuseTexture");
         m_ColourLocation = getUniformLocation("diffuseColour");
         m_DiffuseColour = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    public void setDiffuseColour(Vector4f diffuseColour) {
+        m_DiffuseColour = diffuseColour;
     }
 
     public void activate(Matrix4f mvpMatrix, GLTexture texture) {

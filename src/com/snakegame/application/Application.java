@@ -40,7 +40,7 @@ public class Application implements IAppStateContext {
     private IAppState m_PendingState = null;
     private IAppState m_CurrentState = null;
 
-    public Application() throws IOException {
+    public Application() throws Exception {
         m_GLWindow = new GLWindow(s_DesiredWindowWidth, s_DesiredWindowHeight, s_WindowTitle);
         m_GLWindow.setKeyCallback(new GLFWKeyCallback() {
             @Override
@@ -120,7 +120,7 @@ public class Application implements IAppStateContext {
     }
 
     @Override
-    public Matrix4f getProjectionMatrix() {
+    public Matrix4f getPerspectiveMatrix() {
         return m_GLWindow.getPerspectiveMatrix();
     }
 

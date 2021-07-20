@@ -82,11 +82,6 @@ public class GLStaticPolyhedron {
         glBindVertexArray(m_VaoId);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-
         glDrawArrays(GL_TRIANGLES, 0, m_NumVertices);
-
-        glDisableVertexAttribArray(1);
-        glDisableVertexAttribArray(0);
-        glBindVertexArray(0);
     }
 }

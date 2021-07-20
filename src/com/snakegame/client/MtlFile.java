@@ -33,10 +33,10 @@ public class MtlFile {
         private Colour m_DiffuseColour;
         private Colour m_SpecularColour;
         private Colour m_EmissiveColour;
-        private double m_SpecularExponent;
-        private double m_IndexOfRefraction;
-        private double m_Dissolved;
-        private double m_Transparency;
+        private float m_SpecularExponent;
+        private float m_IndexOfRefraction;
+        private float m_Dissolved;
+        private float m_Transparency;
         private Colour m_TransmissionFilterColour;
         private int m_IlluminationModel;
         private String m_AmbientTexture;
@@ -81,28 +81,28 @@ public class MtlFile {
         Colour getEmissiveColour() {
             return m_EmissiveColour;
         }
-        public void setSpecularExponent(double specularExponent) {
+        public void setSpecularExponent(float specularExponent) {
             m_SpecularExponent = specularExponent;
         }
-        double getSpecularExponent() {
+        float getSpecularExponent() {
             return m_SpecularExponent;
         }
-        public void setIndexOfRefraction(double indexOfRefraction) {
+        public void setIndexOfRefraction(float indexOfRefraction) {
             m_IndexOfRefraction = indexOfRefraction;
         }
-        double getIndexOfRefraction() {
+        float getIndexOfRefraction() {
             return m_IndexOfRefraction;
         }
-        public void setDissolved(double Dissolved) {
+        public void setDissolved(float Dissolved) {
             m_Dissolved = Dissolved;
         }
-        double getDissolved() {
+        float getDissolved() {
             return m_Dissolved;
         }
-        public void setTransparency(double Transparency) {
+        public void setTransparency(float Transparency) {
             m_Transparency = Transparency;
         }
-        double getTransparency() {
+        float getTransparency() {
             return m_Transparency;
         }
         public void setTransmissionFilterColour(Colour transmissionFilterColour) {
@@ -174,8 +174,8 @@ public class MtlFile {
     }
 
     public static class Colour {
-        public double m_R, m_G, m_B;
-        public Colour(double r, double g, double b) {
+        public float m_R, m_G, m_B;
+        public Colour(float r, float g, float b) {
             m_R = r;
             m_G = g;
             m_B = b;
@@ -299,27 +299,27 @@ public class MtlFile {
         // Blender stores its 'Roughness' value from its Principled BSDF within the Ns value.
         // It maps (0, 1) from the Blender GUI to (900, 0) for some weird reason.
         if (words.length == 2 && !m_Materials.isEmpty()) {
-            m_Materials.get(m_Materials.size() - 1).setSpecularExponent(Double.parseDouble(words[1]));
+            m_Materials.get(m_Materials.size() - 1).setSpecularExponent(Float.parseFloat(words[1]));
         }
     }
 
     private void parseOfRefraction(String[] words) {
         if (words.length == 2 && !m_Materials.isEmpty()) {
-            m_Materials.get(m_Materials.size() - 1).setIndexOfRefraction(Double.parseDouble(words[1]));
+            m_Materials.get(m_Materials.size() - 1).setIndexOfRefraction(Float.parseFloat(words[1]));
         }
     }
 
     private void parseDissolved(String[] words) {
         // 0 == fully transparent, 1 = fully opaque
         if (words.length == 2 && !m_Materials.isEmpty()) {
-            m_Materials.get(m_Materials.size() - 1).setDissolved(Double.parseDouble(words[1]));
+            m_Materials.get(m_Materials.size() - 1).setDissolved(Float.parseFloat(words[1]));
         }
     }
 
     private void parseTransparency(String[] words) {
         // 0 == fully opaque, 1 = fully transparent
         if (words.length == 2 && !m_Materials.isEmpty()) {
-            m_Materials.get(m_Materials.size() - 1).setTransparency(Double.parseDouble(words[1]));
+            m_Materials.get(m_Materials.size() - 1).setTransparency(Float.parseFloat(words[1]));
         }
     }
 
@@ -392,9 +392,9 @@ public class MtlFile {
     private Colour parseColour(String[] words) {
         if (words.length == 4) {
             return new Colour(
-                    Double.parseDouble(words[1]),
-                    Double.parseDouble(words[2]),
-                    Double.parseDouble(words[3])
+                    Float.parseFloat(words[1]),
+                    Float.parseFloat(words[2]),
+                    Float.parseFloat(words[3])
             );
         }
         return null;

@@ -5,20 +5,16 @@ import com.snakegame.opengl.GLStaticPolyhedron;
 import com.snakegame.opengl.GLTexture;
 import com.snakegame.opengl.TexturedShaderProgram;
 import com.snakegame.rules.*;
-import com.snakegame.rules.Number;
 import org.joml.Matrix4f;
-import org.joml.Vector4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL11.glEnd;
-
 public class GameView implements IGameView {
     private static final int s_NumNumbers = 9;
     private static final float s_CellSize = 3.0f;
-    private static final float s_CameraZ = -120.0f;
+    private static final float s_CameraXRotation = -90.0f;
+    private static final float s_CameraYPosition = 95.0f;
 
     private final GLTexture[] m_NumberTextures;
     private final GLTexture[] m_PowerUpTextures;
@@ -27,19 +23,22 @@ public class GameView implements IGameView {
     private final GLTexture m_HeadTexture;
     private final NumberFont m_NumberFont;
     private final TexturedShaderProgram m_TexturedShaderProgram;
-    private final Matrix4f m_ModelMatrix;
+    private final Matrix4f m_ViewMatrix;
+
+    private GLStaticPolyhedron m_WorldMesh;
 
     private IAppStateContext m_AppStateContext;
     private IGameController m_Controller;
     private GameField m_GameField;
     private Snake[] m_Snakes;
-    private Matrix4f m_ViewMatrix;
 
-    public GameView() throws IOException {
+    public GameView() throws Exception {
         m_NumberTextures = new GLTexture[s_NumNumbers];
         for (int i = 0; i < s_NumNumbers; ++i) {
             m_NumberTextures[i] = new GLTexture(ImageIO.read(new File(String.format("images\\Apple%d.png", i + 1))));
         }
+
+        loadWorldMesh();
 
         m_PowerUpTextures = new GLTexture[PowerUp.s_NumPowerUps];
         m_PowerUpTextures[0] = new GLTexture(ImageIO.read(new File("images\\DecreaseLength.png")));
@@ -54,12 +53,12 @@ public class GameView implements IGameView {
         m_WallTexture = new GLTexture(ImageIO.read(new File("images\\Wall.jpg")));
         m_DotTexture = new GLTexture(ImageIO.read(new File("images\\dot.png")));
         m_HeadTexture = new GLTexture(ImageIO.read(new File("images\\head.png")));
-        m_NumberFont = new NumberFont();
         m_TexturedShaderProgram = new TexturedShaderProgram();
+        m_NumberFont = new NumberFont(m_TexturedShaderProgram);
 
         m_ViewMatrix = new Matrix4f();
-        m_ViewMatrix.transform(new Vector4f(0, 0, s_CameraZ, 1.0f));
-        m_ModelMatrix = new Matrix4f();
+        m_ViewMatrix.rotate((float)Math.toRadians(-s_CameraXRotation), 1.0f, 0.0f, 0.0f)
+                    .translate(0, -s_CameraYPosition, 0.0f);
     }
 
     @Override
@@ -83,6 +82,7 @@ public class GameView implements IGameView {
         m_HeadTexture.freeNativeResource();
         m_NumberFont.freeNativeResource();
         m_TexturedShaderProgram.freeNativeResource();
+        m_WorldMesh.freeNativeResources();
     }
 
     @Override
@@ -91,101 +91,106 @@ public class GameView implements IGameView {
             throw new RuntimeException("Application state context hasn't been set");
         }
 
-        float maxWidth = GameField.WIDTH * s_CellSize;
-        float maxHeight = GameField.HEIGHT * s_CellSize;
-        float startX = -maxWidth / 2.0f;
-        float startY = -maxHeight / 2.0f;
-        float u = 8*s_CellSize / m_WallTexture.getWidth();
-        float v = 8*s_CellSize / m_WallTexture.getHeight();
+        Matrix4f projectionMatrix = m_AppStateContext.getPerspectiveMatrix();
+        Matrix4f mvpMatrix = new Matrix4f(projectionMatrix);
+        m_TexturedShaderProgram.activate(mvpMatrix.mul(m_ViewMatrix), m_WallTexture);
+        m_WorldMesh.draw();
 
-        for (int y = 0; y < GameField.HEIGHT; ++y) {
-            float cellOffsetY = startY + y * s_CellSize;
-            for (int x = 0; x < GameField.WIDTH; ++x) {
-                float cellOffsetX = startX + x * s_CellSize;
-
-                switch (m_GameField.getCellType(x, y)) {
-                    case EMPTY:
-                        break;
-                    case WALL:
-                        drawTexturedQuad(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, x*u, y*v+v, x*u+u, y*v, m_WallTexture);
-                        break;
-                    case POWER_UP: {
-                        PowerUp powerUp = m_GameField.getPowerUp(x, y);
-                        switch (powerUp.getType()) {
-                            case DEC_LENGTH:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[0]);
-                                break;
-                            case INC_SPEED:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[1]);
-                                break;
-                            case DEC_SPEED:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[2]);
-                                break;
-                            case INC_LIVES:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[3]);
-                                break;
-                            case DEC_LIVES:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[4]);
-                                break;
-                            case INC_POINTS:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[5]);
-                                break;
-                            case DEC_POINTS:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[6]);
-                                break;
-                            case RANDOM:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[7]);
-                                break;
-                        }
-                        break;
-                    }
-                    case NUMBER: {
-                        Number number = m_GameField.getNumber(x, y);
-                        switch (number.getType()) {
-                            case NUM_1:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[0]);
-                                break;
-                            case NUM_2:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[1]);
-                                break;
-                            case NUM_3:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[2]);
-                                break;
-                            case NUM_4:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[3]);
-                                break;
-                            case NUM_5:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[4]);
-                                break;
-                            case NUM_6:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[5]);
-                                break;
-                            case NUM_7:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[6]);
-                                break;
-                            case NUM_8:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[7]);
-                                break;
-                            case NUM_9:
-                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[8]);
-                                break;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        boolean firstLoop;
-        for (var snake : m_Snakes) {
-            firstLoop = true;
-            for (var bodyPart : snake.getBodyParts()) {
-                float cellOffsetX = startX + bodyPart.m_X * s_CellSize;
-                float cellOffsetY = startY + bodyPart.m_Y * s_CellSize;
-                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, firstLoop ? m_HeadTexture : m_DotTexture);
-                firstLoop = false;
-            }
-        }
+//        float maxWidth = GameField.WIDTH * s_CellSize;
+//        float maxHeight = GameField.HEIGHT * s_CellSize;
+//        float startX = -maxWidth / 2.0f;
+//        float startY = -maxHeight / 2.0f;
+//        float u = 8*s_CellSize / m_WallTexture.getWidth();
+//        float v = 8*s_CellSize / m_WallTexture.getHeight();
+//
+//        for (int y = 0; y < GameField.HEIGHT; ++y) {
+//            float cellOffsetY = startY + y * s_CellSize;
+//            for (int x = 0; x < GameField.WIDTH; ++x) {
+//                float cellOffsetX = startX + x * s_CellSize;
+//
+//                switch (m_GameField.getCellType(x, y)) {
+//                    case EMPTY:
+//                        break;
+//                    case WALL:
+//                        drawTexturedQuad(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, x*u, y*v+v, x*u+u, y*v, m_WallTexture);
+//                        break;
+//                    case POWER_UP: {
+//                        PowerUp powerUp = m_GameField.getPowerUp(x, y);
+//                        switch (powerUp.getType()) {
+//                            case DEC_LENGTH:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[0]);
+//                                break;
+//                            case INC_SPEED:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[1]);
+//                                break;
+//                            case DEC_SPEED:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[2]);
+//                                break;
+//                            case INC_LIVES:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[3]);
+//                                break;
+//                            case DEC_LIVES:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[4]);
+//                                break;
+//                            case INC_POINTS:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[5]);
+//                                break;
+//                            case DEC_POINTS:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[6]);
+//                                break;
+//                            case RANDOM:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[7]);
+//                                break;
+//                        }
+//                        break;
+//                    }
+//                    case NUMBER: {
+//                        Number number = m_GameField.getNumber(x, y);
+//                        switch (number.getType()) {
+//                            case NUM_1:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[0]);
+//                                break;
+//                            case NUM_2:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[1]);
+//                                break;
+//                            case NUM_3:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[2]);
+//                                break;
+//                            case NUM_4:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[3]);
+//                                break;
+//                            case NUM_5:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[4]);
+//                                break;
+//                            case NUM_6:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[5]);
+//                                break;
+//                            case NUM_7:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[6]);
+//                                break;
+//                            case NUM_8:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[7]);
+//                                break;
+//                            case NUM_9:
+//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[8]);
+//                                break;
+//                        }
+//                        break;
+//                    }
+//                }
+//            }
+//        }
+//
+//        boolean firstLoop;
+//        for (var snake : m_Snakes) {
+//            firstLoop = true;
+//            for (var bodyPart : snake.getBodyParts()) {
+//                float cellOffsetX = startX + bodyPart.m_X * s_CellSize;
+//                float cellOffsetY = startY + bodyPart.m_Y * s_CellSize;
+//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, firstLoop ? m_HeadTexture : m_DotTexture);
+//                firstLoop = false;
+//            }
+//        }
     }
 
     @Override
@@ -194,23 +199,27 @@ public class GameView implements IGameView {
             throw new RuntimeException("Application state context hasn't been set");
         }
         float y = m_AppStateContext.getWindowHeight() - NumberFont.s_FrameHeight;
+        float w = m_AppStateContext.getWindowWidth();
+        float halfW = w / 2.0f;
+        int level = m_Controller.getCurrentLevel() + 1;
+        Matrix4f projectionMatrix = m_AppStateContext.getOrthographicMatrix();
 
         // Draw the level's state
-        float width = m_NumberFont.calculateWidth(m_Controller.getCurrentLevel() + 1);
-        m_NumberFont.drawNumber(m_Controller.getCurrentLevel() + 1, (m_AppStateContext.getWindowWidth() / 2.0f) - (2.0f * width), y);
+        float width = m_NumberFont.calculateWidth(level);
+        m_NumberFont.drawNumber(projectionMatrix, level, halfW - (2.0f * width), y);
         width = m_NumberFont.calculateWidth(m_Controller.getLevelCount());
-        m_NumberFont.drawNumber(m_Controller.getLevelCount(), (m_AppStateContext.getWindowWidth() / 2.0f) + width, y);
+        m_NumberFont.drawNumber(projectionMatrix, m_Controller.getLevelCount(), halfW + width, y);
 
         // Draw player 1's state
-        m_NumberFont.drawNumber(m_Snakes[0].getNumLives(), 0.0f, y);
-        m_NumberFont.drawNumber(m_Snakes[0].getPoints(), 100.0f, y);
+        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getNumLives(), 0.0f, y);
+        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getPoints(), 100.0f, y);
 
         if (m_Snakes.length > 1) {
             // Draw player 2's state
             width = m_NumberFont.calculateWidth(m_Snakes[1].getNumLives());
-            m_NumberFont.drawNumber(m_Snakes[1].getNumLives(), m_AppStateContext.getWindowWidth() - width, y);
+            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getNumLives(), w - width, y);
             width = m_NumberFont.calculateWidth(m_Snakes[1].getPoints()) + (2.0f * width);
-            m_NumberFont.drawNumber(m_Snakes[1].getPoints(), m_AppStateContext.getWindowWidth() - width, y);
+            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getPoints(), w - width, y);
         }
     }
 
@@ -219,11 +228,9 @@ public class GameView implements IGameView {
         if (m_AppStateContext == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
-
-        Matrix4f mvpMatrix = m_AppStateContext.getOrthographicMatrix();
-        m_TexturedShaderProgram.activate(mvpMatrix, texture);
+        Matrix4f projectionMatrix = m_AppStateContext.getOrthographicMatrix();
+        m_TexturedShaderProgram.activate(projectionMatrix, texture);
         polyhedron.draw();
-        TexturedShaderProgram.deactivateCurrent();
     }
 
     @Override
@@ -253,6 +260,47 @@ public class GameView implements IGameView {
         };
 
         return new GLStaticPolyhedron(vertices, texCoordinates);
+    }
+
+    private void loadWorldMesh() throws Exception {
+        ObjFile objFile = new ObjFile("meshes\\LevelDisplayMesh.obj");
+
+        int numFloats = objFile.getObjects().get(0).getFaces().size() * objFile.getVertices().size() * 3;
+        int floatCount = 0;
+        float[] vertices = new float[numFloats];
+        for (int faceIndex = 0; faceIndex < objFile.getObjects().get(0).getFaces().size(); ++faceIndex) {
+            ObjFile.Face face = objFile.getObjects().get(0).getFaces().get(faceIndex);
+            
+            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_X;
+            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_Y;
+            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_Z;
+            
+            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_X;
+            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_Y;
+            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_Z;
+            
+            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_X;
+            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_Y;
+            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_Z;
+        }
+
+        numFloats = objFile.getObjects().get(0).getFaces().size() * objFile.getVertices().size() * 2;
+        floatCount = 0;
+        float[] texCoordinates = new float[numFloats];
+        for (int faceIndex = 0; faceIndex < objFile.getObjects().get(0).getFaces().size(); ++faceIndex) {
+            ObjFile.Face face = objFile.getObjects().get(0).getFaces().get(faceIndex);
+
+            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_S;
+            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_T;
+
+            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_S;
+            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_T;
+
+            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_S;
+            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_T;
+        }
+
+        m_WorldMesh = new GLStaticPolyhedron(vertices, texCoordinates);
     }
 
     private void drawTexturedQuad(double x, double y, double w, double h, double u0, double v0, double u1, double v1, GLTexture GLTexture) {
