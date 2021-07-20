@@ -9,6 +9,6 @@ public interface IGameView {
     void freeNativeResources();
     void draw3d(long nowMs);
     void draw2d(long nowMs);
-    void drawCenteredImage(GLTexture GLTexture);
-    TexturedShaderProgram getTexturedShaderProgram();
+    void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron, GLTexture texture);
+    GLStaticPolyhedron createRectangle(float width, float height);
 }

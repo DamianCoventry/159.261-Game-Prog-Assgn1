@@ -6,9 +6,6 @@ import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL11.glEnd;
-
 public class NumberFont {
     public static final float s_FrameWidth = 26.0f;
     public static final float s_FrameHeight = 37.0f;
@@ -43,20 +40,20 @@ public class NumberFont {
     }
     
     public void drawNumber(long number, float x, float y) {
-        glColor4d(1.0, 1.0, 1.0, 1.0);
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, m_NumberGLTexture.getId());
-        String text = String.valueOf(number);
-        glBegin(GL_QUADS);
-        for (int i = 0; i < text.length(); ++i) {
-            int j = text.charAt(i) - '0'; // Convert the character to an index into the m_Characters array
-            glTexCoord2d(m_Characters[j].m_U0, m_Characters[j].m_V0); glVertex2d(x, y + s_FrameHeight);
-            glTexCoord2d(m_Characters[j].m_U0, m_Characters[j].m_V1); glVertex2d(x , y);
-            glTexCoord2d(m_Characters[j].m_U1, m_Characters[j].m_V1); glVertex2d(x + s_FrameWidth, y);
-            glTexCoord2d(m_Characters[j].m_U1, m_Characters[j].m_V0); glVertex2d(x + s_FrameWidth, y + s_FrameHeight);
-            x += s_FrameWidth;
-        }
-        glEnd();
+//        glColor4d(1.0, 1.0, 1.0, 1.0);
+//        glEnable(GL_TEXTURE_2D);
+//        glBindTexture(GL_TEXTURE_2D, m_NumberGLTexture.getId());
+//        String text = String.valueOf(number);
+//        glBegin(GL_QUADS);
+//        for (int i = 0; i < text.length(); ++i) {
+//            int j = text.charAt(i) - '0'; // Convert the character to an index into the m_Characters array
+//            glTexCoord2d(m_Characters[j].m_U0, m_Characters[j].m_V0); glVertex2d(x, y + s_FrameHeight);
+//            glTexCoord2d(m_Characters[j].m_U0, m_Characters[j].m_V1); glVertex2d(x , y);
+//            glTexCoord2d(m_Characters[j].m_U1, m_Characters[j].m_V1); glVertex2d(x + s_FrameWidth, y);
+//            glTexCoord2d(m_Characters[j].m_U1, m_Characters[j].m_V0); glVertex2d(x + s_FrameWidth, y + s_FrameHeight);
+//            x += s_FrameWidth;
+//        }
+//        glEnd();
     }
 
     public float calculateWidth(long number) {

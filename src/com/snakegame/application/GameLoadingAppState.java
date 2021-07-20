@@ -14,6 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
+import com.snakegame.opengl.GLStaticPolyhedron;
 import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
@@ -26,6 +27,7 @@ public class GameLoadingAppState implements IAppState {
     private final IGameView m_View;
     private final IGameController.Mode m_Mode;
     private GLTexture m_LoadingTexture;
+    private GLStaticPolyhedron m_Rectangle;
 
     public GameLoadingAppState(IAppStateContext context, IGameController.Mode mode) {
         m_AppStateContext = context;
@@ -36,7 +38,10 @@ public class GameLoadingAppState implements IAppState {
     @Override
     public void begin(long nowMs) throws IOException {
         m_LoadingTexture = new GLTexture(ImageIO.read(new File("images\\Loading.png")));
+        m_Rectangle = m_View.createRectangle(m_LoadingTexture.getWidth(), m_LoadingTexture.getHeight());
+
         m_AppStateContext.getController().startNewGame(nowMs, m_Mode);
+
         m_AppStateContext.addTimeout(500, (callCount) ->{
             m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, true));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
@@ -45,6 +50,7 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
+        m_Rectangle.freeNativeResources();
         m_LoadingTexture.freeNativeResource();
     }
 
@@ -65,6 +71,6 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void draw2d(long nowMs) {
-        m_View.drawCenteredImage(m_LoadingTexture);
+        m_View.drawOrthographicPolyhedron(m_Rectangle, m_LoadingTexture);
     }
 }

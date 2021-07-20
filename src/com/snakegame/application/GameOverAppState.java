@@ -14,6 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
+import com.snakegame.opengl.GLStaticPolyhedron;
 import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
@@ -27,6 +28,7 @@ public class GameOverAppState implements IAppState {
     private final int m_Player;
     private final boolean m_BothSnakes;
     private GLTexture m_GameOverTexture;
+    private GLStaticPolyhedron m_Rectangle;
 
     public GameOverAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
@@ -56,6 +58,9 @@ public class GameOverAppState implements IAppState {
         else {
             m_GameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOver.png")));
         }
+
+        m_Rectangle = m_View.createRectangle(m_GameOverTexture.getWidth(), m_GameOverTexture.getHeight());
+
         m_AppStateContext.addTimeout(3500, (callCount) -> {
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
@@ -64,6 +69,7 @@ public class GameOverAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
+        m_Rectangle.freeNativeResources();
         m_GameOverTexture.freeNativeResource();
     }
 
@@ -85,6 +91,6 @@ public class GameOverAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-        m_View.drawCenteredImage(m_GameOverTexture);
+        m_View.drawOrthographicPolyhedron(m_Rectangle, m_GameOverTexture);
     }
 }

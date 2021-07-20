@@ -14,6 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
+import com.snakegame.opengl.GLStaticPolyhedron;
 import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
@@ -30,6 +31,7 @@ public class SnakeDyingAppState implements IAppState {
     private GLTexture m_Player1DiedTexture;
     private GLTexture m_Player2DiedTexture;
     private GLTexture m_BothPlayersDiedTexture;
+    private GLStaticPolyhedron[] m_Rectangles;
 
     public SnakeDyingAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
@@ -49,9 +51,17 @@ public class SnakeDyingAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
+        m_Rectangles = new GLStaticPolyhedron[3];
+
         m_Player1DiedTexture = new GLTexture(ImageIO.read(new File("images\\Player1Died.png")));
+        m_Rectangles[0] = m_View.createRectangle(m_Player1DiedTexture.getWidth(), m_Player1DiedTexture.getHeight());
+
         m_Player2DiedTexture = new GLTexture(ImageIO.read(new File("images\\Player2Died.png")));
+        m_Rectangles[1] = m_View.createRectangle(m_Player2DiedTexture.getWidth(), m_Player2DiedTexture.getHeight());
+
         m_BothPlayersDiedTexture = new GLTexture(ImageIO.read(new File("images\\BothSnakesDied.png")));
+        m_Rectangles[2] = m_View.createRectangle(m_BothPlayersDiedTexture.getWidth(), m_BothPlayersDiedTexture.getHeight());
+
         m_AppStateContext.addTimeout(2000, (callCount) -> {
             if (m_Controller.getMode() == IGameController.Mode.TWO_PLAYERS) {
                 subtractSnakeTwoPlayersGame();
@@ -65,6 +75,9 @@ public class SnakeDyingAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
+        for (var r : m_Rectangles) {
+            r.freeNativeResources();
+        }
         m_Player1DiedTexture.freeNativeResource();
         m_Player2DiedTexture.freeNativeResource();
         m_BothPlayersDiedTexture.freeNativeResource();
@@ -89,13 +102,13 @@ public class SnakeDyingAppState implements IAppState {
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
         if (m_BothSnakes) {
-            m_View.drawCenteredImage(m_BothPlayersDiedTexture);
+            m_View.drawOrthographicPolyhedron(m_Rectangles[0], m_BothPlayersDiedTexture);
         }
         else if (m_Player == 0) {
-            m_View.drawCenteredImage(m_Player1DiedTexture);
+            m_View.drawOrthographicPolyhedron(m_Rectangles[1], m_Player1DiedTexture);
         }
         else {
-            m_View.drawCenteredImage(m_Player2DiedTexture);
+            m_View.drawOrthographicPolyhedron(m_Rectangles[2], m_Player2DiedTexture);
         }
     }
 

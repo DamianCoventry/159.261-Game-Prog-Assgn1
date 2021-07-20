@@ -14,6 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
+import com.snakegame.opengl.GLStaticPolyhedron;
 import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
@@ -26,6 +27,7 @@ public class GameWonAppState implements IAppState {
     private final int m_Player;
     private final boolean m_BothSnakes;
     private GLTexture m_GameWonTexture;
+    private GLStaticPolyhedron m_Rectangle;
 
     public GameWonAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
@@ -65,6 +67,9 @@ public class GameWonAppState implements IAppState {
         else {
             m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
         }
+
+        m_Rectangle = m_View.createRectangle(m_GameWonTexture.getWidth(), m_GameWonTexture.getHeight());
+
         m_AppStateContext.addTimeout(3500, (callCount) -> {
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
@@ -73,6 +78,7 @@ public class GameWonAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
+        m_Rectangle.freeNativeResources();
         m_GameWonTexture.freeNativeResource();
     }
 
@@ -94,6 +100,6 @@ public class GameWonAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-        m_View.drawCenteredImage(m_GameWonTexture);
+        m_View.drawOrthographicPolyhedron(m_Rectangle, m_GameWonTexture);
     }
 }

@@ -14,6 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
+import com.snakegame.opengl.GLStaticPolyhedron;
 import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
@@ -26,6 +27,7 @@ public class LevelCompleteAppState implements IAppState {
     private final IGameController m_Controller;
     private final IGameView m_View;
     private GLTexture m_LevelCompleteTexture;
+    private GLStaticPolyhedron m_Rectangle;
 
     public LevelCompleteAppState(IAppStateContext context) {
         m_AppStateContext = context;
@@ -36,6 +38,8 @@ public class LevelCompleteAppState implements IAppState {
     @Override
     public void begin(long nowMs) throws IOException {
         m_LevelCompleteTexture = new GLTexture(ImageIO.read(new File("images\\LevelComplete.png")));
+        m_Rectangle = m_View.createRectangle(m_LevelCompleteTexture.getWidth(), m_LevelCompleteTexture.getHeight());
+
         m_AppStateContext.addTimeout(2000, (callCount) -> {
             if (m_Controller.isLastLevel()) {
                 m_AppStateContext.changeState(new GameWonAppState(m_AppStateContext));
@@ -54,6 +58,7 @@ public class LevelCompleteAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
+        m_Rectangle.freeNativeResources();
         m_LevelCompleteTexture.freeNativeResource();
     }
 
@@ -75,6 +80,6 @@ public class LevelCompleteAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-        m_View.drawCenteredImage(m_LevelCompleteTexture);
+        m_View.drawOrthographicPolyhedron(m_Rectangle, m_LevelCompleteTexture);
     }
 }

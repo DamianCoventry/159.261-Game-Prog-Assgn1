@@ -14,6 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.IGameView;
+import com.snakegame.opengl.GLStaticPolyhedron;
 import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
@@ -21,11 +22,11 @@ import javax.imageio.ImageIO;
 import java.io.*;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
 
 public class RunningMenuAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
+    private GLStaticPolyhedron[] m_Rectangles;
     private GLTexture m_MainMenuTexture;
     private GLTexture m_HelpMenuTexture;
     private enum Page {MAIN, HELP }
@@ -38,17 +39,21 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_MainMenuTexture = new GLTexture(ImageIO.read(new File("images\\MainMenu.png")));
-        m_HelpMenuTexture = new GLTexture(ImageIO.read(new File("images\\HelpMenu.png")));
+        m_Rectangles = new GLStaticPolyhedron[2];
 
-        glColor4d(1.0, 1.0, 1.0, 1.0);
-        glEnable(GL_TEXTURE_2D);
+        m_MainMenuTexture = new GLTexture(ImageIO.read(new File("images\\MainMenu.png")));
+        m_Rectangles[0] = m_View.createRectangle(m_MainMenuTexture.getWidth(), m_MainMenuTexture.getHeight());
+
+        m_HelpMenuTexture = new GLTexture(ImageIO.read(new File("images\\HelpMenu.png")));
+        m_Rectangles[1] = m_View.createRectangle(m_HelpMenuTexture.getWidth(), m_HelpMenuTexture.getHeight());
 
         m_Page = Page.MAIN;
     }
 
     @Override
     public void end(long nowMs) {
+        m_Rectangles[1].freeNativeResources();
+        m_Rectangles[0].freeNativeResources();
         m_MainMenuTexture.freeNativeResource();
         m_HelpMenuTexture.freeNativeResource();
     }
@@ -97,10 +102,10 @@ public class RunningMenuAppState implements IAppState {
     public void draw2d(long nowMs) {
         switch (m_Page) {
             case MAIN:
-                m_View.drawCenteredImage(m_MainMenuTexture);
+                m_View.drawOrthographicPolyhedron(m_Rectangles[0], m_MainMenuTexture);
                 break;
             case HELP:
-                m_View.drawCenteredImage(m_HelpMenuTexture);
+                m_View.drawOrthographicPolyhedron(m_Rectangles[1], m_HelpMenuTexture);
                 break;
         }
     }

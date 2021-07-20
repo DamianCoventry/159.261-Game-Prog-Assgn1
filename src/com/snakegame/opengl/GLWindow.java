@@ -30,6 +30,14 @@ public class GLWindow {
             throw new IllegalStateException("Unable to initialize GLFW");
         }
 
+        glfwDefaultWindowHints(); // optional, the current window hints are already the default
+        glfwWindowHint(GLFW_VISIBLE, GL_FALSE); // the window will stay hidden after creation
+        glfwWindowHint(GLFW_RESIZABLE, GL_FALSE); // the window will not be resizable
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5); // Version 4.5 was released in 2014
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
         m_Window = glfwCreateWindow(desiredWindowWidth, desiredWindowHeight, windowTitle, NULL, NULL);
         if (m_Window == NULL) {
             glfwTerminate();
@@ -47,8 +55,6 @@ public class GLWindow {
                 (vidMode.height() - desiredWindowHeight) / 2);
         glfwMakeContextCurrent(m_Window);
 
-        GL.createCapabilities();
-
         glfwSwapInterval(1); // Sync to monitor's refresh rate
 
         glfwSetWindowSizeCallback(m_Window, new GLFWWindowSizeCallback() {
@@ -62,12 +68,19 @@ public class GLWindow {
             }
         });
 
+        // This line is critical for LWJGL's interoperation with GLFW's OpenGL context, or any context that is
+        // managed externally. LWJGL detects the context that is current in the current thread, creates the
+        // ContextCapabilities instance and makes the OpenGL bindings available for use.
+        GL.createCapabilities();
+
         glViewport(0, 0, desiredWindowWidth, desiredWindowHeight);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glfwShowWindow(m_Window);
 
         m_PerspectiveMatrix = createPerspectiveMatrix();
         m_OrthographicMatrix = createOrthographicMatrix();
@@ -114,39 +127,12 @@ public class GLWindow {
         glfwPollEvents();
     }
 
-//    public void set3d(float cameraZ) {
-//        glMatrixMode(GL_PROJECTION);
-//        glLoadIdentity();
-//        setPerspectiveProjection(m_ActualWidth / m_ActualHeight);
-//
-//        glMatrixMode(GL_MODELVIEW);
-//        glLoadIdentity();
-//        glTranslated(0.0, 0.0, cameraZ); // Place the camera
-//    }
-
     private Matrix4f createPerspectiveMatrix() {
-        return new Matrix4f().perspective((float)Math.toRadians(s_FovYDegrees / 2.0), m_ActualWidth / m_ActualHeight, s_NearClipPlane, s_FarClipPlane);
+        return new Matrix4f().perspective((float)Math.toRadians(s_FovYDegrees / 2.0), m_ActualWidth / m_ActualHeight,
+                s_NearClipPlane, s_FarClipPlane);
     }
-
-//    public void set2d() {
-//        glMatrixMode(GL_PROJECTION);
-//        glLoadIdentity();
-//        glOrtho(0.0, m_ActualWidth, 0.0, m_ActualHeight, -1.0f, 1.0f);
-//
-//        glMatrixMode(GL_MODELVIEW);
-//        glLoadIdentity();
-//        // No camera in 2d mode
-//    }
 
     private Matrix4f createOrthographicMatrix() {
-        return new Matrix4f().ortho(0.0f, m_ActualWidth, 0.0f, m_ActualHeight, -1.0f, 1.0f);
+        return new Matrix4f().ortho2D(0.0f, m_ActualWidth, 0.0f, m_ActualHeight);
     }
-
-//    // https://www.khronos.org/opengl/wiki/GluPerspective_code
-//    private static void setPerspectiveProjection(double aspect) {
-//        double tangent = Math.tan(Math.toRadians(s_FovYDegrees / 2.0));
-//        double height = s_NearClipPlane * tangent;
-//        double width = height * aspect;
-//        glFrustum(-width, width, -height, height, s_NearClipPlane, s_FarClipPlane);
-//    }
 }

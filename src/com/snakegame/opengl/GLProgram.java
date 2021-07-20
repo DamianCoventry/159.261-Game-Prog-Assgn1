@@ -1,6 +1,6 @@
 package com.snakegame.opengl;
 
-import org.joml.Matrix4f;
+import org.joml.*;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
@@ -36,7 +36,7 @@ public class GLProgram {
         glDeleteProgram(m_ProgramId);
     }
 
-    public void activate() {
+    public void bind() {
         glUseProgram(m_ProgramId);
     }
 
@@ -58,6 +58,22 @@ public class GLProgram {
 
     protected void setUniform(int location, int value) {
         glUniform1i(location, value);
+    }
+
+    protected void setUniform(int location, Vector3f value) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer fb = stack.mallocFloat(3);
+            value.get(fb);
+            glUniform3fv(location, fb);
+        }
+    }
+
+    protected void setUniform(int location, Vector4f value) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer fb = stack.mallocFloat(4);
+            value.get(fb);
+            glUniform4fv(location, fb);
+        }
     }
 
     protected void setUniform(int location, Matrix4f value) {

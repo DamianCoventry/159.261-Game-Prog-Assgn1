@@ -14,6 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.IGameView;
+import com.snakegame.opengl.GLStaticPolyhedron;
 import com.snakegame.opengl.GLTexture;
 
 import javax.imageio.ImageIO;
@@ -26,6 +27,7 @@ public class GamePausedAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
     private GLTexture m_GamePausedTexture;
+    private GLStaticPolyhedron m_Rectangle;
 
     public GamePausedAppState(IAppStateContext context) {
         m_AppStateContext = context;
@@ -35,10 +37,12 @@ public class GamePausedAppState implements IAppState {
     @Override
     public void begin(long nowMs) throws IOException {
         m_GamePausedTexture = new GLTexture(ImageIO.read(new File("images\\GamePaused.png")));
+        m_Rectangle = m_View.createRectangle(m_GamePausedTexture.getWidth(), m_GamePausedTexture.getHeight());
     }
 
     @Override
     public void end(long nowMs) {
+        m_Rectangle.freeNativeResources();
         m_GamePausedTexture.freeNativeResource();
     }
 
@@ -68,6 +72,6 @@ public class GamePausedAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-        m_View.drawCenteredImage(m_GamePausedTexture);
+        m_View.drawOrthographicPolyhedron(m_Rectangle, m_GamePausedTexture);
     }
 }
