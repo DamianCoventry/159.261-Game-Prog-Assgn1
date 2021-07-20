@@ -14,6 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
+import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
 import javax.imageio.ImageIO;
@@ -24,7 +25,7 @@ public class LevelCompleteAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameController m_Controller;
     private final IGameView m_View;
-    private Texture m_LevelCompleteTexture;
+    private GLTexture m_LevelCompleteTexture;
 
     public LevelCompleteAppState(IAppStateContext context) {
         m_AppStateContext = context;
@@ -34,7 +35,7 @@ public class LevelCompleteAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_LevelCompleteTexture = new Texture(ImageIO.read(new File("images\\LevelComplete.png")));
+        m_LevelCompleteTexture = new GLTexture(ImageIO.read(new File("images\\LevelComplete.png")));
         m_AppStateContext.addTimeout(2000, (callCount) -> {
             if (m_Controller.isLastLevel()) {
                 m_AppStateContext.changeState(new GameWonAppState(m_AppStateContext));

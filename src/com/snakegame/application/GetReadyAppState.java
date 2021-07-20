@@ -14,19 +14,19 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
+import com.snakegame.opengl.GLTexture;
 
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F5;
-import static org.lwjgl.opengl.GL11.*;
 
 public class GetReadyAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
     private final boolean m_ResetState;
-    private Texture m_GetReadyTexture;
+    private GLTexture m_GetReadyTexture;
     private int m_TimeoutId;
 
     public GetReadyAppState(IAppStateContext context, boolean resetState) {
@@ -37,7 +37,7 @@ public class GetReadyAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_GetReadyTexture = new Texture(ImageIO.read(new File("images\\GetReady.png")));
+        m_GetReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady.png")));
         if (m_ResetState) {
             m_AppStateContext.getController().resetAfterSnakeDeath(nowMs);
         }

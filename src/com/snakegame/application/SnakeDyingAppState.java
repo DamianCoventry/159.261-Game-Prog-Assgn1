@@ -14,13 +14,12 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
+import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
-
-import static org.lwjgl.opengl.GL11.*;
 
 public class SnakeDyingAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
@@ -28,9 +27,9 @@ public class SnakeDyingAppState implements IAppState {
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
-    private Texture m_Player1DiedTexture;
-    private Texture m_Player2DiedTexture;
-    private Texture m_BothPlayersDiedTexture;
+    private GLTexture m_Player1DiedTexture;
+    private GLTexture m_Player2DiedTexture;
+    private GLTexture m_BothPlayersDiedTexture;
 
     public SnakeDyingAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
@@ -50,9 +49,9 @@ public class SnakeDyingAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_Player1DiedTexture = new Texture(ImageIO.read(new File("images\\Player1Died.png")));
-        m_Player2DiedTexture = new Texture(ImageIO.read(new File("images\\Player2Died.png")));
-        m_BothPlayersDiedTexture = new Texture(ImageIO.read(new File("images\\BothSnakesDied.png")));
+        m_Player1DiedTexture = new GLTexture(ImageIO.read(new File("images\\Player1Died.png")));
+        m_Player2DiedTexture = new GLTexture(ImageIO.read(new File("images\\Player2Died.png")));
+        m_BothPlayersDiedTexture = new GLTexture(ImageIO.read(new File("images\\BothSnakesDied.png")));
         m_AppStateContext.addTimeout(2000, (callCount) -> {
             if (m_Controller.getMode() == IGameController.Mode.TWO_PLAYERS) {
                 subtractSnakeTwoPlayersGame();

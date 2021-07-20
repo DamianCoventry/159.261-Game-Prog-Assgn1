@@ -14,6 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
+import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
 import javax.imageio.ImageIO;
@@ -24,7 +25,7 @@ public class GameWonAppState implements IAppState {
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
-    private Texture m_GameWonTexture;
+    private GLTexture m_GameWonTexture;
 
     public GameWonAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
@@ -47,22 +48,22 @@ public class GameWonAppState implements IAppState {
                 long p0 = m_AppStateContext.getController().getSnakes()[0].getPoints();
                 long p1 = m_AppStateContext.getController().getSnakes()[1].getPoints();
                 if (p0 > p1) {
-                    m_GameWonTexture = new Texture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
+                    m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
                 }
                 else if (p1 > p0) {
-                    m_GameWonTexture = new Texture(ImageIO.read(new File("images\\GameWonByPlayer2.png")));
+                    m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer2.png")));
                 }
                 else {
-                    m_GameWonTexture = new Texture(ImageIO.read(new File("images\\GameWonByBothPlayers.png")));
+                    m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByBothPlayers.png")));
                 }
             } else if (m_Player == 0) {
-                m_GameWonTexture = new Texture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
+                m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
             } else {
-                m_GameWonTexture = new Texture(ImageIO.read(new File("images\\GameWonByPlayer2.png")));
+                m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer2.png")));
             }
         }
         else {
-            m_GameWonTexture = new Texture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
+            m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
         }
         m_AppStateContext.addTimeout(3500, (callCount) -> {
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));

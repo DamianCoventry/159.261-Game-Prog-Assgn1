@@ -14,6 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
+import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
 import javax.imageio.ImageIO;
@@ -25,7 +26,7 @@ public class GameOverAppState implements IAppState {
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
-    private Texture m_GameOverTexture;
+    private GLTexture m_GameOverTexture;
 
     public GameOverAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
@@ -45,15 +46,15 @@ public class GameOverAppState implements IAppState {
     public void begin(long nowMs) throws IOException {
         if (m_AppStateContext.getController().getMode() == IGameController.Mode.TWO_PLAYERS) {
             if (m_BothSnakes) {
-                m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOverBothPlayersLost.png")));
+                m_GameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverBothPlayersLost.png")));
             } else if (m_Player == 0) {
-                m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOverPlayer1Lost.png")));
+                m_GameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverPlayer1Lost.png")));
             } else {
-                m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOverPlayer2Lost.png")));
+                m_GameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverPlayer2Lost.png")));
             }
         }
         else {
-            m_GameOverTexture = new Texture(ImageIO.read(new File("images\\GameOver.png")));
+            m_GameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOver.png")));
         }
         m_AppStateContext.addTimeout(3500, (callCount) -> {
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));

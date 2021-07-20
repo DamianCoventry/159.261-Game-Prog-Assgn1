@@ -13,9 +13,8 @@
 
 package com.snakegame.application;
 
-import com.snakegame.client.IGameView;
-import com.snakegame.client.Texture;
-import com.snakegame.client.TimeoutManager;
+import com.snakegame.client.*;
+import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
 import javax.imageio.ImageIO;
@@ -26,7 +25,7 @@ public class GameLoadingAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
     private final IGameController.Mode m_Mode;
-    private Texture m_LoadingTexture;
+    private GLTexture m_LoadingTexture;
 
     public GameLoadingAppState(IAppStateContext context, IGameController.Mode mode) {
         m_AppStateContext = context;
@@ -36,7 +35,7 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_LoadingTexture = new Texture(ImageIO.read(new File("images\\Loading.png")));
+        m_LoadingTexture = new GLTexture(ImageIO.read(new File("images\\Loading.png")));
         m_AppStateContext.getController().startNewGame(nowMs, m_Mode);
         m_AppStateContext.addTimeout(500, (callCount) ->{
             m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, true));

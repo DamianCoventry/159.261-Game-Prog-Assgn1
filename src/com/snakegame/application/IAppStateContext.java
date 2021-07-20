@@ -15,6 +15,7 @@ package com.snakegame.application;
 
 import com.snakegame.client.*;
 import com.snakegame.rules.IGameController;
+import org.joml.Matrix4f;
 
 import java.util.function.Function;
 
@@ -30,4 +31,6 @@ public interface IAppStateContext {
 
     IGameController getController();
     IGameView getView();
+    Matrix4f getProjectionMatrix();
+    Matrix4f getOrthographicMatrix();
 }

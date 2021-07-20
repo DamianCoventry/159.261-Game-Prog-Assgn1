@@ -1,8 +1,13 @@
 package com.snakegame.client;
 
 import com.snakegame.application.IAppStateContext;
+import com.snakegame.opengl.GLStaticPolyhedron;
+import com.snakegame.opengl.GLTexture;
+import com.snakegame.opengl.TexturedShaderProgram;
 import com.snakegame.rules.*;
 import com.snakegame.rules.Number;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -13,39 +18,49 @@ import static org.lwjgl.opengl.GL11.glEnd;
 public class GameView implements IGameView {
     private static final int s_NumNumbers = 9;
     private static final float s_CellSize = 3.0f;
+    private static final float s_CameraZ = -120.0f;
+
+    private final GLTexture[] m_NumberTextures;
+    private final GLTexture[] m_PowerUpTextures;
+    private final GLTexture m_WallTexture;
+    private final GLTexture m_DotTexture;
+    private final GLTexture m_HeadTexture;
+    private final NumberFont m_NumberFont;
+    private final TexturedShaderProgram m_TexturedShaderProgram;
+    private final Matrix4f m_ModelMatrix;
 
     private IAppStateContext m_AppStateContext;
     private IGameController m_Controller;
     private GameField m_GameField;
     private Snake[] m_Snakes;
-
-    private final Texture[] m_NumberTextures;
-    private final Texture[] m_PowerUpTextures;
-    private final Texture m_WallTexture;
-    private final Texture m_DotTexture;
-    private final Texture m_HeadTexture;
-    private final NumberFont m_NumberFont;
+    private Matrix4f m_ViewMatrix;
+    private GLStaticPolyhedron m_Rectangle;
 
     public GameView() throws IOException {
-        m_NumberTextures = new Texture[s_NumNumbers];
+        m_NumberTextures = new GLTexture[s_NumNumbers];
         for (int i = 0; i < s_NumNumbers; ++i) {
-            m_NumberTextures[i] = new Texture(ImageIO.read(new File(String.format("images\\Apple%d.png", i + 1))));
+            m_NumberTextures[i] = new GLTexture(ImageIO.read(new File(String.format("images\\Apple%d.png", i + 1))));
         }
 
-        m_PowerUpTextures = new Texture[PowerUp.s_NumPowerUps];
-        m_PowerUpTextures[0] = new Texture(ImageIO.read(new File("images\\DecreaseLength.png")));
-        m_PowerUpTextures[1] = new Texture(ImageIO.read(new File("images\\IncreaseSpeed.png")));
-        m_PowerUpTextures[2] = new Texture(ImageIO.read(new File("images\\DecreaseSpeed.png")));
-        m_PowerUpTextures[3] = new Texture(ImageIO.read(new File("images\\IncreaseLives.png")));
-        m_PowerUpTextures[4] = new Texture(ImageIO.read(new File("images\\DecreaseLives.png")));
-        m_PowerUpTextures[5] = new Texture(ImageIO.read(new File("images\\IncreasePoints.png")));
-        m_PowerUpTextures[6] = new Texture(ImageIO.read(new File("images\\DecreasePoints.png")));
-        m_PowerUpTextures[7] = new Texture(ImageIO.read(new File("images\\Random.png")));
+        m_PowerUpTextures = new GLTexture[PowerUp.s_NumPowerUps];
+        m_PowerUpTextures[0] = new GLTexture(ImageIO.read(new File("images\\DecreaseLength.png")));
+        m_PowerUpTextures[1] = new GLTexture(ImageIO.read(new File("images\\IncreaseSpeed.png")));
+        m_PowerUpTextures[2] = new GLTexture(ImageIO.read(new File("images\\DecreaseSpeed.png")));
+        m_PowerUpTextures[3] = new GLTexture(ImageIO.read(new File("images\\IncreaseLives.png")));
+        m_PowerUpTextures[4] = new GLTexture(ImageIO.read(new File("images\\DecreaseLives.png")));
+        m_PowerUpTextures[5] = new GLTexture(ImageIO.read(new File("images\\IncreasePoints.png")));
+        m_PowerUpTextures[6] = new GLTexture(ImageIO.read(new File("images\\DecreasePoints.png")));
+        m_PowerUpTextures[7] = new GLTexture(ImageIO.read(new File("images\\Random.png")));
 
-        m_WallTexture = new Texture(ImageIO.read(new File("images\\Wall.jpg")));
-        m_DotTexture = new Texture(ImageIO.read(new File("images\\dot.png")));
-        m_HeadTexture = new Texture(ImageIO.read(new File("images\\head.png")));
+        m_WallTexture = new GLTexture(ImageIO.read(new File("images\\Wall.jpg")));
+        m_DotTexture = new GLTexture(ImageIO.read(new File("images\\dot.png")));
+        m_HeadTexture = new GLTexture(ImageIO.read(new File("images\\head.png")));
         m_NumberFont = new NumberFont();
+        m_TexturedShaderProgram = new TexturedShaderProgram();
+
+        m_ViewMatrix = new Matrix4f();
+        m_ViewMatrix.transform(new Vector4f(0, 0, s_CameraZ, 1.0f));
+        m_ModelMatrix = new Matrix4f();
     }
 
     @Override
@@ -54,6 +69,12 @@ public class GameView implements IGameView {
         m_Controller = m_AppStateContext.getController();
         m_GameField = m_Controller.getGameField();
         m_Snakes = m_Controller.getSnakes();
+        createRectangle(400, 300); // TODO
+    }
+
+    @Override
+    public TexturedShaderProgram getTexturedShaderProgram() {
+        return m_TexturedShaderProgram;
     }
 
     @Override
@@ -68,6 +89,8 @@ public class GameView implements IGameView {
         m_DotTexture.freeNativeResource();
         m_HeadTexture.freeNativeResource();
         m_NumberFont.freeNativeResource();
+        m_TexturedShaderProgram.freeNativeResource();
+        m_Rectangle.freeNativeResources();
     }
 
     @Override
@@ -200,28 +223,62 @@ public class GameView implements IGameView {
     }
 
     @Override
-    public void drawCenteredImage(Texture texture) {
+    public void drawCenteredImage(GLTexture texture) {
         if (m_AppStateContext == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
-        glColor4d(1.0, 1.0, 1.0, 1.0);
-        glBindTexture(GL_TEXTURE_2D, texture.getId());
-        var w = texture.getWidth();
-        var h = texture.getHeight();
-        var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
-        var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
-        glBegin(GL_QUADS);
-        glTexCoord2d(0.0, 0.0); glVertex3d(x, y + h, 0.1f);
-        glTexCoord2d(0.0, 1.0); glVertex3d(x , y, 0.1f);
-        glTexCoord2d(1.0, 1.0); glVertex3d(x + w, y, 0.1f);
-        glTexCoord2d(1.0, 0.0); glVertex3d(x + w, y + h, 0.1f);
-        glEnd();
+
+        Matrix4f projection = m_AppStateContext.getOrthographicMatrix();
+        Matrix4f mvpMatrix = m_ModelMatrix.mul(m_ViewMatrix.mul(projection));
+        m_TexturedShaderProgram.activate(mvpMatrix, texture);
+        m_Rectangle.draw();
+
+//        glColor4d(1.0, 1.0, 1.0, 1.0);
+//        glBindTexture(GL_TEXTURE_2D, texture.getId());
+//        var w = texture.getWidth();
+//        var h = texture.getHeight();
+//        var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
+//        var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
+//        glBegin(GL_QUADS);
+//        glTexCoord2d(0.0, 0.0); glVertex3d(x, y + h, 0.1f);
+//        glTexCoord2d(0.0, 1.0); glVertex3d(x , y, 0.1f);
+//        glTexCoord2d(1.0, 1.0); glVertex3d(x + w, y, 0.1f);
+//        glTexCoord2d(1.0, 0.0); glVertex3d(x + w, y + h, 0.1f);
+//        glEnd();
     }
 
-    private void drawTexturedQuad(double x, double y, double w, double h, double u0, double v0, double u1, double v1, Texture texture) {
+    private void createRectangle(float w, float h) {
+        var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (w / 2.0f);
+        var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (h / 2.0f);
+
+        float[] vertices = new float[]{
+                // triangle 0
+                x, y + h, 0.1f,
+                x, y, 0.1f,
+                x + w, y, 0.1f,
+                // triangle 1
+                x, y + h, 0.1f,
+                x + w, y, 0.1f,
+                x + w, y + h, 0.1f
+        };
+        float[] texCoordinates = new float[]{
+                // triangle 0
+                0.0f, 0.0f,
+                0.0f, 1.0f,
+                1.0f, 1.0f,
+                // triangle 1
+                0.0f, 0.0f,
+                1.0f, 1.0f,
+                1.0f, 0.0f
+        };
+
+        m_Rectangle = new GLStaticPolyhedron(vertices, texCoordinates);
+    }
+
+    private void drawTexturedQuad(double x, double y, double w, double h, double u0, double v0, double u1, double v1, GLTexture GLTexture) {
         glColor4d(1.0, 1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, texture.getId());
+        glBindTexture(GL_TEXTURE_2D, GLTexture.getId());
 
         glBegin(GL_QUADS);
         glTexCoord2d(u0, v0); glVertex2d(x, y + h);
@@ -231,10 +288,10 @@ public class GameView implements IGameView {
         glEnd();
     }
 
-    private void drawSingleImage(double x, double y, double w, double h, Texture texture) {
+    private void drawSingleImage(double x, double y, double w, double h, GLTexture GLTexture) {
         glColor4d(1.0, 1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, texture.getId());
+        glBindTexture(GL_TEXTURE_2D, GLTexture.getId());
 
         glBegin(GL_QUADS);
         glTexCoord2d(0.0, 0.0); glVertex3d(x, y + h, 0.1f);

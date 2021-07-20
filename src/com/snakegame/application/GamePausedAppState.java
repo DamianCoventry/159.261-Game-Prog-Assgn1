@@ -14,19 +14,18 @@
 package com.snakegame.application;
 
 import com.snakegame.client.IGameView;
-import com.snakegame.client.Texture;
+import com.snakegame.opengl.GLTexture;
 
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
 
 public class GamePausedAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
-    private Texture m_GamePausedTexture;
+    private GLTexture m_GamePausedTexture;
 
     public GamePausedAppState(IAppStateContext context) {
         m_AppStateContext = context;
@@ -35,7 +34,7 @@ public class GamePausedAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_GamePausedTexture = new Texture(ImageIO.read(new File("images\\GamePaused.png")));
+        m_GamePausedTexture = new GLTexture(ImageIO.read(new File("images\\GamePaused.png")));
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.snakegame.client;
 
+import com.snakegame.opengl.GLTexture;
+
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +13,7 @@ public class NumberFont {
     public static final float s_FrameWidth = 26.0f;
     public static final float s_FrameHeight = 37.0f;
     private static final int s_NumDigits = 10;
-    private final Texture m_NumberTexture;
+    private final GLTexture m_NumberGLTexture;
     private final Character[] m_Characters;
     
     private static class Character {
@@ -24,10 +26,10 @@ public class NumberFont {
     }
     
     public NumberFont() throws IOException {
-        m_NumberTexture = new Texture(ImageIO.read(new File("images\\Numbers.png")));
+        m_NumberGLTexture = new GLTexture(ImageIO.read(new File("images\\Numbers.png")));
         m_Characters = new Character[s_NumDigits];
-        final float deltaU = s_FrameWidth / m_NumberTexture.getWidth();
-        final float deltaV = s_FrameHeight / m_NumberTexture.getHeight();
+        final float deltaU = s_FrameWidth / m_NumberGLTexture.getWidth();
+        final float deltaV = s_FrameHeight / m_NumberGLTexture.getHeight();
         for (int i = 0; i < s_NumDigits; ++i) {
             m_Characters[i] = new Character(
                     i * deltaU,0.0f,
@@ -37,13 +39,13 @@ public class NumberFont {
     }
 
     public void freeNativeResource() {
-        m_NumberTexture.freeNativeResource();
+        m_NumberGLTexture.freeNativeResource();
     }
     
     public void drawNumber(long number, float x, float y) {
         glColor4d(1.0, 1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, m_NumberTexture.getId());
+        glBindTexture(GL_TEXTURE_2D, m_NumberGLTexture.getId());
         String text = String.valueOf(number);
         glBegin(GL_QUADS);
         for (int i = 0; i < text.length(); ++i) {

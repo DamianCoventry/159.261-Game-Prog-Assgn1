@@ -1,5 +1,6 @@
-package com.snakegame.client;
+package com.snakegame.opengl;
 
+import org.joml.Matrix4f;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
 
@@ -10,16 +11,19 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 // https://www.glfw.org/docs/latest/window_guide.html
 // https://github.com/glfw/glfw
 // https://en.wikipedia.org/wiki/GLFW
-public class OpenGLWindow {
-    private static final double s_FovYDegrees = 60.0;
-    private static final double s_NearClipPlane = 1.0;
-    private static final double s_FarClipPlane = 1000.0;
+public class GLWindow {
+    private static final float s_FovYDegrees = 60.0f;
+    private static final float s_NearClipPlane = 1.0f;
+    private static final float s_FarClipPlane = 1000.0f;
 
     private final long m_Window;
+    private Matrix4f m_PerspectiveMatrix;
+    private Matrix4f m_OrthographicMatrix;
+
     private float m_ActualWidth;
     private float m_ActualHeight;
 
-    public OpenGLWindow(int desiredWindowWidth, int desiredWindowHeight, String windowTitle) {
+    public GLWindow(int desiredWindowWidth, int desiredWindowHeight, String windowTitle) {
         glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err));
 
         if (!glfwInit()) {
@@ -65,8 +69,20 @@ public class OpenGLWindow {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+        m_PerspectiveMatrix = createPerspectiveMatrix();
+        m_OrthographicMatrix = createOrthographicMatrix();
+
         m_ActualWidth = (float)desiredWindowWidth;
         m_ActualHeight = (float)desiredWindowHeight;
+    }
+
+    public Matrix4f getPerspectiveMatrix() {
+        m_PerspectiveMatrix = createPerspectiveMatrix();
+        return m_PerspectiveMatrix;
+    }
+    public Matrix4f getOrthographicMatrix() {
+        m_OrthographicMatrix = createOrthographicMatrix();
+        return m_OrthographicMatrix;
     }
 
     public float getActualWidth() {
@@ -75,7 +91,7 @@ public class OpenGLWindow {
     public float getActualHeight() {
         return m_ActualHeight;
     }
-    
+
     public void freeNativeResources() {
         glfwDestroyWindow(m_Window);
         glfwTerminate();
@@ -98,31 +114,39 @@ public class OpenGLWindow {
         glfwPollEvents();
     }
 
-    public void set3d(float cameraZ) {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        setPerspectiveProjection(m_ActualWidth / m_ActualHeight);
+//    public void set3d(float cameraZ) {
+//        glMatrixMode(GL_PROJECTION);
+//        glLoadIdentity();
+//        setPerspectiveProjection(m_ActualWidth / m_ActualHeight);
+//
+//        glMatrixMode(GL_MODELVIEW);
+//        glLoadIdentity();
+//        glTranslated(0.0, 0.0, cameraZ); // Place the camera
+//    }
 
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glTranslated(0.0, 0.0, cameraZ); // Place the camera
+    private Matrix4f createPerspectiveMatrix() {
+        return new Matrix4f().perspective((float)Math.toRadians(s_FovYDegrees / 2.0), m_ActualWidth / m_ActualHeight, s_NearClipPlane, s_FarClipPlane);
     }
 
-    public void set2d() {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0.0, m_ActualWidth, 0.0, m_ActualHeight, -1.0f, 1.0f);
+//    public void set2d() {
+//        glMatrixMode(GL_PROJECTION);
+//        glLoadIdentity();
+//        glOrtho(0.0, m_ActualWidth, 0.0, m_ActualHeight, -1.0f, 1.0f);
+//
+//        glMatrixMode(GL_MODELVIEW);
+//        glLoadIdentity();
+//        // No camera in 2d mode
+//    }
 
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        // No camera in 2d mode
+    private Matrix4f createOrthographicMatrix() {
+        return new Matrix4f().ortho(0.0f, m_ActualWidth, 0.0f, m_ActualHeight, -1.0f, 1.0f);
     }
 
-    // https://www.khronos.org/opengl/wiki/GluPerspective_code
-    private static void setPerspectiveProjection(double aspect) {
-        double tangent = Math.tan(Math.toRadians(s_FovYDegrees / 2.0));
-        double height = s_NearClipPlane * tangent;
-        double width = height * aspect;
-        glFrustum(-width, width, -height, height, s_NearClipPlane, s_FarClipPlane);
-    }
+//    // https://www.khronos.org/opengl/wiki/GluPerspective_code
+//    private static void setPerspectiveProjection(double aspect) {
+//        double tangent = Math.tan(Math.toRadians(s_FovYDegrees / 2.0));
+//        double height = s_NearClipPlane * tangent;
+//        double width = height * aspect;
+//        glFrustum(-width, width, -height, height, s_NearClipPlane, s_FarClipPlane);
+//    }
 }

@@ -13,7 +13,8 @@
 
 package com.snakegame.application;
 
-import com.snakegame.client.Texture;
+import com.snakegame.client.IGameView;
+import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 
 import javax.imageio.ImageIO;
@@ -24,24 +25,26 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class RunningMenuAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
-    private Texture m_MainMenuTexture;
-    private Texture m_HelpMenuTexture;
+    private final IGameView m_View;
+    private GLTexture m_MainMenuTexture;
+    private GLTexture m_HelpMenuTexture;
     private enum Page {MAIN, HELP }
     private Page m_Page;
 
     public RunningMenuAppState(IAppStateContext context) {
         m_AppStateContext = context;
+        m_View = m_AppStateContext.getView();
     }
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_MainMenuTexture = new Texture(ImageIO.read(new File("images\\MainMenu.png")));
-        m_HelpMenuTexture = new Texture(ImageIO.read(new File("images\\HelpMenu.png")));
+        m_MainMenuTexture = new GLTexture(ImageIO.read(new File("images\\MainMenu.png")));
+        m_HelpMenuTexture = new GLTexture(ImageIO.read(new File("images\\HelpMenu.png")));
 
         glColor4d(1.0, 1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
 
-        setPage(Page.MAIN);
+        m_Page = Page.MAIN;
     }
 
     @Override
@@ -58,7 +61,7 @@ public class RunningMenuAppState implements IAppState {
 
         if (m_Page == Page.HELP) {
             if (key == GLFW_KEY_ESCAPE) {
-                setPage(Page.MAIN);
+                m_Page = Page.MAIN;
             }
             return;
         }
@@ -72,7 +75,7 @@ public class RunningMenuAppState implements IAppState {
                 startNewGame(IGameController.Mode.TWO_PLAYERS);
                 break;
             case GLFW_KEY_3:
-                setPage(Page.HELP);
+                m_Page = Page.HELP;
                 break;
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(window, true);
@@ -92,22 +95,12 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void draw2d(long nowMs) {
-        glBegin(GL_QUADS);
-        glTexCoord2d(0.0, 0.0); glVertex2f(0.0f, m_AppStateContext.getWindowHeight());
-        glTexCoord2d(0.0, 1.0); glVertex2f(0.0f, 0.0f);
-        glTexCoord2d(1.0, 1.0); glVertex2f(m_AppStateContext.getWindowWidth(), 0.0f);
-        glTexCoord2d(1.0, 0.0); glVertex2f(m_AppStateContext.getWindowWidth(), m_AppStateContext.getWindowHeight());
-        glEnd();
-    }
-
-    private void setPage(Page page) {
-        m_Page = page;
         switch (m_Page) {
             case MAIN:
-                glBindTexture(GL_TEXTURE_2D, m_MainMenuTexture.getId());
+                m_View.drawCenteredImage(m_MainMenuTexture);
                 break;
             case HELP:
-                glBindTexture(GL_TEXTURE_2D, m_HelpMenuTexture.getId());
+                m_View.drawCenteredImage(m_HelpMenuTexture);
                 break;
         }
     }

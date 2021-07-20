@@ -9,7 +9,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="lwjgl-assimp-javadoc" level="project" />
-    <orderEntry type="library" name="Libbulletjme-10.5.0-sources" level="project" />
     <orderEntry type="module-library" scope="TEST">
       <library name="JUnit5.7.0">
         <CLASSES>
@@ -26,5 +25,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="org.joml:joml:1.10.1" level="project" />
+    <orderEntry type="library" name="Libbulletjme-10.5.0-sources" level="project" />
   </component>
 </module>

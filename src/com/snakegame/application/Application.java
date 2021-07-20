@@ -14,7 +14,9 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
+import com.snakegame.opengl.*;
 import com.snakegame.rules.*;
+import org.joml.Matrix4f;
 import org.lwjgl.glfw.*;
 
 import java.io.IOException;
@@ -28,11 +30,10 @@ import java.util.function.Function;
 public class Application implements IAppStateContext {
     private static final int s_DesiredWindowWidth = 1024;
     private static final int s_DesiredWindowHeight = 768;
-    private static final float s_CameraZCoordinate = -120.0f;
     private static final String s_WindowTitle = "159.261 Game Programming (Assignment 1)";
 
     private final TimeoutManager m_TimeoutManager;
-    private final OpenGLWindow m_GLWindow;
+    private final GLWindow m_GLWindow;
     private final IGameController m_Controller;
     private final IGameView m_View;
 
@@ -40,7 +41,7 @@ public class Application implements IAppStateContext {
     private IAppState m_CurrentState = null;
 
     public Application() throws IOException {
-        m_GLWindow = new OpenGLWindow(s_DesiredWindowWidth, s_DesiredWindowHeight, s_WindowTitle);
+        m_GLWindow = new GLWindow(s_DesiredWindowWidth, s_DesiredWindowHeight, s_WindowTitle);
         m_GLWindow.setKeyCallback(new GLFWKeyCallback() {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
@@ -55,13 +56,14 @@ public class Application implements IAppStateContext {
         });
 
         m_Controller = new GameController(this);
-        m_View = new GameView();
         m_TimeoutManager = new TimeoutManager();
+        m_View = new GameView();
+        m_View.setAppStateContext(this);
 
         changeStateNow(new RunningMenuAppState(this), System.currentTimeMillis());
     }
 
-    public void close() {
+    public void freeNativeResources() {
         m_View.freeNativeResources();
         m_GLWindow.freeNativeResources();
     }
@@ -74,11 +76,8 @@ public class Application implements IAppStateContext {
             m_CurrentState.think(nowMs);
 
             m_GLWindow.beginDrawing();
-                m_GLWindow.set3d(s_CameraZCoordinate);
-                m_CurrentState.draw3d(nowMs);
-
-                m_GLWindow.set2d();
-                m_CurrentState.draw2d(nowMs);
+            m_CurrentState.draw3d(nowMs);
+            m_CurrentState.draw2d(nowMs);
             m_GLWindow.endDrawing();
 
             performPendingStateChange(nowMs);
@@ -120,6 +119,16 @@ public class Application implements IAppStateContext {
         return m_View;
     }
 
+    @Override
+    public Matrix4f getProjectionMatrix() {
+        return m_GLWindow.getPerspectiveMatrix();
+    }
+
+    @Override
+    public Matrix4f getOrthographicMatrix() {
+        return m_GLWindow.getOrthographicMatrix();
+    }
+
     public void performPendingStateChange(long nowMs) throws IOException {
         if (m_PendingState != null) {
             changeStateNow(m_PendingState, nowMs);
@@ -149,7 +158,7 @@ public class Application implements IAppStateContext {
         }
         finally {
             if (app != null) {
-                app.close(); // ensure release of OpenGL resources
+                app.freeNativeResources(); // ensure release of OpenGL resources
             }
         }
     }

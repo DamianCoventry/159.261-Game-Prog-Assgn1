@@ -17,7 +17,7 @@ public class Main {
         }
         finally {
             if (app != null) {
-                app.close(); // ensure release of OpenGL resources
+                app.freeNativeResources(); // ensure release of OpenGL resources
             }
         }
     }

@@ -28,17 +28,29 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - ~~Level info on toolbar~~
 
 ### Graphics
-- ~~OpenGL integration~~
-- GLSL Shaders
-- Polyhedron meshes
-- Transformation based animations
-- Sprites (via bill boarding)
-- Particle systems
-- Alpha blending
-- Coloured lighting
-- Dynamic lighting
-- Shadow mapping
-- Screen transitions
+- Graphics Engine
+  - ~~OpenGL integration~~
+  - GLSL Shaders
+  - Polyhedron meshes
+  - Sprites (via bill boarding)
+  - Particle systems
+  - Alpha blending
+  - Coloured lighting
+  - Dynamic lighting
+  - Shadow mapping
+- GUI Animations
+  - Screen transitions
+  - UI toolbar items
+  - UI dialog boxes
+  - UI control focus
+  - UI controls
+- World Animations
+  - Transformation based
+  - Particle system based
+  - Sprite based
+  - PowerUp spawn/collect animations
+  - Snake death animation
+  - World wall insertion animation
 
 ### Physics
 - Rigid-body dynamics via Bullet3

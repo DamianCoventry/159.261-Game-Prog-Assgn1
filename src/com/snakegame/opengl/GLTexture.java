@@ -1,4 +1,4 @@
-package com.snakegame.client;
+package com.snakegame.opengl;
 
 import org.lwjgl.BufferUtils;
 
@@ -7,13 +7,13 @@ import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
 
-public class Texture {
+public class GLTexture {
     private final int m_Id;
     private final float m_Width;
     private final float m_Height;
 
     // https://jvm-gaming.org/t/bufferedimage-to-lwjgl-texture/37959
-    public Texture(BufferedImage image) {
+    public GLTexture(BufferedImage image) {
         int[] pixels = new int[image.getWidth() * image.getHeight()];
         image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
 
@@ -34,6 +34,9 @@ public class Texture {
         m_Height = image.getHeight();
 
         m_Id = glGenTextures();
+        if (m_Id < 1) {
+            throw new RuntimeException("Unable to create a new texture object");
+        }
         glBindTexture(GL_TEXTURE_2D, m_Id);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
