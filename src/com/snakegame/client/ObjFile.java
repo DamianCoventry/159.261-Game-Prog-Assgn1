@@ -1,8 +1,19 @@
+//
+// Snake Game
+// https://en.wikipedia.org/wiki/Snake_(video_game_genre)
+//
+// Based on the 1976 arcade game Blockade, and the 1991 game Nibbles
+// https://en.wikipedia.org/wiki/Blockade_(video_game)
+// https://en.wikipedia.org/wiki/Nibbles_(video_game)
+//
+// This implementation is Copyright (c) 2021, Damian Coventry
+// All rights reserved
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
+//
+
 package com.snakegame.client;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.util.ArrayList;
 
 /**
@@ -13,22 +24,20 @@ import java.util.ArrayList;
 // https://en.wikipedia.org/wiki/Wavefront_.obj_file
 public class ObjFile {
     private final ArrayList<Object> m_Objects;
-    private final ArrayList<String> m_MaterialNames;
+    private final ArrayList<String> m_MaterialFileNames;
     private final ArrayList<Vertex> m_Vertices;
     private final ArrayList<TexCoordinate> m_TexCoordinates;
     private final ArrayList<Vertex> m_Normals;
 
-    public static class Object {
-        private final String m_Name;
+    public static class Piece {
+        private final String m_MaterialName;
         private final ArrayList<Face> m_Faces;
-        private String m_MaterialName;
-        private int m_SmoothingGroup;
-        public Object(String name) {
-            m_Name = name;
+        public Piece(String materialName) {
+            m_MaterialName = materialName;
             m_Faces = new ArrayList<>();
         }
-        public String getName() {
-            return m_Name;
+        public String getMaterialName() {
+            return m_MaterialName;
         }
         public ArrayList<Face> getFaces() {
             return m_Faces;
@@ -36,11 +45,24 @@ public class ObjFile {
         public void addFace(Face face) {
             m_Faces.add(face);
         }
-        public void setMaterialName(String name) {
-            m_MaterialName = name;
+    }
+
+    public static class Object {
+        private final String m_Name;
+        private final ArrayList<Piece> m_Pieces;
+        private int m_SmoothingGroup;
+        public Object(String name) {
+            m_Name = name;
+            m_Pieces = new ArrayList<>();
         }
-        public String getMaterialName() {
-            return m_MaterialName;
+        public String getName() {
+            return m_Name;
+        }
+        public ArrayList<Piece> getPieces() {
+            return m_Pieces;
+        }
+        public void addPiece(Piece piece) {
+            m_Pieces.add(piece);
         }
         public void setSmoothingGroup(int shading) {
             m_SmoothingGroup = shading;
@@ -80,7 +102,7 @@ public class ObjFile {
 
     public ObjFile(String fileName) throws Exception {
         m_Objects = new ArrayList<>();
-        m_MaterialNames = new ArrayList<>();
+        m_MaterialFileNames = new ArrayList<>();
         m_Vertices = new ArrayList<>();
         m_TexCoordinates = new ArrayList<>();
         m_Normals = new ArrayList<>();
@@ -100,8 +122,8 @@ public class ObjFile {
     public ArrayList<Object> getObjects() {
         return m_Objects;
     }
-    public ArrayList<String> getMaterialNames() {
-        return m_MaterialNames;
+    public ArrayList<String> getMaterialFileNames() {
+        return m_MaterialFileNames;
     }
     public ArrayList<Vertex> getVertices() {
         return m_Vertices;
@@ -131,7 +153,7 @@ public class ObjFile {
             parseNormal(words);
         }
         else if (words[0].equals("usemtl")) {
-            parseMaterialAssignment(words);
+            parseUseMaterial(words);
         }
         else if (words[0].equals("s")) {
             parseSmoothingGroup(words);
@@ -149,7 +171,7 @@ public class ObjFile {
 
     private void parseMaterial(String[] words) {
         if (words.length == 2) {
-            m_MaterialNames.add(words[1]);
+            m_MaterialFileNames.add(words[1]);
         }
     }
 
@@ -182,15 +204,15 @@ public class ObjFile {
         }
     }
 
-    private void parseMaterialAssignment(String[] words) {
+    private void parseUseMaterial(String[] words) {
         if (words.length == 2 && !m_Objects.isEmpty()) {
-            m_Objects.get(m_Objects.size() - 1).setMaterialName(words[1]);
+            getCurrentObject().addPiece(new Piece(words[1]));
         }
     }
 
     private void parseSmoothingGroup(String[] words) {
         if (words.length == 2 && !words[1].equals("off") && !m_Objects.isEmpty()) {
-            m_Objects.get(m_Objects.size() - 1).setSmoothingGroup(Integer.parseInt(words[1]));
+            getCurrentObject().setSmoothingGroup(Integer.parseInt(words[1]));
         }
     }
 
@@ -207,9 +229,7 @@ public class ObjFile {
         texCoordinates[0] = triplet0[1]; texCoordinates[1] = triplet1[1]; texCoordinates[2] = triplet2[1];
         int[] normals = new int[3];
         normals[0] = triplet0[2]; normals[1] = triplet1[2]; normals[2] = triplet2[2];
-        m_Objects.get(m_Objects.size() - 1).addFace(
-                new Face(vertices, texCoordinates, normals)
-        );
+        getCurrentPiece().addFace(new Face(vertices, texCoordinates, normals));
     }
 
     private int[] parseInteger3(String triplet) throws Exception {
@@ -223,5 +243,20 @@ public class ObjFile {
         integer3[1] = Integer.parseInt(indices[1]) - 1;
         integer3[2] = Integer.parseInt(indices[2]) - 1;
         return integer3;
+    }
+
+    private Object getCurrentObject() {
+        if (m_Objects == null || m_Objects.size() == 0) {
+            throw new RuntimeException("There is no current object");
+        }
+        return m_Objects.get(m_Objects.size() - 1);
+    }
+
+    private Piece getCurrentPiece() {
+        Object object = getCurrentObject();
+        if (object.getPieces() == null || object.getPieces().size() == 0) {
+            throw new RuntimeException("There is no current object");
+        }
+        return object.getPieces().get(object.getPieces().size() - 1);
     }
 }

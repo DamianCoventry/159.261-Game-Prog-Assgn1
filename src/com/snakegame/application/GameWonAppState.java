@@ -14,8 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
-import com.snakegame.opengl.GLStaticPolyhedron;
-import com.snakegame.opengl.GLTexture;
+import com.snakegame.opengl.*;
 import com.snakegame.rules.IGameController;
 
 import javax.imageio.ImageIO;
@@ -26,7 +25,6 @@ public class GameWonAppState implements IAppState {
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
-    private GLTexture m_GameWonTexture;
     private GLStaticPolyhedron m_Rectangle;
 
     public GameWonAppState(IAppStateContext context, int player) {
@@ -45,30 +43,31 @@ public class GameWonAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
+        GLTexture gameWonTexture;
         if (m_AppStateContext.getController().getMode() == IGameController.Mode.TWO_PLAYERS) {
             if (m_BothSnakes) {
                 long p0 = m_AppStateContext.getController().getSnakes()[0].getPoints();
                 long p1 = m_AppStateContext.getController().getSnakes()[1].getPoints();
                 if (p0 > p1) {
-                    m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
+                    gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
                 }
                 else if (p1 > p0) {
-                    m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer2.png")));
+                    gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer2.png")));
                 }
                 else {
-                    m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByBothPlayers.png")));
+                    gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByBothPlayers.png")));
                 }
             } else if (m_Player == 0) {
-                m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
+                gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
             } else {
-                m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer2.png")));
+                gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer2.png")));
             }
         }
         else {
-            m_GameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
+            gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
         }
 
-        m_Rectangle = m_View.createRectangle(m_GameWonTexture.getWidth(), m_GameWonTexture.getHeight());
+        m_Rectangle = m_View.createRectangle(gameWonTexture.getWidth(), gameWonTexture.getHeight(), gameWonTexture);
 
         m_AppStateContext.addTimeout(3500, (callCount) -> {
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
@@ -79,7 +78,6 @@ public class GameWonAppState implements IAppState {
     @Override
     public void end(long nowMs) {
         m_Rectangle.freeNativeResources();
-        m_GameWonTexture.freeNativeResource();
     }
 
     @Override
@@ -100,6 +98,6 @@ public class GameWonAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-        m_View.drawOrthographicPolyhedron(m_Rectangle, m_GameWonTexture);
+        m_View.drawOrthographicPolyhedron(m_Rectangle);
     }
 }

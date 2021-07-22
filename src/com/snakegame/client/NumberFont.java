@@ -1,3 +1,16 @@
+//
+// Snake Game
+// https://en.wikipedia.org/wiki/Snake_(video_game_genre)
+//
+// Based on the 1976 arcade game Blockade, and the 1991 game Nibbles
+// https://en.wikipedia.org/wiki/Blockade_(video_game)
+// https://en.wikipedia.org/wiki/Nibbles_(video_game)
+//
+// This implementation is Copyright (c) 2021, Damian Coventry
+// All rights reserved
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
+//
+
 package com.snakegame.client;
 
 import com.snakegame.opengl.*;
@@ -12,7 +25,6 @@ public class NumberFont {
     private static final int s_NumDigits = 10;
     private final Character[] m_Characters;
     private final GLStaticPolyhedron[] m_Polyhedra;
-    private final GLTexture m_NumberGLTexture;
     private final TexturedShaderProgram m_TexturedShaderProgram;
 
     private static class Character {
@@ -26,15 +38,15 @@ public class NumberFont {
     
     public NumberFont(TexturedShaderProgram texturedShaderProgram) throws IOException {
         m_TexturedShaderProgram = texturedShaderProgram;
-        m_NumberGLTexture = new GLTexture(ImageIO.read(new File("images\\Numbers.png")));
         m_Characters = new Character[s_NumDigits];
         m_Polyhedra = new GLStaticPolyhedron[s_NumDigits];
-        extractCharacterInfo();
+        GLTexture numberGLTexture = new GLTexture(ImageIO.read(new File("images\\Numbers.png")));
+        extractCharacterInfo(numberGLTexture);
     }
 
-    private void extractCharacterInfo() {
-        final float deltaU = s_FrameWidth / m_NumberGLTexture.getWidth();
-        final float deltaV = s_FrameHeight / m_NumberGLTexture.getHeight();
+    private void extractCharacterInfo(GLTexture numberGLTexture) {
+        final float deltaU = s_FrameWidth / numberGLTexture.getWidth();
+        final float deltaV = s_FrameHeight / numberGLTexture.getHeight();
         for (int i = 0; i < s_NumDigits; ++i) {
             m_Characters[i] = new Character(i * deltaU,0.0f, (i * deltaU) + deltaU, deltaV);
             final float[] vertices = new float[] {
@@ -57,12 +69,13 @@ public class NumberFont {
                     m_Characters[i].m_U1, m_Characters[i].m_V1,
                     m_Characters[i].m_U1, m_Characters[i].m_V0,
             };
-            m_Polyhedra[i] = new GLStaticPolyhedron(vertices, texCoordinates);
+            GLStaticPolyhedron polyhedron = new GLStaticPolyhedron();
+            polyhedron.addPiece(new GLStaticPolyhedronPiece(vertices, texCoordinates, numberGLTexture));
+            m_Polyhedra[i] = polyhedron;
         }
     }
 
     public void freeNativeResource() {
-        m_NumberGLTexture.freeNativeResource();
         for (var polyhedron : m_Polyhedra) {
             polyhedron.freeNativeResources();
         }
@@ -76,7 +89,7 @@ public class NumberFont {
             int j = text.charAt(i) - '0'; // Convert the character to an index into the m_Characters array
             modelMatrix.setTranslation(x, y, 0.0f);
             Matrix4f mvpMatrix = copy.set(projectionMatrix).mul(modelMatrix);
-            m_TexturedShaderProgram.activate(mvpMatrix, m_NumberGLTexture);
+            m_TexturedShaderProgram.activate(mvpMatrix);
             m_Polyhedra[j].draw();
             x += s_FrameWidth;
         }

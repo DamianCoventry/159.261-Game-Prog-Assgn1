@@ -14,8 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.IGameView;
-import com.snakegame.opengl.GLStaticPolyhedron;
-import com.snakegame.opengl.GLTexture;
+import com.snakegame.opengl.*;
 import com.snakegame.rules.IGameController;
 
 import javax.imageio.ImageIO;
@@ -27,8 +26,6 @@ public class RunningMenuAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
     private GLStaticPolyhedron[] m_Rectangles;
-    private GLTexture m_MainMenuTexture;
-    private GLTexture m_HelpMenuTexture;
     private enum Page {MAIN, HELP }
     private Page m_Page;
 
@@ -41,11 +38,11 @@ public class RunningMenuAppState implements IAppState {
     public void begin(long nowMs) throws IOException {
         m_Rectangles = new GLStaticPolyhedron[2];
 
-        m_MainMenuTexture = new GLTexture(ImageIO.read(new File("images\\MainMenu.png")));
-        m_Rectangles[0] = m_View.createRectangle(m_MainMenuTexture.getWidth(), m_MainMenuTexture.getHeight());
+        GLTexture mainMenuTexture = new GLTexture(ImageIO.read(new File("images\\MainMenu.png")));
+        m_Rectangles[0] = m_View.createRectangle(mainMenuTexture.getWidth(), mainMenuTexture.getHeight(), mainMenuTexture);
 
-        m_HelpMenuTexture = new GLTexture(ImageIO.read(new File("images\\HelpMenu.png")));
-        m_Rectangles[1] = m_View.createRectangle(m_HelpMenuTexture.getWidth(), m_HelpMenuTexture.getHeight());
+        GLTexture helpMenuTexture = new GLTexture(ImageIO.read(new File("images\\HelpMenu.png")));
+        m_Rectangles[1] = m_View.createRectangle(helpMenuTexture.getWidth(), helpMenuTexture.getHeight(), helpMenuTexture);
 
         m_Page = Page.MAIN;
     }
@@ -54,8 +51,6 @@ public class RunningMenuAppState implements IAppState {
     public void end(long nowMs) {
         m_Rectangles[1].freeNativeResources();
         m_Rectangles[0].freeNativeResources();
-        m_MainMenuTexture.freeNativeResource();
-        m_HelpMenuTexture.freeNativeResource();
     }
 
     @Override
@@ -102,10 +97,10 @@ public class RunningMenuAppState implements IAppState {
     public void draw2d(long nowMs) {
         switch (m_Page) {
             case MAIN:
-                m_View.drawOrthographicPolyhedron(m_Rectangles[0], m_MainMenuTexture);
+                m_View.drawOrthographicPolyhedron(m_Rectangles[0]);
                 break;
             case HELP:
-                m_View.drawOrthographicPolyhedron(m_Rectangles[1], m_HelpMenuTexture);
+                m_View.drawOrthographicPolyhedron(m_Rectangles[1]);
                 break;
         }
     }

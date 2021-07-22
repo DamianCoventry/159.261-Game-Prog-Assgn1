@@ -1,14 +1,26 @@
+//
+// Snake Game
+// https://en.wikipedia.org/wiki/Snake_(video_game_genre)
+//
+// Based on the 1976 arcade game Blockade, and the 1991 game Nibbles
+// https://en.wikipedia.org/wiki/Blockade_(video_game)
+// https://en.wikipedia.org/wiki/Nibbles_(video_game)
+//
+// This implementation is Copyright (c) 2021, Damian Coventry
+// All rights reserved
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
+//
+
 package com.snakegame.client;
 
 import com.snakegame.application.IAppStateContext;
-import com.snakegame.opengl.GLStaticPolyhedron;
-import com.snakegame.opengl.GLTexture;
-import com.snakegame.opengl.TexturedShaderProgram;
+import com.snakegame.opengl.*;
 import com.snakegame.rules.*;
 import org.joml.Matrix4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
+import java.util.ArrayList;
 
 public class GameView implements IGameView {
     private static final int s_NumNumbers = 9;
@@ -18,7 +30,6 @@ public class GameView implements IGameView {
 
     private final GLTexture[] m_NumberTextures;
     private final GLTexture[] m_PowerUpTextures;
-    private final GLTexture m_WallTexture;
     private final GLTexture m_DotTexture;
     private final GLTexture m_HeadTexture;
     private final NumberFont m_NumberFont;
@@ -50,7 +61,6 @@ public class GameView implements IGameView {
         m_PowerUpTextures[6] = new GLTexture(ImageIO.read(new File("images\\DecreasePoints.png")));
         m_PowerUpTextures[7] = new GLTexture(ImageIO.read(new File("images\\Random.png")));
 
-        m_WallTexture = new GLTexture(ImageIO.read(new File("images\\Wall.jpg")));
         m_DotTexture = new GLTexture(ImageIO.read(new File("images\\dot.png")));
         m_HeadTexture = new GLTexture(ImageIO.read(new File("images\\head.png")));
         m_TexturedShaderProgram = new TexturedShaderProgram();
@@ -77,7 +87,6 @@ public class GameView implements IGameView {
         for (int i = 0; i < PowerUp.s_NumPowerUps; ++i) {
             m_PowerUpTextures[i].freeNativeResource();
         }
-        m_WallTexture.freeNativeResource();
         m_DotTexture.freeNativeResource();
         m_HeadTexture.freeNativeResource();
         m_NumberFont.freeNativeResource();
@@ -93,7 +102,7 @@ public class GameView implements IGameView {
 
         Matrix4f projectionMatrix = m_AppStateContext.getPerspectiveMatrix();
         Matrix4f mvpMatrix = new Matrix4f(projectionMatrix);
-        m_TexturedShaderProgram.activate(mvpMatrix.mul(m_ViewMatrix), m_WallTexture);
+        m_TexturedShaderProgram.activate(mvpMatrix.mul(m_ViewMatrix));
         m_WorldMesh.draw();
 
 //        float maxWidth = GameField.WIDTH * s_CellSize;
@@ -224,17 +233,17 @@ public class GameView implements IGameView {
     }
 
     @Override
-    public void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron, GLTexture texture) {
+    public void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron) {
         if (m_AppStateContext == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
         Matrix4f projectionMatrix = m_AppStateContext.getOrthographicMatrix();
-        m_TexturedShaderProgram.activate(projectionMatrix, texture);
+        m_TexturedShaderProgram.activate(projectionMatrix);
         polyhedron.draw();
     }
 
     @Override
-    public GLStaticPolyhedron createRectangle(float width, float height) {
+    public GLStaticPolyhedron createRectangle(float width, float height, GLTexture texture) {
         var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (width / 2.0f);
         var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (height / 2.0f);
 
@@ -259,48 +268,85 @@ public class GameView implements IGameView {
                 1.0f, 0.0f
         };
 
-        return new GLStaticPolyhedron(vertices, texCoordinates);
+        GLStaticPolyhedron polyhedron = new GLStaticPolyhedron();
+        polyhedron.addPiece(new GLStaticPolyhedronPiece(vertices, texCoordinates, texture));
+        return polyhedron;
     }
 
     private void loadWorldMesh() throws Exception {
-        ObjFile objFile = new ObjFile("meshes\\LevelDisplayMesh.obj");
-
-        int numFloats = objFile.getObjects().get(0).getFaces().size() * objFile.getVertices().size() * 3;
-        int floatCount = 0;
-        float[] vertices = new float[numFloats];
-        for (int faceIndex = 0; faceIndex < objFile.getObjects().get(0).getFaces().size(); ++faceIndex) {
-            ObjFile.Face face = objFile.getObjects().get(0).getFaces().get(faceIndex);
-            
-            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_X;
-            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_Y;
-            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_Z;
-            
-            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_X;
-            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_Y;
-            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_Z;
-            
-            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_X;
-            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_Y;
-            vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_Z;
+        final ObjFile objFile = new ObjFile("meshes\\LevelDisplayMesh.obj");
+        if (objFile.getObjects() == null || objFile.getObjects().isEmpty()) {
+            throw new RuntimeException("Object file has no objects");
         }
 
-        numFloats = objFile.getObjects().get(0).getFaces().size() * objFile.getVertices().size() * 2;
-        floatCount = 0;
-        float[] texCoordinates = new float[numFloats];
-        for (int faceIndex = 0; faceIndex < objFile.getObjects().get(0).getFaces().size(); ++faceIndex) {
-            ObjFile.Face face = objFile.getObjects().get(0).getFaces().get(faceIndex);
-
-            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_S;
-            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_T;
-
-            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_S;
-            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_T;
-
-            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_S;
-            texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_T;
+        final ObjFile.Object object = objFile.getObjects().get(0);
+        if (object.getPieces() == null || object.getPieces().isEmpty()) {
+            throw new RuntimeException("Object has no pieces");
         }
 
-        m_WorldMesh = new GLStaticPolyhedron(vertices, texCoordinates);
+        final ArrayList<MtlFile> materialFiles = new ArrayList<>();
+        for (var fileName : objFile.getMaterialFileNames()) {
+            materialFiles.add(new MtlFile("meshes\\" + fileName));
+        }
+
+        m_WorldMesh = new GLStaticPolyhedron();
+
+        for (var piece : object.getPieces()) {
+            GLTexture pieceDiffuseTexture = null;
+            for (var materialFile : materialFiles) {
+                for (var material : materialFile.getMaterials()) {
+                    if (material.getName().equalsIgnoreCase(piece.getMaterialName())) {
+                        if (pieceDiffuseTexture != null) {
+                            pieceDiffuseTexture.freeNativeResource();
+                        }
+                        if (material.getDiffuseTexture() == null) {
+                            throw new RuntimeException("Material [" + material.getName() + "] does not have a diffuse texture");
+                        }
+                        pieceDiffuseTexture = new GLTexture(ImageIO.read(new File("meshes\\" + material.getDiffuseTexture())));
+                    }
+                }
+            }
+            if (pieceDiffuseTexture == null) {
+                throw new RuntimeException("The level file does not have a valid diffuse texture within a piece");
+            }
+
+            int numFloats = piece.getFaces().size() * objFile.getVertices().size() * 3;
+            int floatCount = 0;
+            float[] vertices = new float[numFloats];
+            for (int faceIndex = 0; faceIndex < piece.getFaces().size(); ++faceIndex) {
+                ObjFile.Face face = piece.getFaces().get(faceIndex);
+
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_X;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_Y;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_Z;
+
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_X;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_Y;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_Z;
+
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_X;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_Y;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_Z;
+            }
+
+            numFloats = piece.getFaces().size() * objFile.getVertices().size() * 2;
+            floatCount = 0;
+            float[] texCoordinates = new float[numFloats];
+            for (int faceIndex = 0; faceIndex < piece.getFaces().size(); ++faceIndex) {
+                ObjFile.Face face = piece.getFaces().get(faceIndex);
+
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_S;
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_T;
+
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_S;
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_T;
+
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_S;
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_T;
+            }
+
+            m_WorldMesh.addPiece(new GLStaticPolyhedronPiece(vertices, texCoordinates, pieceDiffuseTexture));
+        }
     }
 
     private void drawTexturedQuad(double x, double y, double w, double h, double u0, double v0, double u1, double v1, GLTexture GLTexture) {

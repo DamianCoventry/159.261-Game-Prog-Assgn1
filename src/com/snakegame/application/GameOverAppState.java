@@ -14,20 +14,17 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
-import com.snakegame.opengl.GLStaticPolyhedron;
-import com.snakegame.opengl.GLTexture;
+import com.snakegame.opengl.*;
 import com.snakegame.rules.IGameController;
 
 import javax.imageio.ImageIO;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 
 public class GameOverAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
-    private GLTexture m_GameOverTexture;
     private GLStaticPolyhedron m_Rectangle;
 
     public GameOverAppState(IAppStateContext context, int player) {
@@ -46,20 +43,21 @@ public class GameOverAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
+        GLTexture gameOverTexture;
         if (m_AppStateContext.getController().getMode() == IGameController.Mode.TWO_PLAYERS) {
             if (m_BothSnakes) {
-                m_GameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverBothPlayersLost.png")));
+                gameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverBothPlayersLost.png")));
             } else if (m_Player == 0) {
-                m_GameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverPlayer1Lost.png")));
+                gameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverPlayer1Lost.png")));
             } else {
-                m_GameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverPlayer2Lost.png")));
+                gameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverPlayer2Lost.png")));
             }
         }
         else {
-            m_GameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOver.png")));
+            gameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOver.png")));
         }
 
-        m_Rectangle = m_View.createRectangle(m_GameOverTexture.getWidth(), m_GameOverTexture.getHeight());
+        m_Rectangle = m_View.createRectangle(gameOverTexture.getWidth(), gameOverTexture.getHeight(), gameOverTexture);
 
         m_AppStateContext.addTimeout(3500, (callCount) -> {
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
@@ -70,7 +68,6 @@ public class GameOverAppState implements IAppState {
     @Override
     public void end(long nowMs) {
         m_Rectangle.freeNativeResources();
-        m_GameOverTexture.freeNativeResource();
     }
 
     @Override
@@ -91,6 +88,6 @@ public class GameOverAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) {
         m_View.draw2d(nowMs);
-        m_View.drawOrthographicPolyhedron(m_Rectangle, m_GameOverTexture);
+        m_View.drawOrthographicPolyhedron(m_Rectangle);
     }
 }
