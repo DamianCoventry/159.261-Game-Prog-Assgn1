@@ -40,6 +40,14 @@ public class GLStaticPolyhedron {
         }
     }
 
+    public int getNumPieces() {
+        return m_Pieces.size();
+    }
+
+    public GLStaticPolyhedronPiece getPiece(int i) {
+        return m_Pieces.get(i);
+    }
+
     public void draw() {
         for (var piece : m_Pieces) {
             glActiveTexture(GL_TEXTURE0);

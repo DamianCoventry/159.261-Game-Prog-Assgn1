@@ -24,9 +24,17 @@ import java.util.ArrayList;
 
 public class GameView implements IGameView {
     private static final int s_NumNumbers = 9;
-    private static final float s_CellSize = 3.0f;
-    private static final float s_CameraXRotation = -90.0f;
-    private static final float s_CameraYPosition = 95.0f;
+    private static final float s_CellSize = 1.0f;
+    private static final float s_CameraXRotation = -80.0f;
+    private static final float s_CameraYPosition = 72.5f;
+    private static final float s_CameraZPosition = 13.0f;
+
+    private static final Vector2i s_P1Snakes = new Vector2i(20, 715);
+    private static final Vector2i s_P1Score = new Vector2i(110, 715);
+    private static final Vector2i s_P2Snakes = new Vector2i(790, 715);
+    private static final Vector2i s_P2Score = new Vector2i(878, 715);
+    private static final Vector2i s_CurrentLevel = new Vector2i(484, 715);
+    private static final Vector2i s_NumLevels = new Vector2i(538, 715);
 
     private final GLTexture[] m_NumberTextures;
     private final GLTexture[] m_PowerUpTextures;
@@ -34,9 +42,13 @@ public class GameView implements IGameView {
     private final GLTexture m_HeadTexture;
     private final NumberFont m_NumberFont;
     private final TexturedShaderProgram m_TexturedShaderProgram;
+    private final Matrix4f m_MvpMatrix;
+    private final Matrix4f m_ModelMatrix;
     private final Matrix4f m_ViewMatrix;
-
-    private GLStaticPolyhedron m_WorldMesh;
+    private final GLStaticPolyhedron m_WorldDisplayMesh;
+    private final GLStaticPolyhedron m_AppleDisplayMesh;
+    private final GLStaticPolyhedron m_PowerUpDisplayMesh;
+    private GLStaticPolyhedron m_ToolbarDisplayMesh;
 
     private IAppStateContext m_AppStateContext;
     private IGameController m_Controller;
@@ -49,7 +61,9 @@ public class GameView implements IGameView {
             m_NumberTextures[i] = new GLTexture(ImageIO.read(new File(String.format("images\\Apple%d.png", i + 1))));
         }
 
-        loadWorldMesh();
+        m_WorldDisplayMesh = loadDisplayMesh("meshes\\LevelDisplayMesh.obj");
+        m_AppleDisplayMesh = loadDisplayMesh("meshes\\AppleLoResDisplayMesh.obj");
+        m_PowerUpDisplayMesh = loadDisplayMesh("meshes\\PowerUpDisplayMesh.obj");
 
         m_PowerUpTextures = new GLTexture[PowerUp.s_NumPowerUps];
         m_PowerUpTextures[0] = new GLTexture(ImageIO.read(new File("images\\DecreaseLength.png")));
@@ -66,9 +80,11 @@ public class GameView implements IGameView {
         m_TexturedShaderProgram = new TexturedShaderProgram();
         m_NumberFont = new NumberFont(m_TexturedShaderProgram);
 
+        m_MvpMatrix = new Matrix4f();
+        m_ModelMatrix = new Matrix4f();
         m_ViewMatrix = new Matrix4f();
         m_ViewMatrix.rotate((float)Math.toRadians(-s_CameraXRotation), 1.0f, 0.0f, 0.0f)
-                    .translate(0, -s_CameraYPosition, 0.0f);
+                    .translate(0, -s_CameraYPosition, -s_CameraZPosition);
     }
 
     @Override
@@ -91,7 +107,10 @@ public class GameView implements IGameView {
         m_HeadTexture.freeNativeResource();
         m_NumberFont.freeNativeResource();
         m_TexturedShaderProgram.freeNativeResource();
-        m_WorldMesh.freeNativeResources();
+        m_WorldDisplayMesh.freeNativeResources();
+        m_AppleDisplayMesh.freeNativeResources();
+        m_PowerUpDisplayMesh.freeNativeResources();
+        m_ToolbarDisplayMesh.freeNativeResources();
     }
 
     @Override
@@ -100,30 +119,36 @@ public class GameView implements IGameView {
             throw new RuntimeException("Application state context hasn't been set");
         }
 
-        Matrix4f projectionMatrix = m_AppStateContext.getPerspectiveMatrix();
-        Matrix4f mvpMatrix = new Matrix4f(projectionMatrix);
-        m_TexturedShaderProgram.activate(mvpMatrix.mul(m_ViewMatrix));
-        m_WorldMesh.draw();
+        m_MvpMatrix.identity();
+        m_MvpMatrix
+                .set(m_AppStateContext.getPerspectiveMatrix())
+                .mul(m_ViewMatrix);
+        m_TexturedShaderProgram.activate(m_MvpMatrix);
+        m_WorldDisplayMesh.draw();
 
-//        float maxWidth = GameField.WIDTH * s_CellSize;
-//        float maxHeight = GameField.HEIGHT * s_CellSize;
-//        float startX = -maxWidth / 2.0f;
-//        float startY = -maxHeight / 2.0f;
-//        float u = 8*s_CellSize / m_WallTexture.getWidth();
-//        float v = 8*s_CellSize / m_WallTexture.getHeight();
-//
-//        for (int y = 0; y < GameField.HEIGHT; ++y) {
-//            float cellOffsetY = startY + y * s_CellSize;
-//            for (int x = 0; x < GameField.WIDTH; ++x) {
-//                float cellOffsetX = startX + x * s_CellSize;
-//
-//                switch (m_GameField.getCellType(x, y)) {
-//                    case EMPTY:
-//                        break;
-//                    case WALL:
-//                        drawTexturedQuad(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, x*u, y*v+v, x*u+u, y*v, m_WallTexture);
-//                        break;
-//                    case POWER_UP: {
+        float startX = GameField.WIDTH / 2.0f * -s_CellSize;
+        float startZ = GameField.HEIGHT / 2.0f * -s_CellSize;
+
+        for (int z = 0; z < GameField.HEIGHT; ++z) {
+            float cellOffsetZ = (-startZ - z * s_CellSize) - (s_CellSize / 2.0f);
+            for (int x = 0; x < GameField.WIDTH; ++x) {
+                float cellOffsetX = (startX + x * s_CellSize) + (s_CellSize / 2.0f);
+
+                m_ModelMatrix.setTranslation(cellOffsetX, 0.0f, cellOffsetZ);
+                m_MvpMatrix
+                        .set(m_AppStateContext.getPerspectiveMatrix())
+                        .mul(m_ViewMatrix)
+                        .mul(m_ModelMatrix);
+                m_TexturedShaderProgram.activate(m_MvpMatrix);
+
+                switch (m_GameField.getCellType(x, z)) {
+                    case EMPTY:
+                        break;
+                    case WALL:
+                        m_PowerUpDisplayMesh.draw();
+                        break;
+                    case POWER_UP: {
+                        m_PowerUpDisplayMesh.draw();
 //                        PowerUp powerUp = m_GameField.getPowerUp(x, y);
 //                        switch (powerUp.getType()) {
 //                            case DEC_LENGTH:
@@ -151,9 +176,10 @@ public class GameView implements IGameView {
 //                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[7]);
 //                                break;
 //                        }
-//                        break;
-//                    }
-//                    case NUMBER: {
+                        break;
+                    }
+                    case NUMBER: {
+                        m_AppleDisplayMesh.draw();
 //                        Number number = m_GameField.getNumber(x, y);
 //                        switch (number.getType()) {
 //                            case NUM_1:
@@ -184,30 +210,52 @@ public class GameView implements IGameView {
 //                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[8]);
 //                                break;
 //                        }
-//                        break;
-//                    }
-//                }
-//            }
-//        }
-//
-//        boolean firstLoop;
-//        for (var snake : m_Snakes) {
-//            firstLoop = true;
-//            for (var bodyPart : snake.getBodyParts()) {
-//                float cellOffsetX = startX + bodyPart.m_X * s_CellSize;
-//                float cellOffsetY = startY + bodyPart.m_Y * s_CellSize;
-//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, firstLoop ? m_HeadTexture : m_DotTexture);
-//                firstLoop = false;
-//            }
-//        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        boolean firstLoop;
+        for (var snake : m_Snakes) {
+            firstLoop = true;
+            for (var bodyPart : snake.getBodyParts()) {
+                float cellOffsetX = (startX + bodyPart.m_X * s_CellSize) + (s_CellSize / 2.0f);
+                float cellOffsetZ = (-startZ - bodyPart.m_Z * s_CellSize) - (s_CellSize / 2.0f);
+                m_ModelMatrix.setTranslation(cellOffsetX, 0.0f, cellOffsetZ);
+                m_MvpMatrix
+                        .set(m_AppStateContext.getPerspectiveMatrix())
+                        .mul(m_ViewMatrix)
+                        .mul(m_ModelMatrix);
+                m_TexturedShaderProgram.activate(m_MvpMatrix);
+                if (firstLoop) {
+                    m_PowerUpDisplayMesh.draw();
+                }
+                else {
+                    m_AppleDisplayMesh.draw();
+                }
+                firstLoop = false;
+            }
+        }
     }
 
     @Override
-    public void draw2d(long nowMs) {
+    public void draw2d(long nowMs) throws IOException {
         if (m_AppStateContext == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
-        float y = m_AppStateContext.getWindowHeight() - NumberFont.s_FrameHeight;
+
+        float y;
+        if (m_ToolbarDisplayMesh == null) {
+            GLTexture toolbarTexture = new GLTexture(ImageIO.read(new File("images\\Toolbar.png")));
+            y = m_AppStateContext.getWindowHeight() - toolbarTexture.getHeight();
+            m_ToolbarDisplayMesh = createRectangle(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
+        }
+
+        m_ModelMatrix.identity();
+        drawOrthographicPolyhedron(m_ToolbarDisplayMesh, m_ModelMatrix);
+
+        y = m_AppStateContext.getWindowHeight() - NumberFont.s_FrameHeight;
         float w = m_AppStateContext.getWindowWidth();
         float halfW = w / 2.0f;
         int level = m_Controller.getCurrentLevel() + 1;
@@ -215,38 +263,36 @@ public class GameView implements IGameView {
 
         // Draw the level's state
         float width = m_NumberFont.calculateWidth(level);
-        m_NumberFont.drawNumber(projectionMatrix, level, halfW - (2.0f * width), y);
+        m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X, s_CurrentLevel.m_Z);
         width = m_NumberFont.calculateWidth(m_Controller.getLevelCount());
-        m_NumberFont.drawNumber(projectionMatrix, m_Controller.getLevelCount(), halfW + width, y);
+        m_NumberFont.drawNumber(projectionMatrix, m_Controller.getLevelCount(), s_NumLevels.m_X, s_NumLevels.m_Z);
 
         // Draw player 1's state
-        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getNumLives(), 0.0f, y);
-        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getPoints(), 100.0f, y);
+        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getNumLives(), s_P1Snakes.m_X, s_P1Snakes.m_Z);
+        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getPoints(), s_P1Score.m_X, s_P1Score.m_Z);
 
         if (m_Snakes.length > 1) {
             // Draw player 2's state
             width = m_NumberFont.calculateWidth(m_Snakes[1].getNumLives());
-            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getNumLives(), w - width, y);
+            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getNumLives(), s_P2Snakes.m_X, s_P2Snakes.m_Z);
             width = m_NumberFont.calculateWidth(m_Snakes[1].getPoints()) + (2.0f * width);
-            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getPoints(), w - width, y);
+            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getPoints(), s_P2Score.m_X, s_P2Score.m_Z);
         }
     }
 
     @Override
-    public void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron) {
+    public void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron, Matrix4f modelMatrix) {
         if (m_AppStateContext == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
-        Matrix4f projectionMatrix = m_AppStateContext.getOrthographicMatrix();
-        m_TexturedShaderProgram.activate(projectionMatrix);
+        m_MvpMatrix.identity();
+        m_MvpMatrix.set(m_AppStateContext.getOrthographicMatrix()).mul(modelMatrix);
+        m_TexturedShaderProgram.activate(m_MvpMatrix);
         polyhedron.draw();
     }
 
     @Override
-    public GLStaticPolyhedron createRectangle(float width, float height, GLTexture texture) {
-        var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (width / 2.0f);
-        var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (height / 2.0f);
-
+    public GLStaticPolyhedron createRectangle(float x, float y, float width, float height, GLTexture texture) {
         float[] vertices = new float[]{
                 // triangle 0
                 x, y + height, 0.1f,
@@ -273,8 +319,16 @@ public class GameView implements IGameView {
         return polyhedron;
     }
 
-    private void loadWorldMesh() throws Exception {
-        final ObjFile objFile = new ObjFile("meshes\\LevelDisplayMesh.obj");
+    @Override
+    public GLStaticPolyhedron createCenteredRectangle(float width, float height, GLTexture texture) {
+        var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (width / 2.0f);
+        var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (height / 2.0f);
+        return createRectangle(x, y, width, height, texture);
+    }
+
+    @Override
+    public GLStaticPolyhedron loadDisplayMesh(String fileName) throws Exception {
+        final ObjFile objFile = new ObjFile(fileName);
         if (objFile.getObjects() == null || objFile.getObjects().isEmpty()) {
             throw new RuntimeException("Object file has no objects");
         }
@@ -285,11 +339,11 @@ public class GameView implements IGameView {
         }
 
         final ArrayList<MtlFile> materialFiles = new ArrayList<>();
-        for (var fileName : objFile.getMaterialFileNames()) {
-            materialFiles.add(new MtlFile("meshes\\" + fileName));
+        for (var materialFileName : objFile.getMaterialFileNames()) {
+            materialFiles.add(new MtlFile("meshes\\" + materialFileName));
         }
 
-        m_WorldMesh = new GLStaticPolyhedron();
+        GLStaticPolyhedron displayMesh = new GLStaticPolyhedron();
 
         for (var piece : object.getPieces()) {
             GLTexture pieceDiffuseTexture = null;
@@ -329,49 +383,30 @@ public class GameView implements IGameView {
                 vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_Z;
             }
 
-            numFloats = piece.getFaces().size() * objFile.getVertices().size() * 2;
+            numFloats = piece.getFaces().size() * objFile.getTexCoordinates().size() * 2;
             floatCount = 0;
             float[] texCoordinates = new float[numFloats];
             for (int faceIndex = 0; faceIndex < piece.getFaces().size(); ++faceIndex) {
                 ObjFile.Face face = piece.getFaces().get(faceIndex);
 
-                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_S;
-                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_T;
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_U;
+                texCoordinates[floatCount++] = 1-objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_V;
 
-                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_S;
-                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_T;
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_U;
+                texCoordinates[floatCount++] = 1-objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_V;
 
-                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_S;
-                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_T;
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_U;
+                texCoordinates[floatCount++] = 1-objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_V;
             }
 
-            m_WorldMesh.addPiece(new GLStaticPolyhedronPiece(vertices, texCoordinates, pieceDiffuseTexture));
+            displayMesh.addPiece(new GLStaticPolyhedronPiece(vertices, texCoordinates, pieceDiffuseTexture));
         }
+
+        return displayMesh;
     }
 
-    private void drawTexturedQuad(double x, double y, double w, double h, double u0, double v0, double u1, double v1, GLTexture GLTexture) {
-//        glColor4d(1.0, 1.0, 1.0, 1.0);
-//        glEnable(GL_TEXTURE_2D);
-//        glBindTexture(GL_TEXTURE_2D, GLTexture.getId());
-//
-//        glBegin(GL_QUADS);
-//        glTexCoord2d(u0, v0); glVertex2d(x, y + h);
-//        glTexCoord2d(u0, v1); glVertex2d(x , y);
-//        glTexCoord2d(u1, v1); glVertex2d(x + w, y);
-//        glTexCoord2d(u1, v0); glVertex2d(x + w, y + h);
-//        glEnd();
-    }
-
-    private void drawSingleImage(double x, double y, double w, double h, GLTexture GLTexture) {
-//        glColor4d(1.0, 1.0, 1.0, 1.0);
-//        glEnable(GL_TEXTURE_2D);
-//        glBindTexture(GL_TEXTURE_2D, GLTexture.getId());
-//
-//        glBegin(GL_QUADS);
-//        glTexCoord2d(0.0, 0.0); glVertex3d(x, y + h, 0.1f);
-//        glTexCoord2d(0.0, 1.0); glVertex3d(x , y, 0.1f);
-//        glTexCoord2d(1.0, 1.0); glVertex3d(x + w, y, 0.1f);
-//        glTexCoord2d(1.0, 0.0); glVertex3d(x + w, y + h, 0.1f);
-//        glEnd();
+    @Override
+    public TexturedShaderProgram getTexturedShaderProgram() {
+        return m_TexturedShaderProgram;
     }
 }

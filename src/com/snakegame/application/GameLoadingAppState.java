@@ -17,6 +17,7 @@ import com.snakegame.client.*;
 import com.snakegame.opengl.GLStaticPolyhedron;
 import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
+import org.joml.Matrix4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -25,18 +26,20 @@ public class GameLoadingAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
     private final IGameController.Mode m_Mode;
+    private final Matrix4f m_ModelMatrix;
     private GLStaticPolyhedron m_Rectangle;
 
     public GameLoadingAppState(IAppStateContext context, IGameController.Mode mode) {
         m_AppStateContext = context;
         m_View = m_AppStateContext.getView();
+        m_ModelMatrix = new Matrix4f();
         m_Mode = mode;
     }
 
     @Override
     public void begin(long nowMs) throws IOException {
         GLTexture loadingTexture = new GLTexture(ImageIO.read(new File("images\\Loading.png")));
-        m_Rectangle = m_View.createRectangle(loadingTexture.getWidth(), loadingTexture.getHeight(), loadingTexture);
+        m_Rectangle = m_View.createCenteredRectangle(loadingTexture.getWidth(), loadingTexture.getHeight(), loadingTexture);
 
         m_AppStateContext.getController().startNewGame(nowMs, m_Mode);
 
@@ -67,7 +70,7 @@ public class GameLoadingAppState implements IAppState {
     }
 
     @Override
-    public void draw2d(long nowMs) {
-        m_View.drawOrthographicPolyhedron(m_Rectangle);
+    public void draw2d(long nowMs) throws IOException {
+        m_View.drawOrthographicPolyhedron(m_Rectangle, m_ModelMatrix);
     }
 }

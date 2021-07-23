@@ -15,12 +15,18 @@ package com.snakegame.client;
 
 import com.snakegame.application.IAppStateContext;
 import com.snakegame.opengl.*;
+import org.joml.Matrix4f;
+
+import java.io.IOException;
 
 public interface IGameView {
     void setAppStateContext(IAppStateContext appStateContext);
     void freeNativeResources();
     void draw3d(long nowMs);
-    void draw2d(long nowMs);
-    void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron);
-    GLStaticPolyhedron createRectangle(float width, float height, GLTexture texture);
+    void draw2d(long nowMs) throws IOException;
+    void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron, Matrix4f modelMatrix);
+    GLStaticPolyhedron createRectangle(float x, float y, float width, float height, GLTexture texture);
+    GLStaticPolyhedron createCenteredRectangle(float width, float height, GLTexture texture);
+    GLStaticPolyhedron loadDisplayMesh(String fileName) throws Exception;
+    TexturedShaderProgram getTexturedShaderProgram();
 }

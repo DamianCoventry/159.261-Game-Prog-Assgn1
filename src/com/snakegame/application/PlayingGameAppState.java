@@ -73,7 +73,7 @@ public class PlayingGameAppState implements IAppState {
     }
 
     @Override
-    public void draw2d(long nowMs) {
+    public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
     }
 

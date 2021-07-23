@@ -16,8 +16,8 @@ package com.snakegame.rules;
 import java.util.ArrayList;
 
 public class GameField {
-    public static final int WIDTH = 60;
-    public static final int HEIGHT = 40;
+    public static final int WIDTH = 50;
+    public static final int HEIGHT = 30;
     public static final int TOTAL_CELLS = WIDTH * HEIGHT;
 
     private static class CellInfo {
@@ -102,30 +102,30 @@ public class GameField {
 
     public void insertPowerUp(PowerUp powerUp) {
         if (isValidLocation(powerUp.getLocation())) {
-            m_CellInfo[powerUp.getLocation().m_Y * WIDTH + powerUp.getLocation().m_X].setPowerUp(powerUp);
+            m_CellInfo[powerUp.getLocation().m_Z * WIDTH + powerUp.getLocation().m_X].setPowerUp(powerUp);
         }
     }
 
     public void removePowerUp(PowerUp powerUp) {
         if (isValidLocation(powerUp.getLocation())) {
-            m_CellInfo[powerUp.getLocation().m_Y * WIDTH + powerUp.getLocation().m_X].clearPowerUp();
+            m_CellInfo[powerUp.getLocation().m_Z * WIDTH + powerUp.getLocation().m_X].clearPowerUp();
         }
     }
 
     public void insertNumber(Number number) {
         if (isValidLocation(number.getLocation())) {
-            m_CellInfo[number.getLocation().m_Y * WIDTH + number.getLocation().m_X].setNumber(number);
+            m_CellInfo[number.getLocation().m_Z * WIDTH + number.getLocation().m_X].setNumber(number);
         }
     }
 
     public void removeNumber(Number number) {
         if (isValidLocation(number.getLocation())) {
-            m_CellInfo[number.getLocation().m_Y * WIDTH + number.getLocation().m_X].clearNumber();
+            m_CellInfo[number.getLocation().m_Z * WIDTH + number.getLocation().m_X].clearNumber();
         }
     }
 
     public void insertWall(Vector2i location) {
-        m_CellInfo[location.m_Y * WIDTH + location.m_X] = new CellInfo(CellType.WALL);
+        m_CellInfo[location.m_Z * WIDTH + location.m_X] = new CellInfo(CellType.WALL);
     }
 
     public void setAllCells(String gameField, boolean requirePlayer2) {
@@ -191,7 +191,7 @@ public class GameField {
     }
 
     public CellType getCellType(Vector2i position) {
-        return getCellType(position.m_X, position.m_Y);
+        return getCellType(position.m_X, position.m_Z);
     }
 
     public void setWallBorder() {
@@ -232,12 +232,12 @@ public class GameField {
     public Vector2i clampCoordinates(Vector2i coordinates) {
         return new Vector2i(
                 Math.max(0, Math.min(WIDTH - 1, coordinates.m_X)),
-                Math.max(0, Math.min(HEIGHT - 1, coordinates.m_Y))
+                Math.max(0, Math.min(HEIGHT - 1, coordinates.m_Z))
         );
     }
 
     private boolean isValidLocation(Vector2i location) {
-        return isValidLocation(location.m_X, location.m_Y);
+        return isValidLocation(location.m_X, location.m_Z);
     }
 
     private boolean isValidLocation(int x, int y) {

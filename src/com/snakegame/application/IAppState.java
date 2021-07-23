@@ -17,10 +17,10 @@ import java.io.IOException;
 
 // https://en.wikipedia.org/wiki/State_pattern
 public interface IAppState {
-    void begin(long nowMs) throws IOException;
+    void begin(long nowMs) throws Exception;
     void end(long nowMs);
     void processKey(long window, int key, int scanCode, int action, int mods) throws IOException;
     void think(long nowMs) throws IOException;
     void draw3d(long nowMs);
-    void draw2d(long nowMs);
+    void draw2d(long nowMs) throws IOException;
 }

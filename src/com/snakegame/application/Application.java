@@ -68,7 +68,7 @@ public class Application implements IAppStateContext {
         m_GLWindow.freeNativeResources();
     }
 
-    public void run() throws IOException {
+    public void run() throws Exception {
         long nowMs;
         while (!m_GLWindow.quitRequested()) {
             nowMs = System.currentTimeMillis();
@@ -129,14 +129,14 @@ public class Application implements IAppStateContext {
         return m_GLWindow.getOrthographicMatrix();
     }
 
-    public void performPendingStateChange(long nowMs) throws IOException {
+    public void performPendingStateChange(long nowMs) throws Exception {
         if (m_PendingState != null) {
             changeStateNow(m_PendingState, nowMs);
             m_PendingState = null;
         }
     }
 
-    private void changeStateNow(IAppState newState, long nowMs) throws IOException {
+    private void changeStateNow(IAppState newState, long nowMs) throws Exception {
         if (m_CurrentState != null) {
             m_CurrentState.end(nowMs);
         }

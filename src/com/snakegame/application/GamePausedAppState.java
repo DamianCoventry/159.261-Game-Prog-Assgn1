@@ -15,6 +15,7 @@ package com.snakegame.application;
 
 import com.snakegame.client.IGameView;
 import com.snakegame.opengl.*;
+import org.joml.Matrix4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -24,17 +25,19 @@ import static org.lwjgl.glfw.GLFW.*;
 public class GamePausedAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
+    private final Matrix4f m_ModelMatrix;
     private GLStaticPolyhedron m_Rectangle;
 
     public GamePausedAppState(IAppStateContext context) {
         m_AppStateContext = context;
         m_View = m_AppStateContext.getView();
+        m_ModelMatrix = new Matrix4f();
     }
 
     @Override
     public void begin(long nowMs) throws IOException {
         GLTexture gamePausedTexture = new GLTexture(ImageIO.read(new File("images\\GamePaused.png")));
-        m_Rectangle = m_View.createRectangle(gamePausedTexture.getWidth(), gamePausedTexture.getHeight(), gamePausedTexture);
+        m_Rectangle = m_View.createCenteredRectangle(gamePausedTexture.getWidth(), gamePausedTexture.getHeight(), gamePausedTexture);
     }
 
     @Override
@@ -66,8 +69,8 @@ public class GamePausedAppState implements IAppState {
     }
 
     @Override
-    public void draw2d(long nowMs) {
+    public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
-        m_View.drawOrthographicPolyhedron(m_Rectangle);
+        m_View.drawOrthographicPolyhedron(m_Rectangle, m_ModelMatrix);
     }
 }

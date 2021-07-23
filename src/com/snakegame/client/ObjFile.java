@@ -82,10 +82,10 @@ public class ObjFile {
     }
 
     public static class TexCoordinate {
-        public float m_S, m_T;
+        public float m_U, m_V;
         public TexCoordinate(float s, float t) {
-            m_S = s;
-            m_T = t;
+            m_U = s;
+            m_V = t;
         }
     }
 
@@ -220,15 +220,26 @@ public class ObjFile {
         if (words.length != 4 && !m_Objects.isEmpty()) {
             throw new Exception("Only triangles supported");
         }
-        int[] triplet0 = parseInteger3(words[1]);
-        int[] triplet1 = parseInteger3(words[2]);
-        int[] triplet2 = parseInteger3(words[3]);
+
+        int[] vertex0 = parseInteger3(words[1]);
+        int[] vertex1 = parseInteger3(words[2]);
+        int[] vertex2 = parseInteger3(words[3]);
+
         int[] vertices = new int[3];
-        vertices[0] = triplet0[0]; vertices[1] = triplet1[0]; vertices[2] = triplet2[0];
+        vertices[0] = vertex0[0];
+        vertices[1] = vertex1[0];
+        vertices[2] = vertex2[0];
+
         int[] texCoordinates = new int[3];
-        texCoordinates[0] = triplet0[1]; texCoordinates[1] = triplet1[1]; texCoordinates[2] = triplet2[1];
+        texCoordinates[0] = vertex0[1];
+        texCoordinates[1] = vertex1[1];
+        texCoordinates[2] = vertex2[1];
+
         int[] normals = new int[3];
-        normals[0] = triplet0[2]; normals[1] = triplet1[2]; normals[2] = triplet2[2];
+        normals[0] = vertex0[2];
+        normals[1] = vertex1[2];
+        normals[2] = vertex2[2];
+
         getCurrentPiece().addFace(new Face(vertices, texCoordinates, normals));
     }
 

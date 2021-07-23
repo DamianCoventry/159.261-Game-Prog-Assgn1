@@ -17,6 +17,7 @@ import com.snakegame.client.*;
 import com.snakegame.opengl.GLStaticPolyhedron;
 import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
+import org.joml.Matrix4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -27,12 +28,14 @@ public class SnakeDyingAppState implements IAppState {
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
+    private final Matrix4f m_ModelMatrix;
     private GLStaticPolyhedron[] m_Rectangles;
 
     public SnakeDyingAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
         m_Controller = m_AppStateContext.getController();
         m_View = m_AppStateContext.getView();
+        m_ModelMatrix = new Matrix4f();
         m_Player = player;
         m_BothSnakes = false;
     }
@@ -41,6 +44,7 @@ public class SnakeDyingAppState implements IAppState {
         m_AppStateContext = context;
         m_Controller = m_AppStateContext.getController();
         m_View = m_AppStateContext.getView();
+        m_ModelMatrix = new Matrix4f();
         m_Player = -1;
         m_BothSnakes = true;
     }
@@ -50,13 +54,13 @@ public class SnakeDyingAppState implements IAppState {
         m_Rectangles = new GLStaticPolyhedron[3];
 
         GLTexture player1DiedTexture = new GLTexture(ImageIO.read(new File("images\\Player1Died.png")));
-        m_Rectangles[0] = m_View.createRectangle(player1DiedTexture.getWidth(), player1DiedTexture.getHeight(), player1DiedTexture);
+        m_Rectangles[0] = m_View.createCenteredRectangle(player1DiedTexture.getWidth(), player1DiedTexture.getHeight(), player1DiedTexture);
 
         GLTexture layer2DiedTexture = new GLTexture(ImageIO.read(new File("images\\Player2Died.png")));
-        m_Rectangles[1] = m_View.createRectangle(layer2DiedTexture.getWidth(), layer2DiedTexture.getHeight(), layer2DiedTexture);
+        m_Rectangles[1] = m_View.createCenteredRectangle(layer2DiedTexture.getWidth(), layer2DiedTexture.getHeight(), layer2DiedTexture);
 
         GLTexture bothPlayersDiedTexture = new GLTexture(ImageIO.read(new File("images\\BothSnakesDied.png")));
-        m_Rectangles[2] = m_View.createRectangle(bothPlayersDiedTexture.getWidth(), bothPlayersDiedTexture.getHeight(), bothPlayersDiedTexture);
+        m_Rectangles[2] = m_View.createCenteredRectangle(bothPlayersDiedTexture.getWidth(), bothPlayersDiedTexture.getHeight(), bothPlayersDiedTexture);
 
         m_AppStateContext.addTimeout(2000, (callCount) -> {
             if (m_Controller.getMode() == IGameController.Mode.TWO_PLAYERS) {
@@ -92,16 +96,16 @@ public class SnakeDyingAppState implements IAppState {
     }
 
     @Override
-    public void draw2d(long nowMs) {
+    public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
         if (m_BothSnakes) {
-            m_View.drawOrthographicPolyhedron(m_Rectangles[0]);
+            m_View.drawOrthographicPolyhedron(m_Rectangles[0], m_ModelMatrix);
         }
         else if (m_Player == 0) {
-            m_View.drawOrthographicPolyhedron(m_Rectangles[1]);
+            m_View.drawOrthographicPolyhedron(m_Rectangles[1], m_ModelMatrix);
         }
         else {
-            m_View.drawOrthographicPolyhedron(m_Rectangles[2]);
+            m_View.drawOrthographicPolyhedron(m_Rectangles[2], m_ModelMatrix);
         }
     }
 

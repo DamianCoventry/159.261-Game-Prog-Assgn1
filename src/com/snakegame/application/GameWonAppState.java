@@ -16,6 +16,7 @@ package com.snakegame.application;
 import com.snakegame.client.*;
 import com.snakegame.opengl.*;
 import com.snakegame.rules.IGameController;
+import org.joml.Matrix4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -23,6 +24,7 @@ import java.io.*;
 public class GameWonAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
+    private final Matrix4f m_ModelMatrix;
     private final int m_Player;
     private final boolean m_BothSnakes;
     private GLStaticPolyhedron m_Rectangle;
@@ -30,6 +32,7 @@ public class GameWonAppState implements IAppState {
     public GameWonAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
         m_View = m_AppStateContext.getView();
+        m_ModelMatrix = new Matrix4f();
         m_Player = player;
         m_BothSnakes = false;
     }
@@ -37,6 +40,7 @@ public class GameWonAppState implements IAppState {
     public GameWonAppState(IAppStateContext context) {
         m_AppStateContext = context;
         m_View = m_AppStateContext.getView();
+        m_ModelMatrix = new Matrix4f();
         m_Player = -1;
         m_BothSnakes = true;
     }
@@ -67,7 +71,7 @@ public class GameWonAppState implements IAppState {
             gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
         }
 
-        m_Rectangle = m_View.createRectangle(gameWonTexture.getWidth(), gameWonTexture.getHeight(), gameWonTexture);
+        m_Rectangle = m_View.createCenteredRectangle(gameWonTexture.getWidth(), gameWonTexture.getHeight(), gameWonTexture);
 
         m_AppStateContext.addTimeout(3500, (callCount) -> {
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
@@ -96,8 +100,8 @@ public class GameWonAppState implements IAppState {
     }
 
     @Override
-    public void draw2d(long nowMs) {
+    public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
-        m_View.drawOrthographicPolyhedron(m_Rectangle);
+        m_View.drawOrthographicPolyhedron(m_Rectangle, m_ModelMatrix);
     }
 }

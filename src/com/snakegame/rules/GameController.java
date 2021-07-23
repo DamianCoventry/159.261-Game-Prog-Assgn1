@@ -513,7 +513,7 @@ public class GameController implements IGameController {
     private ArrayList<Vector2i> removeCellsCloseToCell(ArrayList<Vector2i> inCells, Vector2i compareMe) {
         ArrayList<Vector2i> outCells = new ArrayList<>(inCells.size());
         for (var inCell : inCells) {
-            if (compareMe.magntiude(inCell) >= (Snake.s_MinBodyParts * 2)) {
+            if (compareMe.magnitude(inCell) >= (Snake.s_MinBodyParts * 2)) {
                 outCells.add(inCell);
             }
         }

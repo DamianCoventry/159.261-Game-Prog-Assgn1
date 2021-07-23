@@ -220,13 +220,13 @@ public class Snake {
         if (position.m_X <= m_MinBounds.m_X) {
             throw new RuntimeException("Snake start position is out of bounds to the left");
         }
-        if (position.m_Y <= m_MinBounds.m_Y) {
+        if (position.m_Z <= m_MinBounds.m_Z) {
             throw new RuntimeException("Snake start position is out of bounds to the bottom");
         }
         if (position.m_X >= m_MaxBounds.m_X) {
             throw new RuntimeException("Snake start position is out of bounds to the right");
         }
-        if (position.m_Y >= m_MaxBounds.m_Y) {
+        if (position.m_Z >= m_MaxBounds.m_Z) {
             throw new RuntimeException("Snake start position is out of bounds to the top");
         }
     }
@@ -236,14 +236,14 @@ public class Snake {
         if (position.m_X < m_MinBounds.m_X) {
             newVector.m_X = m_MinBounds.m_X;
         }
-        if (position.m_Y < m_MinBounds.m_Y) {
-            newVector.m_Y = m_MinBounds.m_Y;
+        if (position.m_Z < m_MinBounds.m_Z) {
+            newVector.m_Z = m_MinBounds.m_Z;
         }
         if (position.m_X > m_MaxBounds.m_X) {
             newVector.m_X = m_MaxBounds.m_X;
         }
-        if (position.m_Y > m_MaxBounds.m_Y) {
-            newVector.m_Y = m_MaxBounds.m_Y;
+        if (position.m_Z > m_MaxBounds.m_Z) {
+            newVector.m_Z = m_MaxBounds.m_Z;
         }
         return newVector;
     }

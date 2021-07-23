@@ -16,6 +16,7 @@ package com.snakegame.application;
 import com.snakegame.client.*;
 import com.snakegame.opengl.*;
 import com.snakegame.rules.IGameController;
+import org.joml.Matrix4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -25,11 +26,13 @@ public class GameOverAppState implements IAppState {
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
+    private final Matrix4f m_ModelMatrix;
     private GLStaticPolyhedron m_Rectangle;
 
     public GameOverAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
         m_View = m_AppStateContext.getView();
+        m_ModelMatrix = new Matrix4f();
         m_Player = player;
         m_BothSnakes = false;
     }
@@ -37,6 +40,7 @@ public class GameOverAppState implements IAppState {
     public GameOverAppState(IAppStateContext context) {
         m_AppStateContext = context;
         m_View = m_AppStateContext.getView();
+        m_ModelMatrix = new Matrix4f();
         m_Player = -1;
         m_BothSnakes = true;
     }
@@ -57,7 +61,7 @@ public class GameOverAppState implements IAppState {
             gameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOver.png")));
         }
 
-        m_Rectangle = m_View.createRectangle(gameOverTexture.getWidth(), gameOverTexture.getHeight(), gameOverTexture);
+        m_Rectangle = m_View.createCenteredRectangle(gameOverTexture.getWidth(), gameOverTexture.getHeight(), gameOverTexture);
 
         m_AppStateContext.addTimeout(3500, (callCount) -> {
             m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
@@ -86,8 +90,8 @@ public class GameOverAppState implements IAppState {
     }
 
     @Override
-    public void draw2d(long nowMs) {
+    public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
-        m_View.drawOrthographicPolyhedron(m_Rectangle);
+        m_View.drawOrthographicPolyhedron(m_Rectangle, m_ModelMatrix);
     }
 }

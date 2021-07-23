@@ -15,6 +15,7 @@ package com.snakegame.application;
 
 import com.snakegame.client.*;
 import com.snakegame.opengl.*;
+import org.joml.Matrix4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -25,6 +26,7 @@ public class GetReadyAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
     private final boolean m_ResetState;
+    private final Matrix4f m_ModelMatrix;
     private GLStaticPolyhedron m_Rectangle;
     private int m_TimeoutId;
 
@@ -32,12 +34,13 @@ public class GetReadyAppState implements IAppState {
         m_AppStateContext = context;
         m_View = m_AppStateContext.getView();
         m_ResetState = resetState;
+        m_ModelMatrix = new Matrix4f();
     }
 
     @Override
     public void begin(long nowMs) throws IOException {
         GLTexture getReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady.png")));
-        m_Rectangle = m_View.createRectangle(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
+        m_Rectangle = m_View.createCenteredRectangle(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
 
         if (m_ResetState) {
             m_AppStateContext.getController().resetAfterSnakeDeath(nowMs);
@@ -75,8 +78,8 @@ public class GetReadyAppState implements IAppState {
     }
 
     @Override
-    public void draw2d(long nowMs) {
+    public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
-        m_View.drawOrthographicPolyhedron(m_Rectangle);
+        m_View.drawOrthographicPolyhedron(m_Rectangle, m_ModelMatrix);
     }
 }
