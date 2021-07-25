@@ -22,43 +22,70 @@ import javax.imageio.ImageIO;
 import java.io.*;
 import java.util.ArrayList;
 
+// https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public class GameView implements IGameView {
     private static final int s_NumNumbers = 9;
+    private static final int s_NumWallMeshes = 4;
     private static final float s_CellSize = 1.0f;
-    private static final float s_CameraXRotation = -80.0f;
-    private static final float s_CameraYPosition = 72.5f;
-    private static final float s_CameraZPosition = 13.0f;
+    private static final float s_CameraXRotation = -65.0f;
+    private static final float s_CameraYPosition = 50.0f;
+    private static final float s_CameraZPosition = 22.5f;
+    private static final float s_ObjectYPosition = 0.5f;
 
-    private static final Vector2i s_P1Snakes = new Vector2i(20, 715);
-    private static final Vector2i s_P1Score = new Vector2i(110, 715);
-    private static final Vector2i s_P2Snakes = new Vector2i(790, 715);
-    private static final Vector2i s_P2Score = new Vector2i(878, 715);
-    private static final Vector2i s_CurrentLevel = new Vector2i(484, 715);
-    private static final Vector2i s_NumLevels = new Vector2i(538, 715);
+    private static final Vector2i s_P1Snakes = new Vector2i(20, 905);
+    private static final Vector2i s_P1Score = new Vector2i(110, 905);
+    private static final Vector2i s_P2Snakes = new Vector2i(1046, 905);
+    private static final Vector2i s_P2Score = new Vector2i(1134, 905);
+    private static final Vector2i s_CurrentLevel = new Vector2i(592, 905);
+    private static final Vector2i s_NumLevels = new Vector2i(650, 905);
 
-    private final GLTexture[] m_NumberTextures;
-    private final GLTexture[] m_PowerUpTextures;
-    private final GLTexture m_DotTexture;
-    private final GLTexture m_HeadTexture;
-    private final NumberFont m_NumberFont;
-    private final TexturedShaderProgram m_TexturedShaderProgram;
     private final Matrix4f m_MvpMatrix;
     private final Matrix4f m_ModelMatrix;
     private final Matrix4f m_ViewMatrix;
-    private final GLStaticPolyhedron m_WorldDisplayMesh;
-    private final GLStaticPolyhedron m_AppleDisplayMesh;
-    private final GLStaticPolyhedron m_PowerUpDisplayMesh;
-    private GLStaticPolyhedron m_ToolbarDisplayMesh;
+    private final GLTexturedShaderProgram m_TexturedShaderProgram;
 
+    private GLTexture[] m_NumberTextures;
+    private GLTexture[] m_PowerUpTextures;
+    private GLTexture m_DotTexture;
+    private GLTexture m_HeadTexture;
+    private NumberFont m_NumberFont;
+    private GLStaticPolyhedron m_WorldDisplayMesh;
+    private GLStaticPolyhedron m_AppleDisplayMesh;
+    private GLStaticPolyhedron m_PowerUpDisplayMesh;
+    private GLStaticPolyhedron[] m_WallDisplayMeshes;
+    private GLStaticPolyhedron m_ToolbarDisplayMesh;
     private IAppStateContext m_AppStateContext;
     private IGameController m_Controller;
     private GameField m_GameField;
     private Snake[] m_Snakes;
 
-    public GameView() throws Exception {
+    public GameView() throws IOException {
+        m_MvpMatrix = new Matrix4f();
+        m_ModelMatrix = new Matrix4f();
+        m_ViewMatrix = new Matrix4f();
+        m_ViewMatrix.rotate((float)Math.toRadians(-s_CameraXRotation), 1.0f, 0.0f, 0.0f)
+                    .translate(0, -s_CameraYPosition, -s_CameraZPosition);
+        m_TexturedShaderProgram = new GLTexturedShaderProgram();
+    }
+
+    @Override
+    public void setAppStateContext(IAppStateContext appStateContext) {
+        m_AppStateContext = appStateContext;
+        m_Controller = m_AppStateContext.getController();
+        m_GameField = m_Controller.getGameField();
+        m_Snakes = m_Controller.getSnakes();
+    }
+
+    @Override
+    public void loadResources() throws Exception {
         m_NumberTextures = new GLTexture[s_NumNumbers];
         for (int i = 0; i < s_NumNumbers; ++i) {
             m_NumberTextures[i] = new GLTexture(ImageIO.read(new File(String.format("images\\Apple%d.png", i + 1))));
+        }
+
+        m_WallDisplayMeshes = new GLStaticPolyhedron[s_NumWallMeshes];
+        for (int i = 0; i < s_NumWallMeshes; ++i) {
+            m_WallDisplayMeshes[i] = loadDisplayMesh(String.format("meshes\\WallDisplayMesh%d.obj", i));
         }
 
         m_WorldDisplayMesh = loadDisplayMesh("meshes\\LevelDisplayMesh.obj");
@@ -77,40 +104,65 @@ public class GameView implements IGameView {
 
         m_DotTexture = new GLTexture(ImageIO.read(new File("images\\dot.png")));
         m_HeadTexture = new GLTexture(ImageIO.read(new File("images\\head.png")));
-        m_TexturedShaderProgram = new TexturedShaderProgram();
         m_NumberFont = new NumberFont(m_TexturedShaderProgram);
-
-        m_MvpMatrix = new Matrix4f();
-        m_ModelMatrix = new Matrix4f();
-        m_ViewMatrix = new Matrix4f();
-        m_ViewMatrix.rotate((float)Math.toRadians(-s_CameraXRotation), 1.0f, 0.0f, 0.0f)
-                    .translate(0, -s_CameraYPosition, -s_CameraZPosition);
     }
 
     @Override
-    public void setAppStateContext(IAppStateContext appStateContext) {
-        m_AppStateContext = appStateContext;
-        m_Controller = m_AppStateContext.getController();
-        m_GameField = m_Controller.getGameField();
-        m_Snakes = m_Controller.getSnakes();
+    public void unloadResources() {
+        if (m_NumberTextures != null) {
+            for (int i = 0; i < s_NumNumbers; ++i) {
+                m_NumberTextures[i].freeNativeResource();
+            }
+            m_NumberTextures = null;
+        }
+
+        if (m_WallDisplayMeshes != null) {
+            for (int i = 0; i < s_NumWallMeshes; ++i) {
+                m_WallDisplayMeshes[i].freeNativeResources();
+            }
+            m_WallDisplayMeshes = null;
+        }
+
+        if (m_PowerUpTextures != null) {
+            for (int i = 0; i < PowerUp.s_NumPowerUps; ++i) {
+                m_PowerUpTextures[i].freeNativeResource();
+            }
+            m_PowerUpTextures = null;
+        }
+
+        if (m_DotTexture != null ) {
+            m_DotTexture.freeNativeResource();
+            m_DotTexture = null;
+        }
+        if (m_HeadTexture != null ) {
+            m_HeadTexture.freeNativeResource();
+            m_HeadTexture = null;
+        }
+        if (m_NumberFont != null ) {
+            m_NumberFont.freeNativeResource();
+            m_NumberFont = null;
+        }
+        if (m_WorldDisplayMesh != null ) {
+            m_WorldDisplayMesh.freeNativeResources();
+            m_WorldDisplayMesh = null;
+        }
+        if (m_AppleDisplayMesh != null ) {
+            m_AppleDisplayMesh.freeNativeResources();
+            m_AppleDisplayMesh = null;
+        }
+        if (m_PowerUpDisplayMesh != null ) {
+            m_PowerUpDisplayMesh.freeNativeResources();
+            m_PowerUpDisplayMesh = null;
+        }
+        if (m_ToolbarDisplayMesh != null) {
+            m_ToolbarDisplayMesh.freeNativeResources();
+            m_ToolbarDisplayMesh = null;
+        }
     }
 
     @Override
     public void freeNativeResources() {
-        for (int i = 0; i < s_NumNumbers; ++i) {
-            m_NumberTextures[i].freeNativeResource();
-        }
-        for (int i = 0; i < PowerUp.s_NumPowerUps; ++i) {
-            m_PowerUpTextures[i].freeNativeResource();
-        }
-        m_DotTexture.freeNativeResource();
-        m_HeadTexture.freeNativeResource();
-        m_NumberFont.freeNativeResource();
         m_TexturedShaderProgram.freeNativeResource();
-        m_WorldDisplayMesh.freeNativeResources();
-        m_AppleDisplayMesh.freeNativeResources();
-        m_PowerUpDisplayMesh.freeNativeResources();
-        m_ToolbarDisplayMesh.freeNativeResources();
     }
 
     @Override
@@ -120,9 +172,7 @@ public class GameView implements IGameView {
         }
 
         m_MvpMatrix.identity();
-        m_MvpMatrix
-                .set(m_AppStateContext.getPerspectiveMatrix())
-                .mul(m_ViewMatrix);
+        m_MvpMatrix .set(m_AppStateContext.getPerspectiveMatrix()) .mul(m_ViewMatrix);
         m_TexturedShaderProgram.activate(m_MvpMatrix);
         m_WorldDisplayMesh.draw();
 
@@ -134,18 +184,15 @@ public class GameView implements IGameView {
             for (int x = 0; x < GameField.WIDTH; ++x) {
                 float cellOffsetX = (startX + x * s_CellSize) + (s_CellSize / 2.0f);
 
-                m_ModelMatrix.setTranslation(cellOffsetX, 0.0f, cellOffsetZ);
-                m_MvpMatrix
-                        .set(m_AppStateContext.getPerspectiveMatrix())
-                        .mul(m_ViewMatrix)
-                        .mul(m_ModelMatrix);
+                m_ModelMatrix.setTranslation(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
+                m_MvpMatrix.set(m_AppStateContext.getPerspectiveMatrix()).mul(m_ViewMatrix).mul(m_ModelMatrix);
                 m_TexturedShaderProgram.activate(m_MvpMatrix);
 
                 switch (m_GameField.getCellType(x, z)) {
                     case EMPTY:
                         break;
                     case WALL:
-                        m_PowerUpDisplayMesh.draw();
+                        m_WallDisplayMeshes[(x + z) % s_NumWallMeshes].draw();
                         break;
                     case POWER_UP: {
                         m_PowerUpDisplayMesh.draw();
@@ -222,7 +269,7 @@ public class GameView implements IGameView {
             for (var bodyPart : snake.getBodyParts()) {
                 float cellOffsetX = (startX + bodyPart.m_X * s_CellSize) + (s_CellSize / 2.0f);
                 float cellOffsetZ = (-startZ - bodyPart.m_Z * s_CellSize) - (s_CellSize / 2.0f);
-                m_ModelMatrix.setTranslation(cellOffsetX, 0.0f, cellOffsetZ);
+                m_ModelMatrix.setTranslation(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
                 m_MvpMatrix
                         .set(m_AppStateContext.getPerspectiveMatrix())
                         .mul(m_ViewMatrix)
@@ -245,26 +292,20 @@ public class GameView implements IGameView {
             throw new RuntimeException("Application state context hasn't been set");
         }
 
-        float y;
         if (m_ToolbarDisplayMesh == null) {
             GLTexture toolbarTexture = new GLTexture(ImageIO.read(new File("images\\Toolbar.png")));
-            y = m_AppStateContext.getWindowHeight() - toolbarTexture.getHeight();
+            float y = m_AppStateContext.getWindowHeight() - toolbarTexture.getHeight();
             m_ToolbarDisplayMesh = createRectangle(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
         }
 
         m_ModelMatrix.identity();
         drawOrthographicPolyhedron(m_ToolbarDisplayMesh, m_ModelMatrix);
 
-        y = m_AppStateContext.getWindowHeight() - NumberFont.s_FrameHeight;
-        float w = m_AppStateContext.getWindowWidth();
-        float halfW = w / 2.0f;
         int level = m_Controller.getCurrentLevel() + 1;
         Matrix4f projectionMatrix = m_AppStateContext.getOrthographicMatrix();
 
         // Draw the level's state
-        float width = m_NumberFont.calculateWidth(level);
         m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X, s_CurrentLevel.m_Z);
-        width = m_NumberFont.calculateWidth(m_Controller.getLevelCount());
         m_NumberFont.drawNumber(projectionMatrix, m_Controller.getLevelCount(), s_NumLevels.m_X, s_NumLevels.m_Z);
 
         // Draw player 1's state
@@ -273,9 +314,7 @@ public class GameView implements IGameView {
 
         if (m_Snakes.length > 1) {
             // Draw player 2's state
-            width = m_NumberFont.calculateWidth(m_Snakes[1].getNumLives());
             m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getNumLives(), s_P2Snakes.m_X, s_P2Snakes.m_Z);
-            width = m_NumberFont.calculateWidth(m_Snakes[1].getPoints()) + (2.0f * width);
             m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getPoints(), s_P2Score.m_X, s_P2Score.m_Z);
         }
     }
@@ -406,7 +445,7 @@ public class GameView implements IGameView {
     }
 
     @Override
-    public TexturedShaderProgram getTexturedShaderProgram() {
+    public GLTexturedShaderProgram getTexturedShaderProgram() {
         return m_TexturedShaderProgram;
     }
 }

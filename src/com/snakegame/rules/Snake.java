@@ -19,7 +19,7 @@ public class Snake {
     private static final int s_NumStartingLives = 3;
     private static final int s_MaxNumLives = 5;
     public static final int s_MinBodyParts = 3;
-    private static final float s_BodyPartScale = 1.5f;
+    //private static final float s_BodyPartScale = 1.0f;
     private static final int s_NumBodyPartsToRemove = 3;
     private static final long s_PowerUpPointsBonus = 1000;
     private static final long s_PowerUpPoints = 100;
@@ -104,39 +104,39 @@ public class Snake {
     public void awardNumber(Number.Type numberType) {
         switch (numberType) {
             case NUM_1:
-                m_AddBodyParts = (int)s_BodyPartScale;
+                m_AddBodyParts = 1;//(int)s_BodyPartScale;
                 incrementPoints(s_PowerUpPoints);
                 break;
             case NUM_2:
-                m_AddBodyParts = (int)(2.0f * s_BodyPartScale);
+                m_AddBodyParts = 1;//(int)(2.0f * s_BodyPartScale);
                 incrementPoints(2 * s_PowerUpPoints);
                 break;
             case NUM_3:
-                m_AddBodyParts = (int)(3.0f * s_BodyPartScale);
+                m_AddBodyParts = 1;//(int)(3.0f * s_BodyPartScale);
                 incrementPoints(3 * s_PowerUpPoints);
                 break;
             case NUM_4:
-                m_AddBodyParts = (int)(4.0f * s_BodyPartScale);
+                m_AddBodyParts = 1;//(int)(4.0f * s_BodyPartScale);
                 incrementPoints(4 * s_PowerUpPoints);
                 break;
             case NUM_5:
-                m_AddBodyParts = (int)(5.0f * s_BodyPartScale);
+                m_AddBodyParts = 1;//(int)(5.0f * s_BodyPartScale);
                 incrementPoints(5 * s_PowerUpPoints);
                 break;
             case NUM_6:
-                m_AddBodyParts = (int)(6.0f * s_BodyPartScale);
+                m_AddBodyParts = 2;//(int)(6.0f * s_BodyPartScale);
                 incrementPoints(6 * s_PowerUpPoints);
                 break;
             case NUM_7:
-                m_AddBodyParts = (int)(7.0f * s_BodyPartScale);
+                m_AddBodyParts = 2;//(int)(7.0f * s_BodyPartScale);
                 incrementPoints(7 * s_PowerUpPoints);
                 break;
             case NUM_8:
-                m_AddBodyParts = (int)(8.0f * s_BodyPartScale);
+                m_AddBodyParts = 3;//(int)(8.0f * s_BodyPartScale);
                 incrementPoints(8 * s_PowerUpPoints);
                 break;
             case NUM_9:
-                m_AddBodyParts = (int)(9.0f * s_BodyPartScale);
+                m_AddBodyParts = 2;//(int)(9.0f * s_BodyPartScale);
                 incrementPoints(9 * s_PowerUpPoints);
                 break;
         }
@@ -166,7 +166,7 @@ public class Snake {
 
     public void moveForwards() {
         Vector2i movementDelta = getMovementDelta(m_CurrentDirection);
-        m_BodyParts.addFirst(clampCoordinates(m_BodyParts.getFirst().add(movementDelta)));
+        m_BodyParts.addFirst(m_BodyParts.getFirst().add(movementDelta));
         if (m_AddBodyParts > 0) {
             --m_AddBodyParts;
         }
@@ -229,23 +229,6 @@ public class Snake {
         if (position.m_Z >= m_MaxBounds.m_Z) {
             throw new RuntimeException("Snake start position is out of bounds to the top");
         }
-    }
-
-    private Vector2i clampCoordinates(Vector2i position) {
-        Vector2i newVector = position.createCopy();
-        if (position.m_X < m_MinBounds.m_X) {
-            newVector.m_X = m_MinBounds.m_X;
-        }
-        if (position.m_Z < m_MinBounds.m_Z) {
-            newVector.m_Z = m_MinBounds.m_Z;
-        }
-        if (position.m_X > m_MaxBounds.m_X) {
-            newVector.m_X = m_MaxBounds.m_X;
-        }
-        if (position.m_Z > m_MaxBounds.m_Z) {
-            newVector.m_Z = m_MaxBounds.m_Z;
-        }
-        return newVector;
     }
 
     private Vector2i getMovementDelta(Direction direction) {

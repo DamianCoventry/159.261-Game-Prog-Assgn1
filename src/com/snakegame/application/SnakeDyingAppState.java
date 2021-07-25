@@ -99,13 +99,13 @@ public class SnakeDyingAppState implements IAppState {
     public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
         if (m_BothSnakes) {
-            m_View.drawOrthographicPolyhedron(m_Rectangles[0], m_ModelMatrix);
+            m_View.drawOrthographicPolyhedron(m_Rectangles[2], m_ModelMatrix);
         }
         else if (m_Player == 0) {
-            m_View.drawOrthographicPolyhedron(m_Rectangles[1], m_ModelMatrix);
+            m_View.drawOrthographicPolyhedron(m_Rectangles[0], m_ModelMatrix);
         }
         else {
-            m_View.drawOrthographicPolyhedron(m_Rectangles[2], m_ModelMatrix);
+            m_View.drawOrthographicPolyhedron(m_Rectangles[1], m_ModelMatrix);
         }
     }
 

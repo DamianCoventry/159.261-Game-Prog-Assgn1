@@ -15,6 +15,7 @@ package com.snakegame.rules;
 
 import java.io.IOException;
 
+// https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public interface IGameController {
     enum Mode { SINGLE_PLAYER, TWO_PLAYERS}
     enum SubtractSnakeResult { SNAKE_AVAILABLE, NO_SNAKES_REMAIN }

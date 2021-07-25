@@ -38,12 +38,18 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
+        long startTimeMs = System.currentTimeMillis();
+
         GLTexture loadingTexture = new GLTexture(ImageIO.read(new File("images\\Loading.png")));
         m_Rectangle = m_View.createCenteredRectangle(loadingTexture.getWidth(), loadingTexture.getHeight(), loadingTexture);
 
-        m_AppStateContext.getController().startNewGame(nowMs, m_Mode);
-
-        m_AppStateContext.addTimeout(500, (callCount) ->{
+        m_AppStateContext.addTimeout(50, (callCount) ->{
+            try {
+                m_View.loadResources();
+                m_AppStateContext.getController().startNewGame(nowMs, m_Mode);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, true));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });

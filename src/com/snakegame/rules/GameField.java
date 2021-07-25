@@ -16,8 +16,8 @@ package com.snakegame.rules;
 import java.util.ArrayList;
 
 public class GameField {
-    public static final int WIDTH = 50;
-    public static final int HEIGHT = 30;
+    public static final int WIDTH = 30;
+    public static final int HEIGHT = 20;
     public static final int TOTAL_CELLS = WIDTH * HEIGHT;
 
     private static class CellInfo {
@@ -72,7 +72,6 @@ public class GameField {
 
     public GameField() {
         m_CellInfo = new CellInfo[TOTAL_CELLS];
-        makeEmptyFieldWithBorderWall();
     }
 
     public enum CellType {
@@ -132,7 +131,6 @@ public class GameField {
         if (gameField.length() != GameField.TOTAL_CELLS) {
             throw new RuntimeException(String.format("Invalid game field supplied (%d characters present, %d required)", gameField.length(), GameField.TOTAL_CELLS));
         }
-        makeEmptyFieldWithBorderWall();
         String copy = gameField.toLowerCase();
         for (int i = 0; i < GameField.TOTAL_CELLS; ++i) {
             switch (copy.charAt(i)) {
@@ -160,15 +158,6 @@ public class GameField {
         }
     }
 
-    public void makeEmptyFieldWithBorderWall() {
-        m_Player1Start = null;
-        m_Player2Start = null;
-        for (int i = 0; i < GameField.TOTAL_CELLS; ++i) {
-            m_CellInfo[i] = new CellInfo(CellType.EMPTY);
-        }
-        setWallBorder();
-    }
-
     public PowerUp getPowerUp(int x, int y) {
         if (isValidLocation(x, y)) {
             return m_CellInfo[y * WIDTH + x].getPowerUp();
@@ -192,29 +181,6 @@ public class GameField {
 
     public CellType getCellType(Vector2i position) {
         return getCellType(position.m_X, position.m_Z);
-    }
-
-    public void setWallBorder() {
-        setHorizontalWall(0);
-        setHorizontalWall(HEIGHT - 1);
-        setVerticalWall(0);
-        setVerticalWall(WIDTH - 1);
-    }
-
-    public void setVerticalWall(int x) {
-        if (x >= 0 && x < WIDTH) {
-            for (int y = 0; y < HEIGHT; ++y) {
-                m_CellInfo[y * WIDTH + x] = new CellInfo(CellType.WALL);
-            }
-        }
-    }
-
-    public void setHorizontalWall(int y) {
-        if (y >= 0 && y < HEIGHT) {
-            for (int x = 0; x < WIDTH; ++x) {
-                m_CellInfo[y * WIDTH + x] = new CellInfo(CellType.WALL);
-            }
-        }
     }
 
     public ArrayList<Vector2i> getEmptyCells() {

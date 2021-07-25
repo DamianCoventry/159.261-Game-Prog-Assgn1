@@ -19,6 +19,7 @@ import com.snakegame.client.*;
 import java.io.*;
 import java.util.*;
 
+// https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public class GameController implements IGameController {
     private static final int s_MaxPlayers = 2;
     private static final long s_MaxSnakeSpeedTimeoutMs = 150;
@@ -186,7 +187,6 @@ public class GameController implements IGameController {
     private void loadLevelFile(int level) throws IOException {
         GameFieldFile file = new GameFieldFile("levels\\" + m_LevelFileNames.get(level), m_Mode == Mode.TWO_PLAYERS);
         m_GameField = file.getGameField();
-        m_GameField.setWallBorder();
 
         moveSnakesToNewStartPositions();
         setSnakeMovementSpeedForCurrentLevel();
@@ -374,8 +374,8 @@ public class GameController implements IGameController {
     }
 
     private CollisionResult collideSnakesWithWalls() {
-        boolean player1Colliding = isSnakeCollidingWithWall(m_Snakes[0]);
-        boolean player2Colliding = m_Snakes.length > 1 && isSnakeCollidingWithWall(m_Snakes[1]);
+        boolean player1Colliding = isSnakesOutOfBounds(m_Snakes[0]) || isSnakeCollidingWithWall(m_Snakes[0]);
+        boolean player2Colliding = m_Snakes.length > 1 && (isSnakesOutOfBounds(m_Snakes[1]) || isSnakeCollidingWithWall(m_Snakes[1]));
         if (player1Colliding) {
             if (player2Colliding) {
                 return new CollisionResult(true, -1);
@@ -386,6 +386,11 @@ public class GameController implements IGameController {
             return new CollisionResult(false, 1);
         }
         return new CollisionResult();
+    }
+
+    private boolean isSnakesOutOfBounds(Snake snake) {
+        Vector2i position = snake.getBodyParts().getFirst();
+        return position.m_X < 0 || position.m_Z < 0 || position.m_X >= GameField.WIDTH || position.m_Z >= GameField.HEIGHT;
     }
 
     private CollisionResult collideSnakesWithThemselves() {

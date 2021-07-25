@@ -19,8 +19,11 @@ import org.joml.Matrix4f;
 
 import java.io.IOException;
 
+// https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public interface IGameView {
     void setAppStateContext(IAppStateContext appStateContext);
+    void loadResources() throws Exception;
+    void unloadResources();
     void freeNativeResources();
     void draw3d(long nowMs);
     void draw2d(long nowMs) throws IOException;
@@ -28,5 +31,5 @@ public interface IGameView {
     GLStaticPolyhedron createRectangle(float x, float y, float width, float height, GLTexture texture);
     GLStaticPolyhedron createCenteredRectangle(float width, float height, GLTexture texture);
     GLStaticPolyhedron loadDisplayMesh(String fileName) throws Exception;
-    TexturedShaderProgram getTexturedShaderProgram();
+    GLTexturedShaderProgram getTexturedShaderProgram();
 }

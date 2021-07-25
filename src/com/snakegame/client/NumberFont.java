@@ -25,7 +25,7 @@ public class NumberFont {
     private static final int s_NumDigits = 10;
     private final Character[] m_Characters;
     private final GLStaticPolyhedron[] m_Polyhedra;
-    private final TexturedShaderProgram m_TexturedShaderProgram;
+    private final GLTexturedShaderProgram m_TexturedShaderProgram;
 
     private static class Character {
         float m_U0, m_V0;
@@ -36,8 +36,8 @@ public class NumberFont {
         }
     }
     
-    public NumberFont(TexturedShaderProgram texturedShaderProgram) throws IOException {
-        m_TexturedShaderProgram = texturedShaderProgram;
+    public NumberFont(GLTexturedShaderProgram GLTexturedShaderProgram) throws IOException {
+        m_TexturedShaderProgram = GLTexturedShaderProgram;
         m_Characters = new Character[s_NumDigits];
         m_Polyhedra = new GLStaticPolyhedron[s_NumDigits];
         GLTexture numberGLTexture = new GLTexture(ImageIO.read(new File("images\\Numbers.png")));

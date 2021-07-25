@@ -1,7 +1,7 @@
 # Blender MTL File: 'LevelDisplayMesh.blend'
-# Material Count: 4
+# Material Count: 5
 
-newmtl Dirt
+newmtl Stone
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -10,9 +10,9 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd Dirt01.jpg
+map_Kd Stone.jpg
 
-newmtl Grass
+newmtl TreeBark
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -21,10 +21,10 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd Grass01.jpg
+map_Kd Bark.jpg
 
-newmtl HighGround
-Ns 16.342242
+newmtl TreeFoliage
+Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
 Ks 0.500000 0.500000 0.500000
@@ -32,10 +32,10 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd Grass01.jpg
+map_Kd TreeFoliage.png
 
-newmtl LowGround
-Ns 19.963780
+newmtl TreeTrunk
+Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
 Ks 0.500000 0.500000 0.500000
@@ -43,4 +43,15 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd Dirt01.jpg
+map_Kd TreeTrunk.png
+
+newmtl World
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd WorldBackground.png

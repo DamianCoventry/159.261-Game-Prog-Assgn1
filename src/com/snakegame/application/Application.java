@@ -28,8 +28,8 @@ import java.util.function.Function;
 
 // https://en.wikipedia.org/wiki/State_pattern
 public class Application implements IAppStateContext {
-    private static final int s_DesiredWindowWidth = 1024;
-    private static final int s_DesiredWindowHeight = 768;
+    private static final int s_DesiredWindowWidth = 1280;
+    private static final int s_DesiredWindowHeight = 960;
     private static final String s_WindowTitle = "159.261 Game Programming (Assignment 1)";
 
     private final TimeoutManager m_TimeoutManager;
@@ -64,6 +64,7 @@ public class Application implements IAppStateContext {
     }
 
     public void freeNativeResources() {
+        m_View.unloadResources();
         m_View.freeNativeResources();
         m_GLWindow.freeNativeResources();
     }
