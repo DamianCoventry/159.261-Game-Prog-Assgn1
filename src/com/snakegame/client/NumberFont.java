@@ -89,6 +89,7 @@ public class NumberFont {
             int j = text.charAt(i) - '0'; // Convert the character to an index into the m_Characters array
             modelMatrix.setTranslation(x, y, 0.5f);
             Matrix4f mvpMatrix = copy.set(projectionMatrix).mul(modelMatrix);
+            m_TexturedShaderProgram.setDefaultDiffuseColour();
             m_TexturedShaderProgram.activate(mvpMatrix);
             m_Polyhedra[j].draw();
             x += s_FrameWidth;

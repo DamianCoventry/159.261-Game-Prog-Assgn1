@@ -28,6 +28,7 @@ public interface IGameView {
     void draw3d(long nowMs);
     void draw2d(long nowMs) throws IOException;
     void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron, Matrix4f modelMatrix);
+    void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron, Matrix4f modelMatrix, float alpha);
     GLStaticPolyhedron createRectangle(float x, float y, float width, float height, GLTexture texture);
     GLStaticPolyhedron createCenteredRectangle(float width, float height, GLTexture texture);
     GLStaticPolyhedron loadDisplayMesh(String fileName) throws Exception;

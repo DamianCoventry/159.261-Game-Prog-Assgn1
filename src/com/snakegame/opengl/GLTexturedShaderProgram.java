@@ -30,6 +30,10 @@ public class GLTexturedShaderProgram extends GLProgram {
 
         m_TextureLocation = getUniformLocation("diffuseTexture");
         m_ColourLocation = getUniformLocation("diffuseColour");
+        setDefaultDiffuseColour();
+    }
+
+    public void setDefaultDiffuseColour() {
         m_DiffuseColour = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
     }
 

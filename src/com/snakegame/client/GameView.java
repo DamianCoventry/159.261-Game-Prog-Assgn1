@@ -17,6 +17,7 @@ import com.snakegame.application.IAppStateContext;
 import com.snakegame.opengl.*;
 import com.snakegame.rules.*;
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -173,6 +174,7 @@ public class GameView implements IGameView {
 
         m_MvpMatrix.identity();
         m_MvpMatrix .set(m_AppStateContext.getPerspectiveMatrix()) .mul(m_ViewMatrix);
+        m_TexturedShaderProgram.setDefaultDiffuseColour();
         m_TexturedShaderProgram.activate(m_MvpMatrix);
         m_WorldDisplayMesh.draw();
 
@@ -186,6 +188,7 @@ public class GameView implements IGameView {
 
                 m_ModelMatrix.setTranslation(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
                 m_MvpMatrix.set(m_AppStateContext.getPerspectiveMatrix()).mul(m_ViewMatrix).mul(m_ModelMatrix);
+                m_TexturedShaderProgram.setDefaultDiffuseColour();
                 m_TexturedShaderProgram.activate(m_MvpMatrix);
 
                 switch (m_GameField.getCellType(x, z)) {
@@ -274,6 +277,7 @@ public class GameView implements IGameView {
                         .set(m_AppStateContext.getPerspectiveMatrix())
                         .mul(m_ViewMatrix)
                         .mul(m_ModelMatrix);
+                m_TexturedShaderProgram.setDefaultDiffuseColour();
                 m_TexturedShaderProgram.activate(m_MvpMatrix);
                 if (firstLoop) {
                     m_PowerUpDisplayMesh.draw();
@@ -326,6 +330,19 @@ public class GameView implements IGameView {
         }
         m_MvpMatrix.identity();
         m_MvpMatrix.set(m_AppStateContext.getOrthographicMatrix()).mul(modelMatrix);
+        m_TexturedShaderProgram.setDefaultDiffuseColour();
+        m_TexturedShaderProgram.activate(m_MvpMatrix);
+        polyhedron.draw();
+    }
+
+    @Override
+    public void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron, Matrix4f modelMatrix, float alpha) {
+        if (m_AppStateContext == null) {
+            throw new RuntimeException("Application state context hasn't been set");
+        }
+        m_MvpMatrix.identity();
+        m_MvpMatrix.set(m_AppStateContext.getOrthographicMatrix()).mul(modelMatrix);
+        m_TexturedShaderProgram.setDiffuseColour(new Vector4f(1.0f, 1.0f, 1.0f, alpha));
         m_TexturedShaderProgram.activate(m_MvpMatrix);
         polyhedron.draw();
     }

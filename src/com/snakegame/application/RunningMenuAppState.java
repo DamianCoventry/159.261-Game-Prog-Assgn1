@@ -28,17 +28,22 @@ public class RunningMenuAppState implements IAppState {
     private static final float s_CameraZPosition = 5.0f;
     private static final float s_AppleXPosition = 0.65f;
     private static final float s_AppleZPosition = 1.0f;
+    private static final float s_HorizontalScrollSpeed = 50.0f; // pixels per second
+    private static final float s_MsPerFrame = 0.01666666f;
+    private static final float s_BackgroundAlpha = 0.075f;
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
     private final Matrix4f m_MvpMatrix;
     private final Matrix4f m_ViewMatrix;
     private final Matrix4f m_ModelMatrix;
+    private GLStaticPolyhedron m_BackgroundTextRectangle;
     private GLStaticPolyhedron m_BackgroundRectangle;
     private GLStaticPolyhedron[] m_Rectangles;
     private GLStaticPolyhedron m_AppleDisplayMesh;
     private enum Page {MAIN, HELP }
     private Page m_Page;
     private float m_Angle;
+    private float m_ScrollOffsetX;
 
     public RunningMenuAppState(IAppStateContext context) {
         m_AppStateContext = context;
@@ -46,7 +51,7 @@ public class RunningMenuAppState implements IAppState {
         m_MvpMatrix = new Matrix4f();
         m_ViewMatrix = new Matrix4f().translate(0.0f, 0.0f, -s_CameraZPosition);
         m_ModelMatrix = new Matrix4f();
-        m_Angle = 0.0f;
+        m_Angle = m_ScrollOffsetX = 0.0f;
     }
 
     @Override
@@ -57,6 +62,9 @@ public class RunningMenuAppState implements IAppState {
 
         GLTexture backgroundTexture = new GLTexture(ImageIO.read(new File("images\\MainMenuBackground.png")));
         m_BackgroundRectangle = m_View.createRectangle(0, 0, backgroundTexture.getWidth(), backgroundTexture.getHeight(), backgroundTexture);
+
+        GLTexture backgroundTextTexture = new GLTexture(ImageIO.read(new File("images\\MainMenuBackgroundText.png")));
+        m_BackgroundTextRectangle = m_View.createRectangle(0, 0, backgroundTextTexture.getWidth(), backgroundTextTexture.getHeight(), backgroundTextTexture);
 
         m_Rectangles = new GLStaticPolyhedron[2];
         GLTexture mainMenuTexture = new GLTexture(ImageIO.read(new File("images\\MainMenu.png")));
@@ -71,6 +79,7 @@ public class RunningMenuAppState implements IAppState {
     public void end(long nowMs) {
         m_Rectangles[1].freeNativeResources();
         m_Rectangles[0].freeNativeResources();
+        m_BackgroundTextRectangle.freeNativeResources();
         m_BackgroundRectangle.freeNativeResources();
         m_AppleDisplayMesh.freeNativeResources();
     }
@@ -115,6 +124,20 @@ public class RunningMenuAppState implements IAppState {
         glDepthMask(false);
         m_ModelMatrix.identity();
         m_View.drawOrthographicPolyhedron(m_BackgroundRectangle, m_ModelMatrix);
+
+        m_ScrollOffsetX += s_HorizontalScrollSpeed * s_MsPerFrame;
+        if (m_ScrollOffsetX >= m_AppStateContext.getWindowWidth()) {
+            m_ScrollOffsetX -= m_AppStateContext.getWindowWidth();
+        }
+
+        m_ModelMatrix.identity();
+        m_ModelMatrix.translate(m_ScrollOffsetX, 0.0f, 0.0f);
+        m_View.drawOrthographicPolyhedron(m_BackgroundTextRectangle, m_ModelMatrix, s_BackgroundAlpha);
+
+        m_ModelMatrix.identity();
+        m_ModelMatrix.translate(m_ScrollOffsetX - m_AppStateContext.getWindowWidth(), 0.0f, 0.0f);
+        m_View.drawOrthographicPolyhedron(m_BackgroundTextRectangle, m_ModelMatrix, s_BackgroundAlpha);
+
         glDepthMask(true);
         animateApple();
         drawApple();
@@ -157,6 +180,7 @@ public class RunningMenuAppState implements IAppState {
                    .mul(m_ViewMatrix)
                    .mul(m_ModelMatrix);
 
+        m_View.getTexturedShaderProgram().setDefaultDiffuseColour();
         m_View.getTexturedShaderProgram().activate(m_MvpMatrix);
         m_AppleDisplayMesh.draw();
     }

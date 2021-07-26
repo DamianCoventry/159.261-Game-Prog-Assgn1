@@ -9,7 +9,7 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 ## TO DO
 - ~~complete the 3d world mesh~~
 - ~~make the cinder block building 'dirty'~~
-- animate the menu background
+- ~~animate the menu background~~
 - add directional light to the shader
 - create a second shader with directional and specular lighting
 - add a light to the main menu that will shine upon the apple
