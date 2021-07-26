@@ -1,5 +1,82 @@
 # Blender MTL File: 'LevelDisplayMesh.blend'
-# Material Count: 5
+# Material Count: 13
+
+newmtl Cardboard_Box
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd CardboardBox.jpg
+
+newmtl Cinder_Block
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd CinderBlock.jpg
+
+newmtl Corrugated_Iron
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd CorrugatedIron.jpg
+
+newmtl Dark_Red_Timber
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd DarkRedTimber.jpg
+
+newmtl Dry_Wall
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd DryWall.jpg
+
+newmtl Hay
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd hay.jpg
+
+newmtl Red_Timber
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd RedTimber.jpg
 
 newmtl Stone
 Ns 225.000000
@@ -12,7 +89,7 @@ d 1.000000
 illum 2
 map_Kd Stone.jpg
 
-newmtl TreeBark
+newmtl Tree_Bark
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -23,7 +100,7 @@ d 1.000000
 illum 2
 map_Kd Bark.jpg
 
-newmtl TreeFoliage
+newmtl Tree_Foliage
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -34,7 +111,7 @@ d 1.000000
 illum 2
 map_Kd TreeFoliage.png
 
-newmtl TreeTrunk
+newmtl Tree_Trunk
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
@@ -44,6 +121,17 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Kd TreeTrunk.png
+
+newmtl White_Paint
+Ns 225.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd WhitePaint.jpg
 
 newmtl World
 Ns 225.000000
