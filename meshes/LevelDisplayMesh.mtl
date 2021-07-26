@@ -21,7 +21,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd CinderBlock.jpg
+map_Kd CinderBlockBuildingUvMap.png
 
 newmtl Corrugated_Iron
 Ns 225.000000
