@@ -1,7 +1,7 @@
 # Blender MTL File: 'AppleLoResDisplayMesh.blend'
 # Material Count: 1
 
-newmtl AppleMaterial
+newmtl Apple
 Ns 182.250039
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000

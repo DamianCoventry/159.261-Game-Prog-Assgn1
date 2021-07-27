@@ -22,12 +22,12 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - ~~create the barn sides out of individual planks of wood~~
 - ~~add doors to the barn~~
 - ~~recreate the diffuse texture for the in-game apples~~
-- animate the in-game apples by rotating around the y-axis and bobbing up and down
-- create the power-up meshes  
-- animate the power-ups by rotating around the y-axis and bobbing up and down
+- ~~animate the in-game apples by rotating around the y-axis and bobbing up and down~~
 - animate the toolbar text by increasing the text size when:
   - awarding a life or removing a life
   - adding points or removing points
+- create the power-up meshes  
+- ~~animate the power-ups by rotating around the y-axis and bobbing up and down~~
 - update the toolbar background texture by adding a gradient similar to the menu
 - animate the toolbar background
 - correct the glow around panel graphics

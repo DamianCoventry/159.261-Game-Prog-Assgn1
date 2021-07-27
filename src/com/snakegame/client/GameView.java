@@ -34,12 +34,17 @@ public class GameView implements IGameView {
     private static final float s_CameraZPosition = 22.5f;
     private static final float s_ObjectYPosition = 0.5f;
     private static final float s_LightIntensity = 0.8735f;
+    private static final float s_ItemYRotationInc = 60.0f;
+    private static final float s_ItemXRotationRadians = (float)Math.toRadians(5.0f);
+    private static final float s_ItemBobOffsetMax = 0.30f;
+    private static final float s_ItemBobRotationInc = 180.0f;
+    private static final float s_MsPerFrame = 0.01666666f;
 
     private static final Vector2i s_P1Snakes = new Vector2i(20, 905);
     private static final Vector2i s_P1Score = new Vector2i(110, 905);
     private static final Vector2i s_P2Snakes = new Vector2i(1046, 905);
     private static final Vector2i s_P2Score = new Vector2i(1134, 905);
-    private static final Vector2i s_CurrentLevel = new Vector2i(586, 905);
+    private static final Vector2i s_CurrentLevel = new Vector2i(594, 905);
     private static final Vector2i s_NumLevels = new Vector2i(650, 905);
 
     private final Matrix4f m_MvMatrix;
@@ -66,6 +71,9 @@ public class GameView implements IGameView {
     private IGameController m_Controller;
     private GameField m_GameField;
     private Snake[] m_Snakes;
+    private float m_ItemYRotation;
+    private float m_ItemBobRotation;
+    private float m_ItemBobOffset;
 
     public GameView() throws IOException {
         m_MvMatrix = new Matrix4f();
@@ -82,6 +90,10 @@ public class GameView implements IGameView {
         m_DiffuseTexturedProgram = new GLDiffuseTextureProgram();
         m_SpecularDirectionalLightProgram = new GLSpecularDirectionalLightProgram();
         m_DirectionalLightProgram = new GLDirectionalLightProgram();
+
+        m_ItemYRotation = 0.0f;
+        m_ItemBobRotation = 0.0f;
+        m_ItemBobOffset = 0.0f;
     }
 
     @Override
@@ -188,6 +200,16 @@ public class GameView implements IGameView {
             throw new RuntimeException("Application state context hasn't been set");
         }
 
+        m_ItemYRotation += s_MsPerFrame * s_ItemYRotationInc;
+        if (m_ItemYRotation >= 360.0f) {
+            m_ItemYRotation -= 360.0f;
+        }
+        m_ItemBobRotation += s_MsPerFrame * s_ItemBobRotationInc;
+        if (m_ItemBobRotation >= 360.0f) {
+            m_ItemBobRotation -= 360.0f;
+        }
+        m_ItemBobOffset = s_ItemBobOffsetMax * (float)Math.sin(Math.toRadians(m_ItemBobRotation));
+
         m_ModelMatrix.identity();
         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
         m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
@@ -207,21 +229,25 @@ public class GameView implements IGameView {
                 float cellOffsetX = (startX + x * s_CellSize) + (s_CellSize / 2.0f);
 
                 m_ModelMatrix.identity();
-                m_ModelMatrix.setTranslation(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
-                m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
-                m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
-
-                m_DirectionalLightProgram.setLightDirection(m_LightDirection);
-                m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
-                m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
 
                 switch (m_GameField.getCellType(x, z)) {
                     case EMPTY:
                         break;
                     case WALL:
+                        m_ModelMatrix.setTranslation(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
+                        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
+                        m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+                        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
                         m_WallDisplayMeshes[(x + z) % s_NumWallMeshes].draw();
                         break;
                     case POWER_UP: {
+                        m_ModelMatrix
+                                .setTranslation(cellOffsetX, s_ObjectYPosition + (s_ItemBobOffsetMax - m_ItemBobOffset), cellOffsetZ)
+                                .rotate((float)Math.toRadians(-m_ItemYRotation), 0.0f, 1.0f, 0.0f)
+                                .rotate(s_ItemXRotationRadians, 1.0f, 0.0f, 0.0f);
+                        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
+                        m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+                        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
                         m_PowerUpDisplayMesh.draw();
 //                        PowerUp powerUp = m_GameField.getPowerUp(x, y);
 //                        switch (powerUp.getType()) {
@@ -253,6 +279,13 @@ public class GameView implements IGameView {
                         break;
                     }
                     case NUMBER: {
+                        m_ModelMatrix
+                                .setTranslation(cellOffsetX, s_ObjectYPosition + m_ItemBobOffset, cellOffsetZ)
+                                .rotate((float)Math.toRadians(m_ItemYRotation), 0.0f, 1.0f, 0.0f)
+                                .rotate(s_ItemXRotationRadians, 1.0f, 0.0f, 0.0f);
+                        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
+                        m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+                        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
                         m_AppleDisplayMesh.draw();
 //                        Number number = m_GameField.getNumber(x, y);
 //                        switch (number.getType()) {
@@ -337,7 +370,12 @@ public class GameView implements IGameView {
         Matrix4f projectionMatrix = m_AppStateContext.getOrthographicMatrix();
 
         // Draw the level's state
-        m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X, s_CurrentLevel.m_Z);
+        if (level < 10) {
+            m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X, s_CurrentLevel.m_Z);
+        }
+        else {
+            m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X - 8.0f, s_CurrentLevel.m_Z);
+        }
         m_NumberFont.drawNumber(projectionMatrix, m_Controller.getLevelCount(), s_NumLevels.m_X, s_NumLevels.m_Z);
 
         // Draw player 1's state
