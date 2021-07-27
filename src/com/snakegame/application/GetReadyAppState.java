@@ -27,7 +27,7 @@ public class GetReadyAppState implements IAppState {
     private final IGameView m_View;
     private final boolean m_ResetState;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedron m_Rectangle;
+    private GLStaticPolyhedronVxTc m_Rectangle;
     private int m_TimeoutId;
 
     public GetReadyAppState(IAppStateContext context, boolean resetState) {

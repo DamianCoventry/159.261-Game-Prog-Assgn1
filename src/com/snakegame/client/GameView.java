@@ -17,6 +17,7 @@ import com.snakegame.application.IAppStateContext;
 import com.snakegame.opengl.*;
 import com.snakegame.rules.*;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import javax.imageio.ImageIO;
@@ -32,6 +33,7 @@ public class GameView implements IGameView {
     private static final float s_CameraYPosition = 50.0f;
     private static final float s_CameraZPosition = 22.5f;
     private static final float s_ObjectYPosition = 0.5f;
+    private static final float s_LightIntensity = 0.8735f;
 
     private static final Vector2i s_P1Snakes = new Vector2i(20, 905);
     private static final Vector2i s_P1Score = new Vector2i(110, 905);
@@ -40,33 +42,46 @@ public class GameView implements IGameView {
     private static final Vector2i s_CurrentLevel = new Vector2i(592, 905);
     private static final Vector2i s_NumLevels = new Vector2i(650, 905);
 
+    private final Matrix4f m_MvMatrix;
     private final Matrix4f m_MvpMatrix;
+    private final Matrix4f m_ProjectionMatrix;
     private final Matrix4f m_ModelMatrix;
     private final Matrix4f m_ViewMatrix;
-    private final GLTexturedShaderProgram m_TexturedShaderProgram;
+    private final GLDiffuseTextureProgram m_TexturedProgram;
+    private final GLSpecularDirectionalLightProgram m_SpecularDirectionalLightProgram;
+    private final GLDirectionalLightProgram m_DirectionalLightProgram;
+    private final Vector3f m_LightDirection;
 
     private GLTexture[] m_NumberTextures;
     private GLTexture[] m_PowerUpTextures;
     private GLTexture m_DotTexture;
     private GLTexture m_HeadTexture;
     private NumberFont m_NumberFont;
-    private GLStaticPolyhedron m_WorldDisplayMesh;
-    private GLStaticPolyhedron m_AppleDisplayMesh;
-    private GLStaticPolyhedron m_PowerUpDisplayMesh;
-    private GLStaticPolyhedron[] m_WallDisplayMeshes;
-    private GLStaticPolyhedron m_ToolbarDisplayMesh;
+    private GLStaticPolyhedronVxTcNm m_WorldDisplayMesh;
+    private GLStaticPolyhedronVxTcNm m_AppleDisplayMesh;
+    private GLStaticPolyhedronVxTcNm m_PowerUpDisplayMesh;
+    private GLStaticPolyhedronVxTcNm[] m_WallDisplayMeshes;
+    private GLStaticPolyhedronVxTc m_ToolbarDisplayMesh;
     private IAppStateContext m_AppStateContext;
     private IGameController m_Controller;
     private GameField m_GameField;
     private Snake[] m_Snakes;
 
     public GameView() throws IOException {
+        m_MvMatrix = new Matrix4f();
         m_MvpMatrix = new Matrix4f();
+        m_ProjectionMatrix = new Matrix4f();
         m_ModelMatrix = new Matrix4f();
         m_ViewMatrix = new Matrix4f();
+
         m_ViewMatrix.rotate((float)Math.toRadians(-s_CameraXRotation), 1.0f, 0.0f, 0.0f)
                     .translate(0, -s_CameraYPosition, -s_CameraZPosition);
-        m_TexturedShaderProgram = new GLTexturedShaderProgram();
+
+        m_LightDirection = new Vector3f(-0.5f, 0.0f, 1.0f).normalize();
+
+        m_TexturedProgram = new GLDiffuseTextureProgram();
+        m_SpecularDirectionalLightProgram = new GLSpecularDirectionalLightProgram();
+        m_DirectionalLightProgram = new GLDirectionalLightProgram();
     }
 
     @Override
@@ -84,14 +99,14 @@ public class GameView implements IGameView {
             m_NumberTextures[i] = new GLTexture(ImageIO.read(new File(String.format("images\\Apple%d.png", i + 1))));
         }
 
-        m_WallDisplayMeshes = new GLStaticPolyhedron[s_NumWallMeshes];
+        m_WallDisplayMeshes = new GLStaticPolyhedronVxTcNm[s_NumWallMeshes];
         for (int i = 0; i < s_NumWallMeshes; ++i) {
-            m_WallDisplayMeshes[i] = loadDisplayMesh(String.format("meshes\\WallDisplayMesh%d.obj", i));
+            m_WallDisplayMeshes[i] = loadDisplayMeshWithNormals(String.format("meshes\\WallDisplayMesh%d.obj", i));
         }
 
-        m_WorldDisplayMesh = loadDisplayMesh("meshes\\LevelDisplayMesh.obj");
-        m_AppleDisplayMesh = loadDisplayMesh("meshes\\AppleLoResDisplayMesh.obj");
-        m_PowerUpDisplayMesh = loadDisplayMesh("meshes\\PowerUpDisplayMesh.obj");
+        m_WorldDisplayMesh = loadDisplayMeshWithNormals("meshes\\LevelDisplayMesh.obj");
+        m_AppleDisplayMesh = loadDisplayMeshWithNormals("meshes\\AppleLoResDisplayMesh.obj");
+        m_PowerUpDisplayMesh = loadDisplayMeshWithNormals("meshes\\PowerUpDisplayMesh.obj");
 
         m_PowerUpTextures = new GLTexture[PowerUp.s_NumPowerUps];
         m_PowerUpTextures[0] = new GLTexture(ImageIO.read(new File("images\\DecreaseLength.png")));
@@ -105,7 +120,7 @@ public class GameView implements IGameView {
 
         m_DotTexture = new GLTexture(ImageIO.read(new File("images\\dot.png")));
         m_HeadTexture = new GLTexture(ImageIO.read(new File("images\\head.png")));
-        m_NumberFont = new NumberFont(m_TexturedShaderProgram);
+        m_NumberFont = new NumberFont(m_TexturedProgram);
     }
 
     @Override
@@ -163,7 +178,8 @@ public class GameView implements IGameView {
 
     @Override
     public void freeNativeResources() {
-        m_TexturedShaderProgram.freeNativeResource();
+        m_TexturedProgram.freeNativeResource();
+        m_SpecularDirectionalLightProgram.freeNativeResource();
     }
 
     @Override
@@ -172,10 +188,14 @@ public class GameView implements IGameView {
             throw new RuntimeException("Application state context hasn't been set");
         }
 
-        m_MvpMatrix.identity();
-        m_MvpMatrix .set(m_AppStateContext.getPerspectiveMatrix()) .mul(m_ViewMatrix);
-        m_TexturedShaderProgram.setDefaultDiffuseColour();
-        m_TexturedShaderProgram.activate(m_MvpMatrix);
+        m_ModelMatrix.identity();
+        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
+        m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+
+        m_DirectionalLightProgram.setLightDirection(m_LightDirection);
+        m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
+        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
+
         m_WorldDisplayMesh.draw();
 
         float startX = GameField.WIDTH / 2.0f * -s_CellSize;
@@ -186,10 +206,14 @@ public class GameView implements IGameView {
             for (int x = 0; x < GameField.WIDTH; ++x) {
                 float cellOffsetX = (startX + x * s_CellSize) + (s_CellSize / 2.0f);
 
+                m_ModelMatrix.identity();
                 m_ModelMatrix.setTranslation(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
-                m_MvpMatrix.set(m_AppStateContext.getPerspectiveMatrix()).mul(m_ViewMatrix).mul(m_ModelMatrix);
-                m_TexturedShaderProgram.setDefaultDiffuseColour();
-                m_TexturedShaderProgram.activate(m_MvpMatrix);
+                m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
+                m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+
+                m_DirectionalLightProgram.setLightDirection(m_LightDirection);
+                m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
+                m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
 
                 switch (m_GameField.getCellType(x, z)) {
                     case EMPTY:
@@ -272,13 +296,17 @@ public class GameView implements IGameView {
             for (var bodyPart : snake.getBodyParts()) {
                 float cellOffsetX = (startX + bodyPart.m_X * s_CellSize) + (s_CellSize / 2.0f);
                 float cellOffsetZ = (-startZ - bodyPart.m_Z * s_CellSize) - (s_CellSize / 2.0f);
+
+                m_ModelMatrix.identity();
                 m_ModelMatrix.setTranslation(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
-                m_MvpMatrix
-                        .set(m_AppStateContext.getPerspectiveMatrix())
-                        .mul(m_ViewMatrix)
-                        .mul(m_ModelMatrix);
-                m_TexturedShaderProgram.setDefaultDiffuseColour();
-                m_TexturedShaderProgram.activate(m_MvpMatrix);
+
+                m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
+                m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+
+                m_DirectionalLightProgram.setLightDirection(m_LightDirection);
+                m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
+                m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
+
                 if (firstLoop) {
                     m_PowerUpDisplayMesh.draw();
                 }
@@ -324,31 +352,31 @@ public class GameView implements IGameView {
     }
 
     @Override
-    public void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron, Matrix4f modelMatrix) {
+    public void drawOrthographicPolyhedron(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix) {
         if (m_AppStateContext == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
         m_MvpMatrix.identity();
         m_MvpMatrix.set(m_AppStateContext.getOrthographicMatrix()).mul(modelMatrix);
-        m_TexturedShaderProgram.setDefaultDiffuseColour();
-        m_TexturedShaderProgram.activate(m_MvpMatrix);
+        m_TexturedProgram.setDefaultDiffuseColour();
+        m_TexturedProgram.activate(m_MvpMatrix);
         polyhedron.draw();
     }
 
     @Override
-    public void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron, Matrix4f modelMatrix, float alpha) {
+    public void drawOrthographicPolyhedron(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix, float alpha) {
         if (m_AppStateContext == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
         m_MvpMatrix.identity();
         m_MvpMatrix.set(m_AppStateContext.getOrthographicMatrix()).mul(modelMatrix);
-        m_TexturedShaderProgram.setDiffuseColour(new Vector4f(1.0f, 1.0f, 1.0f, alpha));
-        m_TexturedShaderProgram.activate(m_MvpMatrix);
+        m_TexturedProgram.setDiffuseColour(new Vector4f(1.0f, 1.0f, 1.0f, alpha));
+        m_TexturedProgram.activate(m_MvpMatrix);
         polyhedron.draw();
     }
 
     @Override
-    public GLStaticPolyhedron createRectangle(float x, float y, float width, float height, GLTexture texture) {
+    public GLStaticPolyhedronVxTc createRectangle(float x, float y, float width, float height, GLTexture texture) {
         float[] vertices = new float[]{
                 // triangle 0
                 x, y + height, 0.1f,
@@ -370,20 +398,20 @@ public class GameView implements IGameView {
                 1.0f, 0.0f
         };
 
-        GLStaticPolyhedron polyhedron = new GLStaticPolyhedron();
-        polyhedron.addPiece(new GLStaticPolyhedronPiece(vertices, texCoordinates, texture));
+        GLStaticPolyhedronVxTc polyhedron = new GLStaticPolyhedronVxTc();
+        polyhedron.addPiece(new GLStaticPolyhedronPieceVxTc(texture, vertices, texCoordinates));
         return polyhedron;
     }
 
     @Override
-    public GLStaticPolyhedron createCenteredRectangle(float width, float height, GLTexture texture) {
+    public GLStaticPolyhedronVxTc createCenteredRectangle(float width, float height, GLTexture texture) {
         var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (width / 2.0f);
         var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (height / 2.0f);
         return createRectangle(x, y, width, height, texture);
     }
 
     @Override
-    public GLStaticPolyhedron loadDisplayMesh(String fileName) throws Exception {
+    public GLStaticPolyhedronVxTc loadDisplayMeshWithoutNormals(String fileName) throws Exception {
         final ObjFile objFile = new ObjFile(fileName);
         if (objFile.getObjects() == null || objFile.getObjects().isEmpty()) {
             throw new RuntimeException("Object file has no objects");
@@ -399,7 +427,7 @@ public class GameView implements IGameView {
             materialFiles.add(new MtlFile("meshes\\" + materialFileName));
         }
 
-        GLStaticPolyhedron displayMesh = new GLStaticPolyhedron();
+        GLStaticPolyhedronVxTc displayMesh = new GLStaticPolyhedronVxTc();
 
         for (var piece : object.getPieces()) {
             GLTexture pieceDiffuseTexture = null;
@@ -455,14 +483,122 @@ public class GameView implements IGameView {
                 texCoordinates[floatCount++] = 1-objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_V;
             }
 
-            displayMesh.addPiece(new GLStaticPolyhedronPiece(vertices, texCoordinates, pieceDiffuseTexture));
+            displayMesh.addPiece(new GLStaticPolyhedronPieceVxTc(pieceDiffuseTexture, vertices, texCoordinates));
         }
 
         return displayMesh;
     }
 
     @Override
-    public GLTexturedShaderProgram getTexturedShaderProgram() {
-        return m_TexturedShaderProgram;
+    public GLStaticPolyhedronVxTcNm loadDisplayMeshWithNormals(String fileName) throws Exception {
+        final ObjFile objFile = new ObjFile(fileName);
+        if (objFile.getObjects() == null || objFile.getObjects().isEmpty()) {
+            throw new RuntimeException("Object file has no objects");
+        }
+
+        final ObjFile.Object object = objFile.getObjects().get(0);
+        if (object.getPieces() == null || object.getPieces().isEmpty()) {
+            throw new RuntimeException("Object has no pieces");
+        }
+
+        final ArrayList<MtlFile> materialFiles = new ArrayList<>();
+        for (var materialFileName : objFile.getMaterialFileNames()) {
+            materialFiles.add(new MtlFile("meshes\\" + materialFileName));
+        }
+
+        GLStaticPolyhedronVxTcNm displayMesh = new GLStaticPolyhedronVxTcNm();
+
+        for (var piece : object.getPieces()) {
+            GLTexture pieceDiffuseTexture = null;
+            for (var materialFile : materialFiles) {
+                for (var material : materialFile.getMaterials()) {
+                    if (material.getName().equalsIgnoreCase(piece.getMaterialName())) {
+                        if (pieceDiffuseTexture != null) {
+                            pieceDiffuseTexture.freeNativeResource();
+                        }
+                        if (material.getDiffuseTexture() == null) {
+                            throw new RuntimeException("Material [" + material.getName() + "] does not have a diffuse texture");
+                        }
+                        pieceDiffuseTexture = new GLTexture(ImageIO.read(new File("meshes\\" + material.getDiffuseTexture())));
+                    }
+                }
+            }
+            if (pieceDiffuseTexture == null) {
+                throw new RuntimeException("The level file does not have a valid diffuse texture within a piece");
+            }
+
+            int numFloats = piece.getFaces().size() * objFile.getVertices().size() * 3;
+            int floatCount = 0;
+            float[] vertices = new float[numFloats];
+            for (int faceIndex = 0; faceIndex < piece.getFaces().size(); ++faceIndex) {
+                ObjFile.Face face = piece.getFaces().get(faceIndex);
+
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_X;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_Y;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[0]).m_Z;
+
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_X;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_Y;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[1]).m_Z;
+
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_X;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_Y;
+                vertices[floatCount++] = objFile.getVertices().get(face.m_Vertices[2]).m_Z;
+            }
+
+            numFloats = piece.getFaces().size() * objFile.getTexCoordinates().size() * 2;
+            floatCount = 0;
+            float[] texCoordinates = new float[numFloats];
+            for (int faceIndex = 0; faceIndex < piece.getFaces().size(); ++faceIndex) {
+                ObjFile.Face face = piece.getFaces().get(faceIndex);
+
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_U;
+                texCoordinates[floatCount++] = 1-objFile.getTexCoordinates().get(face.m_TexCoordinates[0]).m_V;
+
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_U;
+                texCoordinates[floatCount++] = 1-objFile.getTexCoordinates().get(face.m_TexCoordinates[1]).m_V;
+
+                texCoordinates[floatCount++] = objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_U;
+                texCoordinates[floatCount++] = 1-objFile.getTexCoordinates().get(face.m_TexCoordinates[2]).m_V;
+            }
+
+            numFloats = piece.getFaces().size() * objFile.getNormals().size() * 3;
+            floatCount = 0;
+            float[] normals = new float[numFloats];
+            for (int faceIndex = 0; faceIndex < piece.getFaces().size(); ++faceIndex) {
+                ObjFile.Face face = piece.getFaces().get(faceIndex);
+
+                normals[floatCount++] = objFile.getNormals().get(face.m_Normals[0]).m_X;
+                normals[floatCount++] = objFile.getNormals().get(face.m_Normals[0]).m_Y;
+                normals[floatCount++] = objFile.getNormals().get(face.m_Normals[0]).m_Z;
+
+                normals[floatCount++] = objFile.getNormals().get(face.m_Normals[1]).m_X;
+                normals[floatCount++] = objFile.getNormals().get(face.m_Normals[1]).m_Y;
+                normals[floatCount++] = objFile.getNormals().get(face.m_Normals[1]).m_Z;
+
+                normals[floatCount++] = objFile.getNormals().get(face.m_Normals[2]).m_X;
+                normals[floatCount++] = objFile.getNormals().get(face.m_Normals[2]).m_Y;
+                normals[floatCount++] = objFile.getNormals().get(face.m_Normals[2]).m_Z;
+            }
+
+            displayMesh.addPiece(new GLStaticPolyhedronPieceVxTcNm(pieceDiffuseTexture, vertices, texCoordinates, normals));
+        }
+
+        return displayMesh;
+    }
+
+    @Override
+    public GLDiffuseTextureProgram getTexturedProgram() {
+        return m_TexturedProgram;
+    }
+
+    @Override
+    public GLSpecularDirectionalLightProgram getSpecularDirectionalLightProgram() {
+        return m_SpecularDirectionalLightProgram;
+    }
+
+    @Override
+    public GLDirectionalLightProgram getDirectionalLightProgram() {
+        return m_DirectionalLightProgram;
     }
 }

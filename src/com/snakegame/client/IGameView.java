@@ -27,10 +27,13 @@ public interface IGameView {
     void freeNativeResources();
     void draw3d(long nowMs);
     void draw2d(long nowMs) throws IOException;
-    void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron, Matrix4f modelMatrix);
-    void drawOrthographicPolyhedron(GLStaticPolyhedron polyhedron, Matrix4f modelMatrix, float alpha);
-    GLStaticPolyhedron createRectangle(float x, float y, float width, float height, GLTexture texture);
-    GLStaticPolyhedron createCenteredRectangle(float width, float height, GLTexture texture);
-    GLStaticPolyhedron loadDisplayMesh(String fileName) throws Exception;
-    GLTexturedShaderProgram getTexturedShaderProgram();
+    void drawOrthographicPolyhedron(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix);
+    void drawOrthographicPolyhedron(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix, float alpha);
+    GLStaticPolyhedronVxTc createRectangle(float x, float y, float width, float height, GLTexture texture);
+    GLStaticPolyhedronVxTc createCenteredRectangle(float width, float height, GLTexture texture);
+    GLStaticPolyhedronVxTc loadDisplayMeshWithoutNormals(String fileName) throws Exception;
+    GLStaticPolyhedronVxTcNm loadDisplayMeshWithNormals(String fileName) throws Exception;
+    GLDiffuseTextureProgram getTexturedProgram();
+    GLSpecularDirectionalLightProgram getSpecularDirectionalLightProgram();
+    GLDirectionalLightProgram getDirectionalLightProgram();
 }

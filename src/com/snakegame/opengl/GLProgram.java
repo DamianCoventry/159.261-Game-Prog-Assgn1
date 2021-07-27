@@ -24,7 +24,6 @@ public class GLProgram {
     private final int m_ProgramId;
     private final int m_VertexShaderId;
     private final int m_FragmentShaderId;
-    private final int m_MvpMatrixLocation;
 
     public static void deactivateCurrent() {
         glUseProgram(0);
@@ -40,8 +39,6 @@ public class GLProgram {
         m_FragmentShaderId = compile(GL_FRAGMENT_SHADER, fragmentShaderSourceCode);
 
         link();
-
-        m_MvpMatrixLocation = getUniformLocation("mvpMatrix");
     }
 
     public void freeNativeResource() {
@@ -57,10 +54,6 @@ public class GLProgram {
         return m_ProgramId;
     }
 
-    public void setMvpMatrix(Matrix4f mvpMatrix) {
-        setUniform(m_MvpMatrixLocation, mvpMatrix);
-    }
-
     protected int getUniformLocation(String uniformName) {
         int location = glGetUniformLocation(getProgramId(), uniformName);
         if (location < 0) {
@@ -71,6 +64,10 @@ public class GLProgram {
 
     protected void setUniform(int location, int value) {
         glUniform1i(location, value);
+    }
+
+    protected void setUniform(int location, float value) {
+        glUniform1f(location, value);
     }
 
     protected void setUniform(int location, Vector3f value) {

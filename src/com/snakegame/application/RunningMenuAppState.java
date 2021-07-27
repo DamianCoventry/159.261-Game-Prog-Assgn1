@@ -17,6 +17,7 @@ import com.snakegame.client.IGameView;
 import com.snakegame.opengl.*;
 import com.snakegame.rules.IGameController;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -31,15 +32,22 @@ public class RunningMenuAppState implements IAppState {
     private static final float s_HorizontalScrollSpeed = 50.0f; // pixels per second
     private static final float s_MsPerFrame = 0.01666666f;
     private static final float s_BackgroundAlpha = 0.075f;
+    private static final float s_LightIntensity = 2.0f;
+    private static final float s_LightShininess = 16.0f;
+
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
-    private final Matrix4f m_MvpMatrix;
+    private final Matrix4f m_MvMatrix;
+    private final Matrix4f m_ProjectionMatrix;
     private final Matrix4f m_ViewMatrix;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedron m_BackgroundTextRectangle;
-    private GLStaticPolyhedron m_BackgroundRectangle;
-    private GLStaticPolyhedron[] m_Rectangles;
-    private GLStaticPolyhedron m_AppleDisplayMesh;
+    private final Vector3f m_LightDirection;
+    private final Vector3f m_AmbientLight;
+
+    private GLStaticPolyhedronVxTc m_BackgroundTextRectangle;
+    private GLStaticPolyhedronVxTc m_BackgroundRectangle;
+    private GLStaticPolyhedronVxTc[] m_MenuPageRectangles;
+    private GLStaticPolyhedronVxTcNm m_AppleDisplayMesh;
     private enum Page {MAIN, HELP }
     private Page m_Page;
     private float m_Angle;
@@ -48,17 +56,23 @@ public class RunningMenuAppState implements IAppState {
     public RunningMenuAppState(IAppStateContext context) {
         m_AppStateContext = context;
         m_View = m_AppStateContext.getView();
-        m_MvpMatrix = new Matrix4f();
+
+        m_MvMatrix = new Matrix4f();
+        m_ProjectionMatrix = new Matrix4f();
         m_ViewMatrix = new Matrix4f().translate(0.0f, 0.0f, -s_CameraZPosition);
         m_ModelMatrix = new Matrix4f();
+
         m_Angle = m_ScrollOffsetX = 0.0f;
+
+        m_LightDirection = new Vector3f(-10.0f, 7.50f, 8.75f).normalize();
+        m_AmbientLight = new Vector3f(0.05f, 0.05f, 0.05f);
     }
 
     @Override
     public void begin(long nowMs) throws Exception {
         m_View.unloadResources();
 
-        m_AppleDisplayMesh = m_View.loadDisplayMesh("meshes\\AppleHiResDisplayMesh.obj");
+        m_AppleDisplayMesh = m_View.loadDisplayMeshWithNormals("meshes\\AppleHiResDisplayMesh.obj");
 
         GLTexture backgroundTexture = new GLTexture(ImageIO.read(new File("images\\MainMenuBackground.png")));
         m_BackgroundRectangle = m_View.createRectangle(0, 0, backgroundTexture.getWidth(), backgroundTexture.getHeight(), backgroundTexture);
@@ -66,19 +80,19 @@ public class RunningMenuAppState implements IAppState {
         GLTexture backgroundTextTexture = new GLTexture(ImageIO.read(new File("images\\MainMenuBackgroundText.png")));
         m_BackgroundTextRectangle = m_View.createRectangle(0, 0, backgroundTextTexture.getWidth(), backgroundTextTexture.getHeight(), backgroundTextTexture);
 
-        m_Rectangles = new GLStaticPolyhedron[2];
+        m_MenuPageRectangles = new GLStaticPolyhedronVxTc[2];
         GLTexture mainMenuTexture = new GLTexture(ImageIO.read(new File("images\\MainMenu.png")));
-        m_Rectangles[0] = m_View.createCenteredRectangle(mainMenuTexture.getWidth(), mainMenuTexture.getHeight(), mainMenuTexture);
+        m_MenuPageRectangles[0] = m_View.createCenteredRectangle(mainMenuTexture.getWidth(), mainMenuTexture.getHeight(), mainMenuTexture);
         GLTexture helpMenuTexture = new GLTexture(ImageIO.read(new File("images\\HelpMenu.png")));
-        m_Rectangles[1] = m_View.createCenteredRectangle(helpMenuTexture.getWidth(), helpMenuTexture.getHeight(), helpMenuTexture);
+        m_MenuPageRectangles[1] = m_View.createCenteredRectangle(helpMenuTexture.getWidth(), helpMenuTexture.getHeight(), helpMenuTexture);
 
         m_Page = Page.MAIN;
     }
 
     @Override
     public void end(long nowMs) {
-        m_Rectangles[1].freeNativeResources();
-        m_Rectangles[0].freeNativeResources();
+        m_MenuPageRectangles[1].freeNativeResources();
+        m_MenuPageRectangles[0].freeNativeResources();
         m_BackgroundTextRectangle.freeNativeResources();
         m_BackgroundRectangle.freeNativeResources();
         m_AppleDisplayMesh.freeNativeResources();
@@ -146,12 +160,12 @@ public class RunningMenuAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) throws IOException {
         float oneThird = m_AppStateContext.getWindowWidth() * 0.3333f;
-        float halfWidth = m_Rectangles[0].getPiece(0).getDiffuseTexture().getWidth() / 2.0f;
+        float halfWidth = m_MenuPageRectangles[0].getPiece(0).getDiffuseTexture().getWidth() / 2.0f;
         m_ModelMatrix.identity();
         m_ModelMatrix.setTranslation(-(oneThird - halfWidth), 0.0f, 0.0f);
         switch (m_Page) {
             case MAIN:
-                m_View.drawOrthographicPolyhedron(m_Rectangles[0], m_ModelMatrix);
+                m_View.drawOrthographicPolyhedron(m_MenuPageRectangles[0], m_ModelMatrix);
                 break;
             case HELP:
                 //m_View.drawOrthographicPolyhedron(m_Rectangles[1]);
@@ -175,13 +189,15 @@ public class RunningMenuAppState implements IAppState {
         m_ModelMatrix.setTranslation(s_AppleXPosition, 0.0f, s_AppleZPosition)
                      .rotate((float)Math.toRadians(m_Angle), 0.0f, 1.0f, 0.0f);
 
-        m_MvpMatrix.identity();
-        m_MvpMatrix.set(m_AppStateContext.getPerspectiveMatrix())
-                   .mul(m_ViewMatrix)
-                   .mul(m_ModelMatrix);
+        m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
 
-        m_View.getTexturedShaderProgram().setDefaultDiffuseColour();
-        m_View.getTexturedShaderProgram().activate(m_MvpMatrix);
+        GLSpecularDirectionalLightProgram program = m_View.getSpecularDirectionalLightProgram();
+        program.setAmbientLight(m_AmbientLight);
+        program.setLightDirection(m_LightDirection);
+        program.setLightIntensity(s_LightIntensity);
+        program.setShininess(s_LightShininess);
+        program.activate(m_MvMatrix, m_ProjectionMatrix);
         m_AppleDisplayMesh.draw();
     }
 }

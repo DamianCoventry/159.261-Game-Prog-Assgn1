@@ -27,7 +27,7 @@ public class GameOverAppState implements IAppState {
     private final int m_Player;
     private final boolean m_BothSnakes;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedron m_Rectangle;
+    private GLStaticPolyhedronVxTc m_Rectangle;
 
     public GameOverAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;

@@ -26,7 +26,7 @@ public class LevelCompleteAppState implements IAppState {
     private final IGameController m_Controller;
     private final IGameView m_View;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedron m_Rectangle;
+    private GLStaticPolyhedronVxTc m_Rectangle;
 
     public LevelCompleteAppState(IAppStateContext context) {
         m_AppStateContext = context;

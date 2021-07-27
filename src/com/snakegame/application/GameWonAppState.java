@@ -27,7 +27,7 @@ public class GameWonAppState implements IAppState {
     private final Matrix4f m_ModelMatrix;
     private final int m_Player;
     private final boolean m_BothSnakes;
-    private GLStaticPolyhedron m_Rectangle;
+    private GLStaticPolyhedronVxTc m_Rectangle;
 
     public GameWonAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;

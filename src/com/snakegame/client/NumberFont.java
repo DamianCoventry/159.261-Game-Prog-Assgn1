@@ -24,8 +24,8 @@ public class NumberFont {
     public static final float s_FrameHeight = 37.0f;
     private static final int s_NumDigits = 10;
     private final Character[] m_Characters;
-    private final GLStaticPolyhedron[] m_Polyhedra;
-    private final GLTexturedShaderProgram m_TexturedShaderProgram;
+    private final GLStaticPolyhedronVxTc[] m_Polyhedra;
+    private final GLDiffuseTextureProgram m_TexturedProgram;
 
     private static class Character {
         float m_U0, m_V0;
@@ -36,10 +36,10 @@ public class NumberFont {
         }
     }
     
-    public NumberFont(GLTexturedShaderProgram GLTexturedShaderProgram) throws IOException {
-        m_TexturedShaderProgram = GLTexturedShaderProgram;
+    public NumberFont(GLDiffuseTextureProgram GLDiffuseTextureProgram) throws IOException {
+        m_TexturedProgram = GLDiffuseTextureProgram;
         m_Characters = new Character[s_NumDigits];
-        m_Polyhedra = new GLStaticPolyhedron[s_NumDigits];
+        m_Polyhedra = new GLStaticPolyhedronVxTc[s_NumDigits];
         GLTexture numberGLTexture = new GLTexture(ImageIO.read(new File("images\\Numbers.png")));
         extractCharacterInfo(numberGLTexture);
     }
@@ -69,8 +69,8 @@ public class NumberFont {
                     m_Characters[i].m_U1, m_Characters[i].m_V1,
                     m_Characters[i].m_U1, m_Characters[i].m_V0,
             };
-            GLStaticPolyhedron polyhedron = new GLStaticPolyhedron();
-            polyhedron.addPiece(new GLStaticPolyhedronPiece(vertices, texCoordinates, numberGLTexture));
+            GLStaticPolyhedronVxTc polyhedron = new GLStaticPolyhedronVxTc();
+            polyhedron.addPiece(new GLStaticPolyhedronPieceVxTc(numberGLTexture, vertices, texCoordinates));
             m_Polyhedra[i] = polyhedron;
         }
     }
@@ -89,8 +89,8 @@ public class NumberFont {
             int j = text.charAt(i) - '0'; // Convert the character to an index into the m_Characters array
             modelMatrix.setTranslation(x, y, 0.5f);
             Matrix4f mvpMatrix = copy.set(projectionMatrix).mul(modelMatrix);
-            m_TexturedShaderProgram.setDefaultDiffuseColour();
-            m_TexturedShaderProgram.activate(mvpMatrix);
+            m_TexturedProgram.setDefaultDiffuseColour();
+            m_TexturedProgram.activate(mvpMatrix);
             m_Polyhedra[j].draw();
             x += s_FrameWidth;
         }

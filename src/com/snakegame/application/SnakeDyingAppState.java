@@ -14,7 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
-import com.snakegame.opengl.GLStaticPolyhedron;
+import com.snakegame.opengl.GLStaticPolyhedronVxTc;
 import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 import org.joml.Matrix4f;
@@ -29,7 +29,7 @@ public class SnakeDyingAppState implements IAppState {
     private final int m_Player;
     private final boolean m_BothSnakes;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedron[] m_Rectangles;
+    private GLStaticPolyhedronVxTc[] m_Rectangles;
 
     public SnakeDyingAppState(IAppStateContext context, int player) {
         m_AppStateContext = context;
@@ -51,7 +51,7 @@ public class SnakeDyingAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_Rectangles = new GLStaticPolyhedron[3];
+        m_Rectangles = new GLStaticPolyhedronVxTc[3];
 
         GLTexture player1DiedTexture = new GLTexture(ImageIO.read(new File("images\\Player1Died.png")));
         m_Rectangles[0] = m_View.createCenteredRectangle(player1DiedTexture.getWidth(), player1DiedTexture.getHeight(), player1DiedTexture);

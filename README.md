@@ -10,10 +10,10 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - ~~complete the 3d world mesh~~
 - ~~make the cinder block building 'dirty'~~
 - ~~animate the menu background~~
-- add directional light to the shader
-- create a second shader with directional and specular lighting
-- add a light to the main menu that will shine upon the apple
-- add a light to the levels that will shine upon the world
+- ~~create a directional light shader with specular lighting~~
+- ~~add a light to the main menu that will shine upon the apple~~
+- ~~create a directional light shader~~
+- ~~add a light to the levels that will shine upon the world~~
 - adjust the snake speed
 - display the fps on the screen
 - display the core loop timings on the screen
@@ -57,6 +57,8 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - create a particle class
 - create a sprite particle
 - create a mesh particle
+- display the players keys above the snake
+- display either player one or player two above each snake
 - create an animation for use when spawning an apple
 - create an animation for use when spawning a power-up
 - create an animation for use when collecting an apple
@@ -68,7 +70,8 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - create an animation for use when collecting an INC_POINTS power-up
 - create an animation for use when collecting a DEC_POINTS power-up
 - create an animation for use when collecting a DEC_LENGTH power-up
-- create an animation for use when inserting a wall into the field 
+- create an animation for use when inserting a wall into the field
+- combine the .obj mesh -> display mesh conversion code 
 - initialise the sound system
 - play sound samples
 - stream an MP3 file for the menu
@@ -82,3 +85,4 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - create a rigid bodies for random world items(the rigid bodies must be removed when at rest)
 - add a shadow map for the levels to use
 - implement tangent space mapping for bumps
+- do the smoothing groups need to be loaded from the object file?

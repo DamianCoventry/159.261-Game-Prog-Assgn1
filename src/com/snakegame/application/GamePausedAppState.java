@@ -26,7 +26,7 @@ public class GamePausedAppState implements IAppState {
     private final IAppStateContext m_AppStateContext;
     private final IGameView m_View;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedron m_Rectangle;
+    private GLStaticPolyhedronVxTc m_Rectangle;
 
     public GamePausedAppState(IAppStateContext context) {
         m_AppStateContext = context;

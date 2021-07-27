@@ -17,19 +17,19 @@ import java.util.ArrayList;
 
 import static org.lwjgl.opengl.GL30.*;
 
-public class GLStaticPolyhedron {
-    private final ArrayList<GLStaticPolyhedronPiece> m_Pieces;
+public class GLStaticPolyhedronVxTcNm {
+    private final ArrayList<GLStaticPolyhedronPieceVxTcNm> m_Pieces;
 
     public static void deactivateCurrent() {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
 
-    public GLStaticPolyhedron() {
+    public GLStaticPolyhedronVxTcNm() {
         m_Pieces = new ArrayList<>();
     }
 
-    public void addPiece(GLStaticPolyhedronPiece piece) {
+    public void addPiece(GLStaticPolyhedronPieceVxTcNm piece) {
         m_Pieces.add(piece);
     }
 
@@ -44,7 +44,7 @@ public class GLStaticPolyhedron {
         return m_Pieces.size();
     }
 
-    public GLStaticPolyhedronPiece getPiece(int i) {
+    public GLStaticPolyhedronPieceVxTcNm getPiece(int i) {
         return m_Pieces.get(i);
     }
 

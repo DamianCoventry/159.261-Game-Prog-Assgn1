@@ -14,7 +14,7 @@
 package com.snakegame.application;
 
 import com.snakegame.client.*;
-import com.snakegame.opengl.GLStaticPolyhedron;
+import com.snakegame.opengl.GLStaticPolyhedronVxTc;
 import com.snakegame.opengl.GLTexture;
 import com.snakegame.rules.IGameController;
 import org.joml.Matrix4f;
@@ -27,7 +27,7 @@ public class GameLoadingAppState implements IAppState {
     private final IGameView m_View;
     private final IGameController.Mode m_Mode;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedron m_Rectangle;
+    private GLStaticPolyhedronVxTc m_Rectangle;
 
     public GameLoadingAppState(IAppStateContext context, IGameController.Mode mode) {
         m_AppStateContext = context;
