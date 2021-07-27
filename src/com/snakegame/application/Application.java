@@ -39,6 +39,11 @@ public class Application implements IAppStateContext {
 
     private IAppState m_PendingState = null;
     private IAppState m_CurrentState = null;
+    private long m_LastFrameCountTime = 0;
+    private int m_FrameCount = 0;
+    private DebugNumberFont m_DebugNumberFont;
+    private int m_DebugFps;
+    private long m_DebugFrameTime;
 
     public Application() throws Exception {
         m_GLWindow = new GLWindow(s_DesiredWindowWidth, s_DesiredWindowHeight, s_WindowTitle);
@@ -60,29 +65,9 @@ public class Application implements IAppStateContext {
         m_View = new GameView();
         m_View.setAppStateContext(this);
 
+        m_DebugNumberFont = new DebugNumberFont(m_View.getTexturedProgram());
+
         changeStateNow(new RunningMenuAppState(this), System.currentTimeMillis());
-    }
-
-    public void freeNativeResources() {
-        m_View.unloadResources();
-        m_View.freeNativeResources();
-        m_GLWindow.freeNativeResources();
-    }
-
-    public void run() throws Exception {
-        long nowMs;
-        while (!m_GLWindow.quitRequested()) {
-            nowMs = System.currentTimeMillis();
-            m_TimeoutManager.dispatchTimeouts(nowMs);
-            m_CurrentState.think(nowMs);
-
-            m_GLWindow.beginDrawing();
-            m_CurrentState.draw3d(nowMs);
-            m_CurrentState.draw2d(nowMs);
-            m_GLWindow.endDrawing();
-
-            performPendingStateChange(nowMs);
-        }
     }
 
     @Override
@@ -128,6 +113,58 @@ public class Application implements IAppStateContext {
     @Override
     public Matrix4f getOrthographicMatrix() {
         return m_GLWindow.getOrthographicMatrix();
+    }
+
+    public void freeNativeResources() {
+        m_DebugNumberFont.freeNativeResource();
+        m_View.unloadResources();
+        m_View.freeNativeResources();
+        m_GLWindow.freeNativeResources();
+    }
+
+    public void run() throws Exception {
+        long nowMs, prevMs = 0;
+        stampFrameCountStart();
+        while (!m_GLWindow.quitRequested()) {
+            nowMs = System.currentTimeMillis();
+            prevMs = updateFrameTime(nowMs, prevMs);
+
+            m_TimeoutManager.dispatchTimeouts(nowMs);
+            m_CurrentState.think(nowMs);
+
+            m_GLWindow.beginDrawing();
+            m_CurrentState.draw3d(nowMs);
+            m_CurrentState.draw2d(nowMs);
+            drawDebugInfo();
+            m_GLWindow.endDrawing();
+
+            performPendingStateChange(nowMs);
+            updateFps(nowMs);
+        }
+    }
+
+    private void drawDebugInfo() {
+        m_DebugNumberFont.drawNumber(m_GLWindow.getOrthographicMatrix(), m_DebugFps, 0, 55);
+        m_DebugNumberFont.drawNumber(m_GLWindow.getOrthographicMatrix(), m_DebugFrameTime, 0, 40);
+    }
+
+    private void stampFrameCountStart() {
+        m_LastFrameCountTime = System.currentTimeMillis();
+        m_FrameCount = 0;
+    }
+
+    private long updateFrameTime(long nowMs, long prevMs) {
+        m_DebugFrameTime = nowMs - prevMs;
+        return nowMs;
+    }
+
+    private void updateFps(long nowMs) {
+        ++m_FrameCount;
+        if (nowMs - m_LastFrameCountTime >= 1000) {
+            m_LastFrameCountTime = nowMs;
+            m_DebugFps = m_FrameCount;
+            m_FrameCount = 0;
+        }
     }
 
     public void performPendingStateChange(long nowMs) throws Exception {

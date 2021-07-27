@@ -20,12 +20,12 @@ import javax.imageio.ImageIO;
 import java.io.*;
 
 public class NumberFont {
-    public static final float s_FrameWidth = 26.0f;
-    public static final float s_FrameHeight = 37.0f;
     private static final int s_NumDigits = 10;
     private final Character[] m_Characters;
     private final GLStaticPolyhedronVxTc[] m_Polyhedra;
-    private final GLDiffuseTextureProgram m_TexturedProgram;
+    private final GLDiffuseTextureProgram m_DiffuseTexturedProgram;
+    private final float m_FrameWidth;
+    private final float m_FrameHeight;
 
     private static class Character {
         float m_U0, m_V0;
@@ -36,28 +36,30 @@ public class NumberFont {
         }
     }
     
-    public NumberFont(GLDiffuseTextureProgram GLDiffuseTextureProgram) throws IOException {
-        m_TexturedProgram = GLDiffuseTextureProgram;
+    protected NumberFont(GLDiffuseTextureProgram program, float frameWidth, float frameHeight, String diffuseTextureFileName) throws IOException {
+        m_DiffuseTexturedProgram = program;
+        m_FrameWidth = frameWidth;
+        m_FrameHeight = frameHeight;
         m_Characters = new Character[s_NumDigits];
         m_Polyhedra = new GLStaticPolyhedronVxTc[s_NumDigits];
-        GLTexture numberGLTexture = new GLTexture(ImageIO.read(new File("images\\Numbers.png")));
+        GLTexture numberGLTexture = new GLTexture(ImageIO.read(new File(diffuseTextureFileName)));
         extractCharacterInfo(numberGLTexture);
     }
 
     private void extractCharacterInfo(GLTexture numberGLTexture) {
-        final float deltaU = s_FrameWidth / numberGLTexture.getWidth();
-        final float deltaV = s_FrameHeight / numberGLTexture.getHeight();
+        final float deltaU = m_FrameWidth / numberGLTexture.getWidth();
+        final float deltaV = m_FrameHeight / numberGLTexture.getHeight();
         for (int i = 0; i < s_NumDigits; ++i) {
             m_Characters[i] = new Character(i * deltaU,0.0f, (i * deltaU) + deltaU, deltaV);
             final float[] vertices = new float[] {
                     // Triangle 0
-                    0.0f, s_FrameHeight, 0.0f,
+                    0.0f, m_FrameHeight, 0.0f,
                     0.0f, 0.0f, 0.0f,
-                    s_FrameWidth, 0.0f, 0.0f,
+                    m_FrameWidth, 0.0f, 0.0f,
                     // Triangle 1
-                    0.0f, s_FrameHeight, 0.0f,
-                    s_FrameWidth, 0.0f, 0.0f,
-                    s_FrameWidth, s_FrameHeight, 0.0f,
+                    0.0f, m_FrameHeight, 0.0f,
+                    m_FrameWidth, 0.0f, 0.0f,
+                    m_FrameWidth, m_FrameHeight, 0.0f,
             };
             final float[] texCoordinates = new float[] {
                     // Triangle 0
@@ -89,15 +91,15 @@ public class NumberFont {
             int j = text.charAt(i) - '0'; // Convert the character to an index into the m_Characters array
             modelMatrix.setTranslation(x, y, 0.5f);
             Matrix4f mvpMatrix = copy.set(projectionMatrix).mul(modelMatrix);
-            m_TexturedProgram.setDefaultDiffuseColour();
-            m_TexturedProgram.activate(mvpMatrix);
+            m_DiffuseTexturedProgram.setDefaultDiffuseColour();
+            m_DiffuseTexturedProgram.activate(mvpMatrix);
             m_Polyhedra[j].draw();
-            x += s_FrameWidth;
+            x += m_FrameWidth;
         }
     }
 
     public float calculateWidth(long number) {
         String text = String.valueOf(number);
-        return text.length() * s_FrameWidth;
+        return text.length() * m_FrameWidth;
     }
 }

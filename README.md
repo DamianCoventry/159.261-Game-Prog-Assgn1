@@ -14,9 +14,9 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - ~~add a light to the main menu that will shine upon the apple~~
 - ~~create a directional light shader~~
 - ~~add a light to the levels that will shine upon the world~~
-- adjust the snake speed
-- display the fps on the screen
-- display the core loop timings on the screen
+- ~~adjust the snake speed~~
+- ~~display the fps on the screen~~
+- ~~display the core loop timings on the screen~~
 - the last level is too difficult
 - put 3, 2, 1 onto the get ready dialog
 - create the barn sides out of individual planks of wood

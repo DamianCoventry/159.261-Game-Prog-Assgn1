@@ -19,7 +19,7 @@ public class Snake {
     private static final int s_NumStartingLives = 3;
     private static final int s_MaxNumLives = 5;
     public static final int s_MinBodyParts = 3;
-    //private static final float s_BodyPartScale = 1.0f;
+    private static final int s_NumBodyPartsToAdd = 1;
     private static final int s_NumBodyPartsToRemove = 3;
     private static final long s_PowerUpPointsBonus = 1000;
     private static final long s_PowerUpPoints = 100;
@@ -102,43 +102,16 @@ public class Snake {
     }
 
     public void awardNumber(Number.Type numberType) {
-        switch (numberType) {
-            case NUM_1:
-                m_AddBodyParts = 1;//(int)s_BodyPartScale;
-                incrementPoints(s_PowerUpPoints);
-                break;
-            case NUM_2:
-                m_AddBodyParts = 1;//(int)(2.0f * s_BodyPartScale);
-                incrementPoints(2 * s_PowerUpPoints);
-                break;
-            case NUM_3:
-                m_AddBodyParts = 1;//(int)(3.0f * s_BodyPartScale);
-                incrementPoints(3 * s_PowerUpPoints);
-                break;
-            case NUM_4:
-                m_AddBodyParts = 1;//(int)(4.0f * s_BodyPartScale);
-                incrementPoints(4 * s_PowerUpPoints);
-                break;
-            case NUM_5:
-                m_AddBodyParts = 1;//(int)(5.0f * s_BodyPartScale);
-                incrementPoints(5 * s_PowerUpPoints);
-                break;
-            case NUM_6:
-                m_AddBodyParts = 2;//(int)(6.0f * s_BodyPartScale);
-                incrementPoints(6 * s_PowerUpPoints);
-                break;
-            case NUM_7:
-                m_AddBodyParts = 2;//(int)(7.0f * s_BodyPartScale);
-                incrementPoints(7 * s_PowerUpPoints);
-                break;
-            case NUM_8:
-                m_AddBodyParts = 3;//(int)(8.0f * s_BodyPartScale);
-                incrementPoints(8 * s_PowerUpPoints);
-                break;
-            case NUM_9:
-                m_AddBodyParts = 2;//(int)(9.0f * s_BodyPartScale);
-                incrementPoints(9 * s_PowerUpPoints);
-                break;
+        int value = Number.toInteger(numberType);
+        incrementPoints(value * s_PowerUpPoints);
+        if (value > 7) {
+            m_AddBodyParts = s_NumBodyPartsToAdd * 3;
+        }
+        else if (value > 5) {
+            m_AddBodyParts = s_NumBodyPartsToAdd * 2;
+        }
+        else {
+            m_AddBodyParts = s_NumBodyPartsToAdd;
         }
     }
 

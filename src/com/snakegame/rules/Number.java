@@ -61,6 +61,20 @@ public class Number {
         return new Result();
     }
 
+    public static int toInteger(Type type) {
+        switch (type) {
+            case NUM_1: return 1;
+            case NUM_2: return 2;
+            case NUM_3: return 3;
+            case NUM_4: return 4;
+            case NUM_5: return 5;
+            case NUM_6: return 6;
+            case NUM_7: return 7;
+            case NUM_8: return 8;
+        }
+        return 9;
+    }
+
     public Type getType() {
         return m_Type;
     }

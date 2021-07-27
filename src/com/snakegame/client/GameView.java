@@ -47,7 +47,7 @@ public class GameView implements IGameView {
     private final Matrix4f m_ProjectionMatrix;
     private final Matrix4f m_ModelMatrix;
     private final Matrix4f m_ViewMatrix;
-    private final GLDiffuseTextureProgram m_TexturedProgram;
+    private final GLDiffuseTextureProgram m_DiffuseTexturedProgram;
     private final GLSpecularDirectionalLightProgram m_SpecularDirectionalLightProgram;
     private final GLDirectionalLightProgram m_DirectionalLightProgram;
     private final Vector3f m_LightDirection;
@@ -79,7 +79,7 @@ public class GameView implements IGameView {
 
         m_LightDirection = new Vector3f(-0.5f, 0.0f, 1.0f).normalize();
 
-        m_TexturedProgram = new GLDiffuseTextureProgram();
+        m_DiffuseTexturedProgram = new GLDiffuseTextureProgram();
         m_SpecularDirectionalLightProgram = new GLSpecularDirectionalLightProgram();
         m_DirectionalLightProgram = new GLDirectionalLightProgram();
     }
@@ -120,7 +120,7 @@ public class GameView implements IGameView {
 
         m_DotTexture = new GLTexture(ImageIO.read(new File("images\\dot.png")));
         m_HeadTexture = new GLTexture(ImageIO.read(new File("images\\head.png")));
-        m_NumberFont = new NumberFont(m_TexturedProgram);
+        m_NumberFont = new ToolbarNumberFont(m_DiffuseTexturedProgram);
     }
 
     @Override
@@ -178,7 +178,7 @@ public class GameView implements IGameView {
 
     @Override
     public void freeNativeResources() {
-        m_TexturedProgram.freeNativeResource();
+        m_DiffuseTexturedProgram.freeNativeResource();
         m_SpecularDirectionalLightProgram.freeNativeResource();
     }
 
@@ -358,8 +358,8 @@ public class GameView implements IGameView {
         }
         m_MvpMatrix.identity();
         m_MvpMatrix.set(m_AppStateContext.getOrthographicMatrix()).mul(modelMatrix);
-        m_TexturedProgram.setDefaultDiffuseColour();
-        m_TexturedProgram.activate(m_MvpMatrix);
+        m_DiffuseTexturedProgram.setDefaultDiffuseColour();
+        m_DiffuseTexturedProgram.activate(m_MvpMatrix);
         polyhedron.draw();
     }
 
@@ -370,8 +370,8 @@ public class GameView implements IGameView {
         }
         m_MvpMatrix.identity();
         m_MvpMatrix.set(m_AppStateContext.getOrthographicMatrix()).mul(modelMatrix);
-        m_TexturedProgram.setDiffuseColour(new Vector4f(1.0f, 1.0f, 1.0f, alpha));
-        m_TexturedProgram.activate(m_MvpMatrix);
+        m_DiffuseTexturedProgram.setDiffuseColour(new Vector4f(1.0f, 1.0f, 1.0f, alpha));
+        m_DiffuseTexturedProgram.activate(m_MvpMatrix);
         polyhedron.draw();
     }
 
@@ -589,7 +589,7 @@ public class GameView implements IGameView {
 
     @Override
     public GLDiffuseTextureProgram getTexturedProgram() {
-        return m_TexturedProgram;
+        return m_DiffuseTexturedProgram;
     }
 
     @Override

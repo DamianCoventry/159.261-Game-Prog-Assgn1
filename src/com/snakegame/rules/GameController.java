@@ -22,10 +22,10 @@ import java.util.*;
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public class GameController implements IGameController {
     private static final int s_MaxPlayers = 2;
-    private static final long s_MaxSnakeSpeedTimeoutMs = 150;
-    private static final long s_MinSnakeSpeedTimeoutMs = 75;
-    private static final long s_SnakeSpeedPowerUpAdjustment = 25;
-    private static final long s_SnakeSpeedLevelAdjustment = 8;
+    private static final long s_MaxSnakeSpeedTimeoutMs = 200;
+    private static final long s_MinSnakeSpeedTimeoutMs = 125;
+    private static final long s_SnakeSpeedPowerUpAdjustment = 15;
+    private static final long s_SnakeSpeedLevelAdjustment = 12;
     private static final long s_PowerUpInitialTimeoutMs = 3750;
     private static final long s_PowerUpSubsequentTimeoutMs = 15000;
     private static final long s_PowerUpExpireTimeoutMs = 6000;
