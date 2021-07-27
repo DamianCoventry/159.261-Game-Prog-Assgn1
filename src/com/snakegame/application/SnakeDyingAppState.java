@@ -23,7 +23,7 @@ import javax.imageio.ImageIO;
 import java.io.*;
 
 public class SnakeDyingAppState implements IAppState {
-    private final IAppStateContext m_AppStateContext;
+    private final IAppStateContext m_Context;
     private final IGameController m_Controller;
     private final IGameView m_View;
     private final int m_Player;
@@ -32,18 +32,18 @@ public class SnakeDyingAppState implements IAppState {
     private GLStaticPolyhedronVxTc[] m_Rectangles;
 
     public SnakeDyingAppState(IAppStateContext context, int player) {
-        m_AppStateContext = context;
-        m_Controller = m_AppStateContext.getController();
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_Controller = m_Context.getController();
+        m_View = m_Context.getView();
         m_ModelMatrix = new Matrix4f();
         m_Player = player;
         m_BothSnakes = false;
     }
 
     public SnakeDyingAppState(IAppStateContext context) {
-        m_AppStateContext = context;
-        m_Controller = m_AppStateContext.getController();
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_Controller = m_Context.getController();
+        m_View = m_Context.getView();
         m_ModelMatrix = new Matrix4f();
         m_Player = -1;
         m_BothSnakes = true;
@@ -62,7 +62,7 @@ public class SnakeDyingAppState implements IAppState {
         GLTexture bothPlayersDiedTexture = new GLTexture(ImageIO.read(new File("images\\BothSnakesDied.png")));
         m_Rectangles[2] = m_View.createCenteredRectangle(bothPlayersDiedTexture.getWidth(), bothPlayersDiedTexture.getHeight(), bothPlayersDiedTexture);
 
-        m_AppStateContext.addTimeout(2000, (callCount) -> {
+        m_Context.addTimeout(2000, (callCount) -> {
             if (m_Controller.getMode() == IGameController.Mode.TWO_PLAYERS) {
                 subtractSnakeTwoPlayersGame();
             }
@@ -111,10 +111,10 @@ public class SnakeDyingAppState implements IAppState {
 
     private void subtractSnakeSinglePlayerGame() {
         if (m_Controller.subtractSnake(0) == IGameController.SubtractSnakeResult.SNAKE_AVAILABLE) {
-            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, true));
+            m_Context.changeState(new GetReadyAppState(m_Context, true));
         }
         else {
-            m_AppStateContext.changeState(new GameOverAppState(m_AppStateContext, 0));
+            m_Context.changeState(new GameOverAppState(m_Context, 0));
         }
     }
 
@@ -124,10 +124,10 @@ public class SnakeDyingAppState implements IAppState {
         }
         else if (m_Controller.subtractSnake(m_Player) == IGameController.SubtractSnakeResult.NO_SNAKES_REMAIN) {
             // Then the other player won
-            m_AppStateContext.changeState(new GameWonAppState(m_AppStateContext, m_Player == 0 ? 1 : 0));
+            m_Context.changeState(new GameWonAppState(m_Context, m_Player == 0 ? 1 : 0));
         }
         else {
-            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, true));
+            m_Context.changeState(new GetReadyAppState(m_Context, true));
         }
     }
 
@@ -137,19 +137,19 @@ public class SnakeDyingAppState implements IAppState {
         if (player1Result == IGameController.SubtractSnakeResult.NO_SNAKES_REMAIN) {
             if (player2Result == IGameController.SubtractSnakeResult.NO_SNAKES_REMAIN) {
                 // Then it's a joint loss
-                m_AppStateContext.changeState(new GameOverAppState(m_AppStateContext));
+                m_Context.changeState(new GameOverAppState(m_Context));
             }
             else {
                 // Then player 2 won
-                m_AppStateContext.changeState(new GameWonAppState(m_AppStateContext, 1));
+                m_Context.changeState(new GameWonAppState(m_Context, 1));
             }
         }
         else if (player2Result == IGameController.SubtractSnakeResult.NO_SNAKES_REMAIN) {
             // Then player 1 won
-            m_AppStateContext.changeState(new GameWonAppState(m_AppStateContext, 0));
+            m_Context.changeState(new GameWonAppState(m_Context, 0));
         }
         else {
-            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, true));
+            m_Context.changeState(new GetReadyAppState(m_Context, true));
         }
     }
 }

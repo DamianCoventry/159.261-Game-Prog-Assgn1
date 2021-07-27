@@ -35,7 +35,7 @@ public class RunningMenuAppState implements IAppState {
     private static final float s_LightIntensity = 2.0f;
     private static final float s_LightShininess = 16.0f;
 
-    private final IAppStateContext m_AppStateContext;
+    private final IAppStateContext m_Context;
     private final IGameView m_View;
     private final Matrix4f m_MvMatrix;
     private final Matrix4f m_ProjectionMatrix;
@@ -54,8 +54,8 @@ public class RunningMenuAppState implements IAppState {
     private float m_ScrollOffsetX;
 
     public RunningMenuAppState(IAppStateContext context) {
-        m_AppStateContext = context;
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_View = m_Context.getView();
 
         m_MvMatrix = new Matrix4f();
         m_ProjectionMatrix = new Matrix4f();
@@ -140,8 +140,8 @@ public class RunningMenuAppState implements IAppState {
         m_View.drawOrthographicPolyhedron(m_BackgroundRectangle, m_ModelMatrix);
 
         m_ScrollOffsetX += s_HorizontalScrollSpeed * s_MsPerFrame;
-        if (m_ScrollOffsetX >= m_AppStateContext.getWindowWidth()) {
-            m_ScrollOffsetX -= m_AppStateContext.getWindowWidth();
+        if (m_ScrollOffsetX >= m_Context.getWindowWidth()) {
+            m_ScrollOffsetX -= m_Context.getWindowWidth();
         }
 
         m_ModelMatrix.identity();
@@ -149,7 +149,7 @@ public class RunningMenuAppState implements IAppState {
         m_View.drawOrthographicPolyhedron(m_BackgroundTextRectangle, m_ModelMatrix, s_BackgroundAlpha);
 
         m_ModelMatrix.identity();
-        m_ModelMatrix.translate(m_ScrollOffsetX - m_AppStateContext.getWindowWidth(), 0.0f, 0.0f);
+        m_ModelMatrix.translate(m_ScrollOffsetX - m_Context.getWindowWidth(), 0.0f, 0.0f);
         m_View.drawOrthographicPolyhedron(m_BackgroundTextRectangle, m_ModelMatrix, s_BackgroundAlpha);
 
         glDepthMask(true);
@@ -159,7 +159,7 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void draw2d(long nowMs) throws IOException {
-        float oneThird = m_AppStateContext.getWindowWidth() * 0.3333f;
+        float oneThird = m_Context.getWindowWidth() * 0.3333f;
         float halfWidth = m_MenuPageRectangles[0].getPiece(0).getDiffuseTexture().getWidth() / 2.0f;
         m_ModelMatrix.identity();
         m_ModelMatrix.setTranslation(-(oneThird - halfWidth), 0.0f, 0.0f);
@@ -174,7 +174,7 @@ public class RunningMenuAppState implements IAppState {
     }
 
     private void startNewGame(IGameController.Mode mode) {
-        m_AppStateContext.changeState(new GameLoadingAppState(m_AppStateContext, mode));
+        m_Context.changeState(new GameLoadingAppState(m_Context, mode));
     }
 
     private void animateApple() {
@@ -189,7 +189,7 @@ public class RunningMenuAppState implements IAppState {
         m_ModelMatrix.setTranslation(s_AppleXPosition, 0.0f, s_AppleZPosition)
                      .rotate((float)Math.toRadians(m_Angle), 0.0f, 1.0f, 0.0f);
 
-        m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
 
         GLSpecularDirectionalLightProgram program = m_View.getSpecularDirectionalLightProgram();

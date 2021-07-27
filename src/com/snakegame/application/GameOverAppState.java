@@ -22,7 +22,7 @@ import javax.imageio.ImageIO;
 import java.io.*;
 
 public class GameOverAppState implements IAppState {
-    private final IAppStateContext m_AppStateContext;
+    private final IAppStateContext m_Context;
     private final IGameView m_View;
     private final int m_Player;
     private final boolean m_BothSnakes;
@@ -30,16 +30,16 @@ public class GameOverAppState implements IAppState {
     private GLStaticPolyhedronVxTc m_Rectangle;
 
     public GameOverAppState(IAppStateContext context, int player) {
-        m_AppStateContext = context;
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_View = m_Context.getView();
         m_ModelMatrix = new Matrix4f();
         m_Player = player;
         m_BothSnakes = false;
     }
 
     public GameOverAppState(IAppStateContext context) {
-        m_AppStateContext = context;
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_View = m_Context.getView();
         m_ModelMatrix = new Matrix4f();
         m_Player = -1;
         m_BothSnakes = true;
@@ -48,7 +48,7 @@ public class GameOverAppState implements IAppState {
     @Override
     public void begin(long nowMs) throws IOException {
         GLTexture gameOverTexture;
-        if (m_AppStateContext.getController().getMode() == IGameController.Mode.TWO_PLAYERS) {
+        if (m_Context.getController().getMode() == IGameController.Mode.TWO_PLAYERS) {
             if (m_BothSnakes) {
                 gameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverBothPlayersLost.png")));
             } else if (m_Player == 0) {
@@ -63,8 +63,8 @@ public class GameOverAppState implements IAppState {
 
         m_Rectangle = m_View.createCenteredRectangle(gameOverTexture.getWidth(), gameOverTexture.getHeight(), gameOverTexture);
 
-        m_AppStateContext.addTimeout(3500, (callCount) -> {
-            m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
+        m_Context.addTimeout(3500, (callCount) -> {
+            m_Context.changeState(new RunningMenuAppState(m_Context));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });
     }

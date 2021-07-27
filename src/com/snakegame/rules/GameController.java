@@ -31,7 +31,7 @@ public class GameController implements IGameController {
     private static final long s_PowerUpExpireTimeoutMs = 6000;
     private static final long s_InsertWallsTimeoutMs = 12000;
 
-    private final IAppStateContext m_AppStateContext;
+    private final IAppStateContext m_Context;
     private final Random m_Rng;
 
     private ArrayList<String> m_LevelFileNames;
@@ -48,7 +48,7 @@ public class GameController implements IGameController {
     private int m_CurrentLevel;
 
     public GameController(IAppStateContext appStateContext) {
-        m_AppStateContext = appStateContext;
+        m_Context = appStateContext;
         m_Rng = new Random();
         m_Mode = Mode.SINGLE_PLAYER; // startNewGame() will change this
         m_Snakes = null; // startNewGame() will allocate this
@@ -109,9 +109,9 @@ public class GameController implements IGameController {
         Vector2i maxBounds = new Vector2i(GameField.WIDTH - 1, GameField.HEIGHT - 1);
 
         m_Snakes = new Snake[m_Mode == Mode.TWO_PLAYERS ? 2 : 1];
-        m_Snakes[0] = new Snake(0, m_AppStateContext.getView(), Snake.Direction.Right, minBounds, maxBounds);
+        m_Snakes[0] = new Snake(0, m_Context.getView(), Snake.Direction.Right, minBounds, maxBounds);
         if (m_Mode == Mode.TWO_PLAYERS) {
-            m_Snakes[1] = new Snake(1, m_AppStateContext.getView(), Snake.Direction.Left, minBounds, maxBounds);
+            m_Snakes[1] = new Snake(1, m_Context.getView(), Snake.Direction.Left, minBounds, maxBounds);
         }
 
         loadLevelFile(m_CurrentLevel);
@@ -192,7 +192,7 @@ public class GameController implements IGameController {
         setSnakeMovementSpeedForCurrentLevel();
         insertNumber(Number.Type.NUM_1);
 
-        m_AppStateContext.getView().setAppStateContext(m_AppStateContext);
+        m_Context.getView().setAppStateContext(m_Context);
     }
 
     private void setSnakeMovementSpeedForCurrentLevel() {
@@ -209,15 +209,15 @@ public class GameController implements IGameController {
     }
 
     private void scheduleSnakeMovement() {
-        m_SnakeTimeoutId = m_AppStateContext.addTimeout(m_SnakeTimeoutMs, (callCount) -> {
+        m_SnakeTimeoutId = m_Context.addTimeout(m_SnakeTimeoutMs, (callCount) -> {
             moveSnakesForwards();
             CollisionResult r = performCollisionDetection();
             if (r.collisionOccurred()) {
                 if (r.getResult() == CollisionResult.Result.BOTH_SNAKES) {
-                    m_AppStateContext.changeState(new SnakeDyingAppState(m_AppStateContext));
+                    m_Context.changeState(new SnakeDyingAppState(m_Context));
                 }
                 else {
-                    m_AppStateContext.changeState(new SnakeDyingAppState(m_AppStateContext, r.getPlayer()));
+                    m_Context.changeState(new SnakeDyingAppState(m_Context, r.getPlayer()));
                 }
             }
             return TimeoutManager.CallbackResult.KEEP_CALLING;
@@ -231,7 +231,7 @@ public class GameController implements IGameController {
 
     private void scheduleInsertPowerUp(long timeoutMs) {
         removePowerUpTimeout();
-        m_PowerUpTimeoutId = m_AppStateContext.addTimeout(timeoutMs, (callCount) -> {
+        m_PowerUpTimeoutId = m_Context.addTimeout(timeoutMs, (callCount) -> {
             insertRandomPowerUp();
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });
@@ -260,7 +260,7 @@ public class GameController implements IGameController {
 
     private void scheduleExpirePowerUp() {
         removePowerUpTimeout();
-        m_PowerUpTimeoutId = m_AppStateContext.addTimeout(s_PowerUpExpireTimeoutMs, (callCount1) -> {
+        m_PowerUpTimeoutId = m_Context.addTimeout(s_PowerUpExpireTimeoutMs, (callCount1) -> {
             if (m_PowerUp != null) {
                 m_GameField.removePowerUp(m_PowerUp);
                 m_PowerUp = null;
@@ -272,7 +272,7 @@ public class GameController implements IGameController {
 
     private void scheduleInsertWalls() {
         removeWallsTimeout();
-        m_WallsTimeoutId = m_AppStateContext.addTimeout(s_InsertWallsTimeoutMs, (callCount1) -> {
+        m_WallsTimeoutId = m_Context.addTimeout(s_InsertWallsTimeoutMs, (callCount1) -> {
             insertWalls();
             return TimeoutManager.CallbackResult.KEEP_CALLING;
         });
@@ -304,21 +304,21 @@ public class GameController implements IGameController {
 
     private void removeWallsTimeout() {
         if (m_WallsTimeoutId != 0) {
-            m_AppStateContext.removeTimeout(m_WallsTimeoutId);
+            m_Context.removeTimeout(m_WallsTimeoutId);
             m_WallsTimeoutId = 0;
         }
     }
 
     private void removeSnakeMovementTimeout() {
         if (m_SnakeTimeoutId != 0) {
-            m_AppStateContext.removeTimeout(m_SnakeTimeoutId);
+            m_Context.removeTimeout(m_SnakeTimeoutId);
             m_SnakeTimeoutId = 0;
         }
     }
 
     private void removePowerUpTimeout() {
         if (m_PowerUpTimeoutId != 0) {
-            m_AppStateContext.removeTimeout(m_PowerUpTimeoutId);
+            m_Context.removeTimeout(m_PowerUpTimeoutId);
             m_PowerUpTimeoutId = 0;
         }
     }
@@ -460,7 +460,7 @@ public class GameController implements IGameController {
 
         Number.Result r = Number.getNextInSeries(numberType);
         if (r.m_LevelComplete) {
-            m_AppStateContext.changeState(new LevelCompleteAppState(m_AppStateContext));
+            m_Context.changeState(new LevelCompleteAppState(m_Context));
         }
         else {
             insertNumber(r.m_Type);

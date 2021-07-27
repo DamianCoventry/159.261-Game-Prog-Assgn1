@@ -23,15 +23,15 @@ import javax.imageio.ImageIO;
 import java.io.*;
 
 public class GameLoadingAppState implements IAppState {
-    private final IAppStateContext m_AppStateContext;
+    private final IAppStateContext m_Context;
     private final IGameView m_View;
     private final IGameController.Mode m_Mode;
     private final Matrix4f m_ModelMatrix;
     private GLStaticPolyhedronVxTc m_Rectangle;
 
     public GameLoadingAppState(IAppStateContext context, IGameController.Mode mode) {
-        m_AppStateContext = context;
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_View = m_Context.getView();
         m_ModelMatrix = new Matrix4f();
         m_Mode = mode;
     }
@@ -43,14 +43,14 @@ public class GameLoadingAppState implements IAppState {
         GLTexture loadingTexture = new GLTexture(ImageIO.read(new File("images\\Loading.png")));
         m_Rectangle = m_View.createCenteredRectangle(loadingTexture.getWidth(), loadingTexture.getHeight(), loadingTexture);
 
-        m_AppStateContext.addTimeout(50, (callCount) ->{
+        m_Context.addTimeout(50, (callCount) ->{
             try {
                 m_View.loadResources();
-                m_AppStateContext.getController().startNewGame(nowMs, m_Mode);
+                m_Context.getController().startNewGame(nowMs, m_Mode);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, true));
+            m_Context.changeState(new GetReadyAppState(m_Context, true));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });
     }

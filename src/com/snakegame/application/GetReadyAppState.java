@@ -23,7 +23,7 @@ import java.io.*;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F5;
 
 public class GetReadyAppState implements IAppState {
-    private final IAppStateContext m_AppStateContext;
+    private final IAppStateContext m_Context;
     private final IGameView m_View;
     private final boolean m_ResetState;
     private final Matrix4f m_ModelMatrix;
@@ -32,8 +32,8 @@ public class GetReadyAppState implements IAppState {
     private int m_CurrentRectangle;
 
     public GetReadyAppState(IAppStateContext context, boolean resetState) {
-        m_AppStateContext = context;
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_View = m_Context.getView();
         m_ResetState = resetState;
         m_ModelMatrix = new Matrix4f();
     }
@@ -50,13 +50,13 @@ public class GetReadyAppState implements IAppState {
         m_GetReadyRectangles[2] = m_View.createCenteredRectangle(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
 
         if (m_ResetState) {
-            m_AppStateContext.getController().resetAfterSnakeDeath(nowMs);
+            m_Context.getController().resetAfterSnakeDeath(nowMs);
         }
 
         m_CurrentRectangle = 0;
-        m_TimeoutId = m_AppStateContext.addTimeout(1000, (callCount) -> {
+        m_TimeoutId = m_Context.addTimeout(1000, (callCount) -> {
             if (m_CurrentRectangle == 2) {
-                m_AppStateContext.changeState(new PlayingGameAppState(m_AppStateContext));
+                m_Context.changeState(new PlayingGameAppState(m_Context));
                 return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
             }
             ++m_CurrentRectangle;
@@ -75,10 +75,10 @@ public class GetReadyAppState implements IAppState {
     public void processKey(long window, int key, int scanCode, int action, int mods) {
         if (key == GLFW_KEY_F5) { // temp cheat key
             if (m_TimeoutId != 0) {
-                m_AppStateContext.removeTimeout(m_TimeoutId);
+                m_Context.removeTimeout(m_TimeoutId);
                 m_TimeoutId = 0;
             }
-            m_AppStateContext.changeState(new LevelCompleteAppState(m_AppStateContext));
+            m_Context.changeState(new LevelCompleteAppState(m_Context));
         }
     }
 

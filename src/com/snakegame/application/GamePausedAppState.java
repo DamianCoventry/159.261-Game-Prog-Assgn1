@@ -23,14 +23,14 @@ import java.io.*;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class GamePausedAppState implements IAppState {
-    private final IAppStateContext m_AppStateContext;
+    private final IAppStateContext m_Context;
     private final IGameView m_View;
     private final Matrix4f m_ModelMatrix;
     private GLStaticPolyhedronVxTc m_Rectangle;
 
     public GamePausedAppState(IAppStateContext context) {
-        m_AppStateContext = context;
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_View = m_Context.getView();
         m_ModelMatrix = new Matrix4f();
     }
 
@@ -51,10 +51,10 @@ public class GamePausedAppState implements IAppState {
             return;
         }
         if (key == GLFW_KEY_ESCAPE) {
-            m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, false));
+            m_Context.changeState(new GetReadyAppState(m_Context, false));
         }
         else if (key == GLFW_KEY_Q) {
-            m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
+            m_Context.changeState(new RunningMenuAppState(m_Context));
         }
     }
 

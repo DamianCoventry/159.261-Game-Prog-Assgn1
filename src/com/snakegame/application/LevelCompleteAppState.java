@@ -22,16 +22,16 @@ import javax.imageio.ImageIO;
 import java.io.*;
 
 public class LevelCompleteAppState implements IAppState {
-    private final IAppStateContext m_AppStateContext;
+    private final IAppStateContext m_Context;
     private final IGameController m_Controller;
     private final IGameView m_View;
     private final Matrix4f m_ModelMatrix;
     private GLStaticPolyhedronVxTc m_Rectangle;
 
     public LevelCompleteAppState(IAppStateContext context) {
-        m_AppStateContext = context;
-        m_Controller = m_AppStateContext.getController();
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_Controller = m_Context.getController();
+        m_View = m_Context.getView();
         m_ModelMatrix = new Matrix4f();
     }
 
@@ -40,9 +40,9 @@ public class LevelCompleteAppState implements IAppState {
         GLTexture levelCompleteTexture = new GLTexture(ImageIO.read(new File("images\\LevelComplete.png")));
         m_Rectangle = m_View.createCenteredRectangle(levelCompleteTexture.getWidth(), levelCompleteTexture.getHeight(), levelCompleteTexture);
 
-        m_AppStateContext.addTimeout(2000, (callCount) -> {
+        m_Context.addTimeout(2000, (callCount) -> {
             if (m_Controller.isLastLevel()) {
-                m_AppStateContext.changeState(new GameWonAppState(m_AppStateContext));
+                m_Context.changeState(new GameWonAppState(m_Context));
             }
             else {
                 try {
@@ -50,7 +50,7 @@ public class LevelCompleteAppState implements IAppState {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                m_AppStateContext.changeState(new GetReadyAppState(m_AppStateContext, true));
+                m_Context.changeState(new GetReadyAppState(m_Context, true));
             }
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });

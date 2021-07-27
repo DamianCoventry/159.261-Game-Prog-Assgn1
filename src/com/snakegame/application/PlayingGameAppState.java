@@ -21,14 +21,14 @@ import java.io.IOException;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class PlayingGameAppState implements IAppState {
-    private final IAppStateContext m_AppStateContext;
+    private final IAppStateContext m_Context;
     private final IGameController m_Controller;
     private final IGameView m_View;
 
     public PlayingGameAppState(IAppStateContext context) {
-        m_AppStateContext = context;
-        m_Controller = m_AppStateContext.getController();
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_Controller = m_Context.getController();
+        m_View = m_Context.getView();
     }
 
     @Override
@@ -47,11 +47,11 @@ public class PlayingGameAppState implements IAppState {
             return;
         }
         if (key == GLFW_KEY_ESCAPE) {
-            m_AppStateContext.changeState(new GamePausedAppState(m_AppStateContext));
+            m_Context.changeState(new GamePausedAppState(m_Context));
             return;
         }
         if (key == GLFW_KEY_F5) { // temp cheat key
-            m_AppStateContext.changeState(new LevelCompleteAppState(m_AppStateContext));
+            m_Context.changeState(new LevelCompleteAppState(m_Context));
             return;
         }
         

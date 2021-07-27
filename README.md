@@ -26,7 +26,9 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - ~~animate the toolbar text by increasing the text size when:~~
   - ~~awarding a life or removing a life~~
   - ~~adding points or removing points~~
-- create the power-up meshes  
+- create the power-up meshes
+- don't show power ups that will make no difference
+- change the colour of a few of the power ups
 - ~~animate the power-ups by rotating around the y-axis and bobbing up and down~~
 - update the toolbar background texture by adding a gradient similar to the menu
 - animate the toolbar background

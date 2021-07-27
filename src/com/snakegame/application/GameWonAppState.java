@@ -22,7 +22,7 @@ import javax.imageio.ImageIO;
 import java.io.*;
 
 public class GameWonAppState implements IAppState {
-    private final IAppStateContext m_AppStateContext;
+    private final IAppStateContext m_Context;
     private final IGameView m_View;
     private final Matrix4f m_ModelMatrix;
     private final int m_Player;
@@ -30,16 +30,16 @@ public class GameWonAppState implements IAppState {
     private GLStaticPolyhedronVxTc m_Rectangle;
 
     public GameWonAppState(IAppStateContext context, int player) {
-        m_AppStateContext = context;
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_View = m_Context.getView();
         m_ModelMatrix = new Matrix4f();
         m_Player = player;
         m_BothSnakes = false;
     }
 
     public GameWonAppState(IAppStateContext context) {
-        m_AppStateContext = context;
-        m_View = m_AppStateContext.getView();
+        m_Context = context;
+        m_View = m_Context.getView();
         m_ModelMatrix = new Matrix4f();
         m_Player = -1;
         m_BothSnakes = true;
@@ -48,10 +48,10 @@ public class GameWonAppState implements IAppState {
     @Override
     public void begin(long nowMs) throws IOException {
         GLTexture gameWonTexture;
-        if (m_AppStateContext.getController().getMode() == IGameController.Mode.TWO_PLAYERS) {
+        if (m_Context.getController().getMode() == IGameController.Mode.TWO_PLAYERS) {
             if (m_BothSnakes) {
-                long p0 = m_AppStateContext.getController().getSnakes()[0].getPoints();
-                long p1 = m_AppStateContext.getController().getSnakes()[1].getPoints();
+                long p0 = m_Context.getController().getSnakes()[0].getPoints();
+                long p1 = m_Context.getController().getSnakes()[1].getPoints();
                 if (p0 > p1) {
                     gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
                 }
@@ -73,8 +73,8 @@ public class GameWonAppState implements IAppState {
 
         m_Rectangle = m_View.createCenteredRectangle(gameWonTexture.getWidth(), gameWonTexture.getHeight(), gameWonTexture);
 
-        m_AppStateContext.addTimeout(3500, (callCount) -> {
-            m_AppStateContext.changeState(new RunningMenuAppState(m_AppStateContext));
+        m_Context.addTimeout(3500, (callCount) -> {
+            m_Context.changeState(new RunningMenuAppState(m_Context));
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });
     }

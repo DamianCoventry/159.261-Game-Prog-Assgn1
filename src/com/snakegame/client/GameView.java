@@ -25,7 +25,6 @@ import javax.imageio.ImageIO;
 import java.io.*;
 import java.lang.Math;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public class GameView implements IGameView {
@@ -67,6 +66,29 @@ public class GameView implements IGameView {
     private final GLDirectionalLightProgram m_DirectionalLightProgram;
     private final Vector3f m_LightDirection;
 
+    private GLTexture[] m_NumberTextures;
+    private GLTexture[] m_PowerUpTextures;
+    private GLTexture m_DotTexture;
+    private GLTexture m_HeadTexture;
+    private NumberFont m_NumberFont;
+    private GLStaticPolyhedronVxTcNm m_WorldDisplayMesh;
+    private GLStaticPolyhedronVxTcNm m_ApplePolyhedron;
+    private GLStaticPolyhedronVxTcNm m_PowerUpIncreaseSpeedPolyhedron;
+    private GLStaticPolyhedronVxTcNm m_PowerUpDecreaseSpeedPolyhedron;
+    private GLStaticPolyhedronVxTcNm m_PowerUpIncreasePointsPolyhedron;
+    private GLStaticPolyhedronVxTcNm m_PowerUpDecreasePointsPolyhedron;
+    private GLStaticPolyhedronVxTcNm m_PowerUpIncreaseLivesPolyhedron;
+    private GLStaticPolyhedronVxTcNm m_PowerUpDecreaseLivesPolyhedron;
+    private GLStaticPolyhedronVxTcNm[] m_WallPolyhedra;
+    private GLStaticPolyhedronVxTc m_ToolbarPolyhedron;
+    private IAppStateContext m_Context;
+    private IGameController m_Controller;
+    private GameField m_GameField;
+    private Snake[] m_Snakes;
+    private float m_ItemYRotation;
+    private float m_ItemBobRotation;
+    private float m_ItemBobOffset;
+
     private static class Animation {
         private float m_Value;
         private Vector4f m_Colour;
@@ -88,24 +110,6 @@ public class GameView implements IGameView {
         }
     }
     private final Animation[] m_ToolbarAnimations;
-
-    private GLTexture[] m_NumberTextures;
-    private GLTexture[] m_PowerUpTextures;
-    private GLTexture m_DotTexture;
-    private GLTexture m_HeadTexture;
-    private NumberFont m_NumberFont;
-    private GLStaticPolyhedronVxTcNm m_WorldDisplayMesh;
-    private GLStaticPolyhedronVxTcNm m_AppleDisplayMesh;
-    private GLStaticPolyhedronVxTcNm m_PowerUpDisplayMesh;
-    private GLStaticPolyhedronVxTcNm[] m_WallDisplayMeshes;
-    private GLStaticPolyhedronVxTc m_ToolbarDisplayMesh;
-    private IAppStateContext m_AppStateContext;
-    private IGameController m_Controller;
-    private GameField m_GameField;
-    private Snake[] m_Snakes;
-    private float m_ItemYRotation;
-    private float m_ItemBobRotation;
-    private float m_ItemBobOffset;
 
     public GameView() throws IOException {
         m_MvMatrix = new Matrix4f();
@@ -136,8 +140,8 @@ public class GameView implements IGameView {
 
     @Override
     public void setAppStateContext(IAppStateContext appStateContext) {
-        m_AppStateContext = appStateContext;
-        m_Controller = m_AppStateContext.getController();
+        m_Context = appStateContext;
+        m_Controller = m_Context.getController();
         m_GameField = m_Controller.getGameField();
         m_Snakes = m_Controller.getSnakes();
     }
@@ -149,14 +153,19 @@ public class GameView implements IGameView {
             m_NumberTextures[i] = new GLTexture(ImageIO.read(new File(String.format("images\\Apple%d.png", i + 1))));
         }
 
-        m_WallDisplayMeshes = new GLStaticPolyhedronVxTcNm[s_NumWallMeshes];
+        m_WallPolyhedra = new GLStaticPolyhedronVxTcNm[s_NumWallMeshes];
         for (int i = 0; i < s_NumWallMeshes; ++i) {
-            m_WallDisplayMeshes[i] = loadDisplayMeshWithNormals(String.format("meshes\\WallDisplayMesh%d.obj", i));
+            m_WallPolyhedra[i] = loadDisplayMeshWithNormals(String.format("meshes\\WallDisplayMesh%d.obj", i));
         }
 
         m_WorldDisplayMesh = loadDisplayMeshWithNormals("meshes\\LevelDisplayMesh.obj");
-        m_AppleDisplayMesh = loadDisplayMeshWithNormals("meshes\\AppleLoResDisplayMesh.obj");
-        m_PowerUpDisplayMesh = loadDisplayMeshWithNormals("meshes\\PowerUpDisplayMesh.obj");
+        m_ApplePolyhedron = loadDisplayMeshWithNormals("meshes\\AppleLoResDisplayMesh.obj");
+        m_PowerUpIncreaseSpeedPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpIncreaseSpeed.obj");
+        m_PowerUpDecreaseSpeedPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseSpeed.obj");
+        m_PowerUpIncreasePointsPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpIncreasePoints.obj");
+        m_PowerUpDecreasePointsPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreasePoints.obj");
+        m_PowerUpIncreaseLivesPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpIncreaseLives.obj");
+        m_PowerUpDecreaseLivesPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseLives.obj");
 
         m_PowerUpTextures = new GLTexture[PowerUp.s_NumPowerUps];
         m_PowerUpTextures[0] = new GLTexture(ImageIO.read(new File("images\\DecreaseLength.png")));
@@ -182,11 +191,11 @@ public class GameView implements IGameView {
             m_NumberTextures = null;
         }
 
-        if (m_WallDisplayMeshes != null) {
+        if (m_WallPolyhedra != null) {
             for (int i = 0; i < s_NumWallMeshes; ++i) {
-                m_WallDisplayMeshes[i].freeNativeResources();
+                m_WallPolyhedra[i].freeNativeResources();
             }
-            m_WallDisplayMeshes = null;
+            m_WallPolyhedra = null;
         }
 
         if (m_PowerUpTextures != null) {
@@ -212,17 +221,37 @@ public class GameView implements IGameView {
             m_WorldDisplayMesh.freeNativeResources();
             m_WorldDisplayMesh = null;
         }
-        if (m_AppleDisplayMesh != null ) {
-            m_AppleDisplayMesh.freeNativeResources();
-            m_AppleDisplayMesh = null;
+        if (m_ApplePolyhedron != null ) {
+            m_ApplePolyhedron.freeNativeResources();
+            m_ApplePolyhedron = null;
         }
-        if (m_PowerUpDisplayMesh != null ) {
-            m_PowerUpDisplayMesh.freeNativeResources();
-            m_PowerUpDisplayMesh = null;
+        if (m_PowerUpDecreaseSpeedPolyhedron != null) {
+            m_PowerUpDecreaseSpeedPolyhedron.freeNativeResources();
+            m_PowerUpDecreaseSpeedPolyhedron = null;
         }
-        if (m_ToolbarDisplayMesh != null) {
-            m_ToolbarDisplayMesh.freeNativeResources();
-            m_ToolbarDisplayMesh = null;
+        if (m_PowerUpIncreaseSpeedPolyhedron != null ) {
+            m_PowerUpIncreaseSpeedPolyhedron.freeNativeResources();
+            m_PowerUpIncreaseSpeedPolyhedron = null;
+        }
+        if (m_PowerUpDecreasePointsPolyhedron != null) {
+            m_PowerUpDecreasePointsPolyhedron.freeNativeResources();
+            m_PowerUpDecreasePointsPolyhedron = null;
+        }
+        if (m_PowerUpIncreasePointsPolyhedron != null ) {
+            m_PowerUpIncreasePointsPolyhedron.freeNativeResources();
+            m_PowerUpIncreasePointsPolyhedron = null;
+        }
+        if (m_PowerUpDecreaseLivesPolyhedron != null) {
+            m_PowerUpDecreaseLivesPolyhedron.freeNativeResources();
+            m_PowerUpDecreaseLivesPolyhedron = null;
+        }
+        if (m_PowerUpIncreaseLivesPolyhedron != null ) {
+            m_PowerUpIncreaseLivesPolyhedron.freeNativeResources();
+            m_PowerUpIncreaseLivesPolyhedron = null;
+        }
+        if (m_ToolbarPolyhedron != null) {
+            m_ToolbarPolyhedron.freeNativeResources();
+            m_ToolbarPolyhedron = null;
         }
     }
 
@@ -234,7 +263,7 @@ public class GameView implements IGameView {
 
     @Override
     public void draw3d(long nowMs) {
-        if (m_AppStateContext == null) {
+        if (m_Context == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
 
@@ -250,7 +279,7 @@ public class GameView implements IGameView {
 
         m_ModelMatrix.identity();
         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
-        m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
 
         m_DirectionalLightProgram.setLightDirection(m_LightDirection);
         m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
@@ -274,9 +303,9 @@ public class GameView implements IGameView {
                     case WALL:
                         m_ModelMatrix.setTranslation(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
                         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
-                        m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+                        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
                         m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
-                        m_WallDisplayMeshes[(x + z) % s_NumWallMeshes].draw();
+                        m_WallPolyhedra[(x + z) % s_NumWallMeshes].draw();
                         break;
                     case POWER_UP: {
                         m_ModelMatrix
@@ -284,36 +313,36 @@ public class GameView implements IGameView {
                                 .rotate((float)Math.toRadians(-m_ItemYRotation), 0.0f, 1.0f, 0.0f)
                                 .rotate(s_ItemXRotationRadians, 1.0f, 0.0f, 0.0f);
                         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
-                        m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+                        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
                         m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
-                        m_PowerUpDisplayMesh.draw();
-//                        PowerUp powerUp = m_GameField.getPowerUp(x, y);
-//                        switch (powerUp.getType()) {
+                        PowerUp powerUp = m_GameField.getPowerUp(x, z);
+                        switch (powerUp.getType()) {
+                            case INC_SPEED:
+                                m_PowerUpIncreaseSpeedPolyhedron.draw();
+                                break;
+                            case DEC_SPEED:
+                                m_PowerUpDecreaseSpeedPolyhedron.draw();
+                                break;
+                            case INC_LIVES:
+                                m_PowerUpIncreaseLivesPolyhedron.draw();
+                                break;
+                            case DEC_LIVES:
+                                m_PowerUpDecreaseLivesPolyhedron.draw();
+                                break;
+                            case INC_POINTS:
+                                m_PowerUpIncreasePointsPolyhedron.draw();
+                                break;
+                            default:
+//                            case DEC_POINTS:
+                                m_PowerUpDecreasePointsPolyhedron.draw();
+                                break;
 //                            case DEC_LENGTH:
 //                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[0]);
-//                                break;
-//                            case INC_SPEED:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[1]);
-//                                break;
-//                            case DEC_SPEED:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[2]);
-//                                break;
-//                            case INC_LIVES:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[3]);
-//                                break;
-//                            case DEC_LIVES:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[4]);
-//                                break;
-//                            case INC_POINTS:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[5]);
-//                                break;
-//                            case DEC_POINTS:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[6]);
 //                                break;
 //                            case RANDOM:
 //                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[7]);
 //                                break;
-//                        }
+                        }
                         break;
                     }
                     case NUMBER: {
@@ -322,9 +351,9 @@ public class GameView implements IGameView {
                                 .rotate((float)Math.toRadians(m_ItemYRotation), 0.0f, 1.0f, 0.0f)
                                 .rotate(s_ItemXRotationRadians, 1.0f, 0.0f, 0.0f);
                         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
-                        m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+                        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
                         m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
-                        m_AppleDisplayMesh.draw();
+                        m_ApplePolyhedron.draw();
 //                        Number number = m_GameField.getNumber(x, y);
 //                        switch (number.getType()) {
 //                            case NUM_1:
@@ -372,17 +401,17 @@ public class GameView implements IGameView {
                 m_ModelMatrix.setTranslation(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
 
                 m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
-                m_ProjectionMatrix.set(m_AppStateContext.getPerspectiveMatrix());
+                m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
 
                 m_DirectionalLightProgram.setLightDirection(m_LightDirection);
                 m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
                 m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
 
                 if (firstLoop) {
-                    m_PowerUpDisplayMesh.draw();
+                    m_PowerUpIncreaseSpeedPolyhedron.draw();
                 }
                 else {
-                    m_AppleDisplayMesh.draw();
+                    m_ApplePolyhedron.draw();
                 }
                 firstLoop = false;
             }
@@ -391,23 +420,23 @@ public class GameView implements IGameView {
 
     @Override
     public void draw2d(long nowMs) throws IOException {
-        if (m_AppStateContext == null) {
+        if (m_Context == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
 
-        if (m_ToolbarDisplayMesh == null) {
+        if (m_ToolbarPolyhedron == null) {
             GLTexture toolbarTexture = new GLTexture(ImageIO.read(new File("images\\Toolbar.png")));
-            float y = m_AppStateContext.getWindowHeight() - toolbarTexture.getHeight();
-            m_ToolbarDisplayMesh = createRectangle(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
+            float y = m_Context.getWindowHeight() - toolbarTexture.getHeight();
+            m_ToolbarPolyhedron = createRectangle(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
         }
 
         updateToolbarAnimations();
 
         m_ModelMatrix.identity();
-        drawOrthographicPolyhedron(m_ToolbarDisplayMesh, m_ModelMatrix);
+        drawOrthographicPolyhedron(m_ToolbarPolyhedron, m_ModelMatrix);
 
         int level = m_Controller.getCurrentLevel() + 1;
-        Matrix4f projectionMatrix = m_AppStateContext.getOrthographicMatrix();
+        Matrix4f projectionMatrix = m_Context.getOrthographicMatrix();
 
         // Draw the level's state
         if (level < 10) {
@@ -451,11 +480,11 @@ public class GameView implements IGameView {
 
     @Override
     public void drawOrthographicPolyhedron(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix) {
-        if (m_AppStateContext == null) {
+        if (m_Context == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
         m_MvpMatrix.identity();
-        m_MvpMatrix.set(m_AppStateContext.getOrthographicMatrix()).mul(modelMatrix);
+        m_MvpMatrix.set(m_Context.getOrthographicMatrix()).mul(modelMatrix);
         m_DiffuseTexturedProgram.setDefaultDiffuseColour();
         m_DiffuseTexturedProgram.activate(m_MvpMatrix);
         polyhedron.draw();
@@ -463,11 +492,11 @@ public class GameView implements IGameView {
 
     @Override
     public void drawOrthographicPolyhedron(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix, float alpha) {
-        if (m_AppStateContext == null) {
+        if (m_Context == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
         m_MvpMatrix.identity();
-        m_MvpMatrix.set(m_AppStateContext.getOrthographicMatrix()).mul(modelMatrix);
+        m_MvpMatrix.set(m_Context.getOrthographicMatrix()).mul(modelMatrix);
         m_DiffuseTexturedProgram.setDiffuseColour(new Vector4f(1.0f, 1.0f, 1.0f, alpha));
         m_DiffuseTexturedProgram.activate(m_MvpMatrix);
         polyhedron.draw();
@@ -517,8 +546,8 @@ public class GameView implements IGameView {
 
     @Override
     public GLStaticPolyhedronVxTc createCenteredRectangle(float width, float height, GLTexture texture) {
-        var x = (m_AppStateContext.getWindowWidth() / 2.0f) - (width / 2.0f);
-        var y = (m_AppStateContext.getWindowHeight() / 2.0f) - (height / 2.0f);
+        var x = (m_Context.getWindowWidth() / 2.0f) - (width / 2.0f);
+        var y = (m_Context.getWindowHeight() / 2.0f) - (height / 2.0f);
         return createRectangle(x, y, width, height, texture);
     }
 
