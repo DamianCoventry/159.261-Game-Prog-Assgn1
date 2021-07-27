@@ -36,12 +36,12 @@ public class Application implements IAppStateContext {
     private final GLWindow m_GLWindow;
     private final IGameController m_Controller;
     private final IGameView m_View;
+    private final DebugNumberFont m_DebugNumberFont;
 
     private IAppState m_PendingState = null;
     private IAppState m_CurrentState = null;
     private long m_LastFrameCountTime = 0;
     private int m_FrameCount = 0;
-    private DebugNumberFont m_DebugNumberFont;
     private int m_DebugFps;
     private long m_DebugFrameTime;
 

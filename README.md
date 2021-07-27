@@ -17,13 +17,11 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - ~~adjust the snake speed~~
 - ~~display the fps on the screen~~
 - ~~display the core loop timings on the screen~~
-- the last level is too difficult
-- put 3, 2, 1 onto the get ready dialog
-- create the barn sides out of individual planks of wood
-- add doors to the barn
-- add more items to the cinder block building
-- recreate the diffuse texture for the in-game apples
-- add numbers to the apples when rendering
+- ~~the last level is too difficult~~
+- ~~put 3, 2, 1 onto the get ready dialog~~
+- ~~create the barn sides out of individual planks of wood~~
+- ~~add doors to the barn~~
+- ~~recreate the diffuse texture for the in-game apples~~
 - animate the in-game apples by rotating around the y-axis and bobbing up and down
 - create the power-up meshes  
 - animate the power-ups by rotating around the y-axis and bobbing up and down
@@ -41,7 +39,7 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - add code for choosing the correct mesh and rotation when rendering the snake
 - create an animation to use when a snake is dying
 - make the help page
-- all the help page to be scrolled vertically
+- allow the help page to be scrolled vertically
 - make the menu buttons clickable with the mouse cursor
 - add a focus animation to the menu buttons
 - add a click animation to the menu buttons
@@ -53,6 +51,7 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - animate the loading state either with a 3d mesh, or progress bar
 - add a screen transition from the loading state to the game
 - create a sprite class
+- add numbers to the apples when rendering
 - create a particle emitter class
 - create a particle class
 - create a sprite particle

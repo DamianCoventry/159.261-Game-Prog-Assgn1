@@ -27,8 +27,9 @@ public class GetReadyAppState implements IAppState {
     private final IGameView m_View;
     private final boolean m_ResetState;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedronVxTc m_Rectangle;
+    private GLStaticPolyhedronVxTc[] m_GetReadyRectangles;
     private int m_TimeoutId;
+    private int m_CurrentRectangle;
 
     public GetReadyAppState(IAppStateContext context, boolean resetState) {
         m_AppStateContext = context;
@@ -39,21 +40,35 @@ public class GetReadyAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        GLTexture getReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady.png")));
-        m_Rectangle = m_View.createCenteredRectangle(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
+        m_GetReadyRectangles = new GLStaticPolyhedronVxTc[3];
+
+        GLTexture getReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady3.png")));
+        m_GetReadyRectangles[0] = m_View.createCenteredRectangle(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
+        getReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady2.png")));
+        m_GetReadyRectangles[1] = m_View.createCenteredRectangle(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
+        getReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady1.png")));
+        m_GetReadyRectangles[2] = m_View.createCenteredRectangle(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
 
         if (m_ResetState) {
             m_AppStateContext.getController().resetAfterSnakeDeath(nowMs);
         }
-        m_TimeoutId = m_AppStateContext.addTimeout(2000, (callCount) -> {
-            m_AppStateContext.changeState(new PlayingGameAppState(m_AppStateContext));
-            return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
+
+        m_CurrentRectangle = 0;
+        m_TimeoutId = m_AppStateContext.addTimeout(1000, (callCount) -> {
+            if (m_CurrentRectangle == 2) {
+                m_AppStateContext.changeState(new PlayingGameAppState(m_AppStateContext));
+                return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
+            }
+            ++m_CurrentRectangle;
+            return TimeoutManager.CallbackResult.KEEP_CALLING;
         });
     }
 
     @Override
     public void end(long nowMs) {
-        m_Rectangle.freeNativeResources();
+        for (var rectangle : m_GetReadyRectangles) {
+            rectangle.freeNativeResources();
+        }
     }
 
     @Override
@@ -80,6 +95,6 @@ public class GetReadyAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
-        m_View.drawOrthographicPolyhedron(m_Rectangle, m_ModelMatrix);
+        m_View.drawOrthographicPolyhedron(m_GetReadyRectangles[m_CurrentRectangle], m_ModelMatrix);
     }
 }

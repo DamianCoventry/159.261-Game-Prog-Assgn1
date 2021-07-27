@@ -39,7 +39,7 @@ public class GameView implements IGameView {
     private static final Vector2i s_P1Score = new Vector2i(110, 905);
     private static final Vector2i s_P2Snakes = new Vector2i(1046, 905);
     private static final Vector2i s_P2Score = new Vector2i(1134, 905);
-    private static final Vector2i s_CurrentLevel = new Vector2i(592, 905);
+    private static final Vector2i s_CurrentLevel = new Vector2i(586, 905);
     private static final Vector2i s_NumLevels = new Vector2i(650, 905);
 
     private final Matrix4f m_MvMatrix;
