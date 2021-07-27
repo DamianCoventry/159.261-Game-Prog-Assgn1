@@ -15,9 +15,12 @@ package com.snakegame.client;
 
 import com.snakegame.opengl.*;
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
+
+import static org.lwjgl.opengl.GL11.glDepthMask;
 
 public class NumberFont {
     private static final int s_NumDigits = 10;
@@ -25,7 +28,11 @@ public class NumberFont {
     private final GLStaticPolyhedronVxTc[] m_Polyhedra;
     private final GLDiffuseTextureProgram m_DiffuseTexturedProgram;
     private final float m_FrameWidth;
+    private final float m_HalfFrameWidth;
     private final float m_FrameHeight;
+    private final float m_HalfFrameHeight;
+    private final Matrix4f m_Copy;
+    private final Matrix4f m_ModelMatrix;
 
     private static class Character {
         float m_U0, m_V0;
@@ -39,9 +46,15 @@ public class NumberFont {
     protected NumberFont(GLDiffuseTextureProgram program, float frameWidth, float frameHeight, String diffuseTextureFileName) throws IOException {
         m_DiffuseTexturedProgram = program;
         m_FrameWidth = frameWidth;
+        m_HalfFrameWidth = m_FrameWidth / 2.0f;
         m_FrameHeight = frameHeight;
+        m_HalfFrameHeight = m_FrameHeight / 2.0f;
+
+        m_Copy = new Matrix4f();
+        m_ModelMatrix = new Matrix4f();
         m_Characters = new Character[s_NumDigits];
         m_Polyhedra = new GLStaticPolyhedronVxTc[s_NumDigits];
+        
         GLTexture numberGLTexture = new GLTexture(ImageIO.read(new File(diffuseTextureFileName)));
         extractCharacterInfo(numberGLTexture);
     }
@@ -53,13 +66,13 @@ public class NumberFont {
             m_Characters[i] = new Character(i * deltaU,0.0f, (i * deltaU) + deltaU, deltaV);
             final float[] vertices = new float[] {
                     // Triangle 0
-                    0.0f, m_FrameHeight, 0.0f,
-                    0.0f, 0.0f, 0.0f,
-                    m_FrameWidth, 0.0f, 0.0f,
+                    -m_HalfFrameWidth, m_HalfFrameHeight, 0.0f,
+                    -m_HalfFrameWidth, -m_HalfFrameHeight, 0.0f,
+                    m_HalfFrameWidth, -m_HalfFrameHeight, 0.0f,
                     // Triangle 1
-                    0.0f, m_FrameHeight, 0.0f,
-                    m_FrameWidth, 0.0f, 0.0f,
-                    m_FrameWidth, m_FrameHeight, 0.0f,
+                    -m_HalfFrameWidth, m_HalfFrameHeight, 0.0f,
+                    m_HalfFrameWidth, -m_HalfFrameHeight, 0.0f,
+                    m_HalfFrameWidth, m_HalfFrameHeight, 0.0f,
             };
             final float[] texCoordinates = new float[] {
                     // Triangle 0
@@ -83,19 +96,21 @@ public class NumberFont {
         }
     }
     
-    public void drawNumber(Matrix4f projectionMatrix, long number, float x, float y) {
-        Matrix4f copy = new Matrix4f();
-        Matrix4f modelMatrix = new Matrix4f();
+    public void drawNumber(Matrix4f projectionMatrix, long number, float x, float y, float scale, Vector4f colour) {
+        glDepthMask(false);
         String text = String.valueOf(number);
         for (int i = 0; i < text.length(); ++i) {
-            int j = text.charAt(i) - '0'; // Convert the character to an index into the m_Characters array
-            modelMatrix.setTranslation(x, y, 0.5f);
-            Matrix4f mvpMatrix = copy.set(projectionMatrix).mul(modelMatrix);
-            m_DiffuseTexturedProgram.setDefaultDiffuseColour();
+            m_ModelMatrix.identity().translate(x + m_HalfFrameWidth, y + m_HalfFrameHeight, 0.5f).scale(scale);
+            Matrix4f mvpMatrix = m_Copy.set(projectionMatrix).mul(m_ModelMatrix);
+
+            m_DiffuseTexturedProgram.setDiffuseColour(colour);
             m_DiffuseTexturedProgram.activate(mvpMatrix);
+            int j = text.charAt(i) - '0'; // Convert the character to an index into the m_Characters array
             m_Polyhedra[j].draw();
+
             x += m_FrameWidth;
         }
+        glDepthMask(true);
     }
 
     public float calculateWidth(long number) {

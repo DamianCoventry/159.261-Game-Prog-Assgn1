@@ -16,7 +16,7 @@ package com.snakegame.application;
 import com.snakegame.client.*;
 import com.snakegame.opengl.*;
 import com.snakegame.rules.*;
-import org.joml.Matrix4f;
+import org.joml.*;
 import org.lwjgl.glfw.*;
 
 import java.io.IOException;
@@ -31,6 +31,7 @@ public class Application implements IAppStateContext {
     private static final int s_DesiredWindowWidth = 1280;
     private static final int s_DesiredWindowHeight = 960;
     private static final String s_WindowTitle = "159.261 Game Programming (Assignment 1)";
+    private static final Vector4f s_White = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
 
     private final TimeoutManager m_TimeoutManager;
     private final GLWindow m_GLWindow;
@@ -144,8 +145,8 @@ public class Application implements IAppStateContext {
     }
 
     private void drawDebugInfo() {
-        m_DebugNumberFont.drawNumber(m_GLWindow.getOrthographicMatrix(), m_DebugFps, 0, 55);
-        m_DebugNumberFont.drawNumber(m_GLWindow.getOrthographicMatrix(), m_DebugFrameTime, 0, 40);
+        m_DebugNumberFont.drawNumber(m_GLWindow.getOrthographicMatrix(), m_DebugFps, 0.0f, 55.0f, 1.0f, s_White);
+        m_DebugNumberFont.drawNumber(m_GLWindow.getOrthographicMatrix(), m_DebugFrameTime, 0.0f, 40.0f, 1.0f, s_White);
     }
 
     private void stampFrameCountStart() {

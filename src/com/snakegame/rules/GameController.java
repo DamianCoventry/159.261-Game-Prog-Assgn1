@@ -109,9 +109,9 @@ public class GameController implements IGameController {
         Vector2i maxBounds = new Vector2i(GameField.WIDTH - 1, GameField.HEIGHT - 1);
 
         m_Snakes = new Snake[m_Mode == Mode.TWO_PLAYERS ? 2 : 1];
-        m_Snakes[0] = new Snake(Snake.Direction.Right, minBounds, maxBounds);
+        m_Snakes[0] = new Snake(0, m_AppStateContext.getView(), Snake.Direction.Right, minBounds, maxBounds);
         if (m_Mode == Mode.TWO_PLAYERS) {
-            m_Snakes[1] = new Snake(Snake.Direction.Left, minBounds, maxBounds);
+            m_Snakes[1] = new Snake(1, m_AppStateContext.getView(), Snake.Direction.Left, minBounds, maxBounds);
         }
 
         loadLevelFile(m_CurrentLevel);

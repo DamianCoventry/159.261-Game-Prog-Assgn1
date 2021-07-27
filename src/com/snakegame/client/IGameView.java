@@ -16,19 +16,26 @@ package com.snakegame.client;
 import com.snakegame.application.IAppStateContext;
 import com.snakegame.opengl.*;
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import java.io.IOException;
 
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public interface IGameView {
     void setAppStateContext(IAppStateContext appStateContext);
+
     void loadResources() throws Exception;
     void unloadResources();
     void freeNativeResources();
+
     void draw3d(long nowMs);
     void draw2d(long nowMs) throws IOException;
     void drawOrthographicPolyhedron(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix);
     void drawOrthographicPolyhedron(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix, float alpha);
+
+    void startRemainingSnakesAnimation(int playerId, Vector4f colour);
+    void startScoreAnimation(int playerId, Vector4f colour);
+
     GLStaticPolyhedronVxTc createRectangle(float x, float y, float width, float height, GLTexture texture);
     GLStaticPolyhedronVxTc createCenteredRectangle(float width, float height, GLTexture texture);
     GLStaticPolyhedronVxTc loadDisplayMeshWithoutNormals(String fileName) throws Exception;

@@ -13,6 +13,9 @@
 
 package com.snakegame.rules;
 
+import com.snakegame.client.IGameView;
+import org.joml.Vector4f;
+
 import java.util.LinkedList;
 
 public class Snake {
@@ -28,6 +31,11 @@ public class Snake {
     private final Vector2i m_MinBounds;
     private final Vector2i m_MaxBounds;
     private final Direction m_StartDirection;
+    private final int m_Id;
+    private final IGameView m_GameView;
+
+    private final Vector4f s_Red = new Vector4f(1.0f, 0.0f, 0.0f, 1.0f);
+    private final Vector4f s_Green = new Vector4f(0.0f, 1.0f, 0.0f, 1.0f);
 
     private Vector2i m_StartPosition = null;
     private Direction m_CurrentDirection;
@@ -37,7 +45,9 @@ public class Snake {
     private int m_RemoveBodyParts;
     private long m_Points;
 
-    public Snake(Direction startDirection, Vector2i minBounds, Vector2i maxBounds) {
+    public Snake(int id, IGameView gameView, Direction startDirection, Vector2i minBounds, Vector2i maxBounds) {
+        m_Id = id;
+        m_GameView = gameView;
         m_StartDirection = startDirection;
         m_BodyParts = new LinkedList<>();
         m_MinBounds = minBounds;
@@ -76,12 +86,14 @@ public class Snake {
     public void incrementLives() {
         if (m_NumLives < s_MaxNumLives) {
             ++m_NumLives;
+            m_GameView.startRemainingSnakesAnimation(m_Id, s_Green);
         }
     }
 
     public void decrementLives() {
         if (m_NumLives > 0) {
             --m_NumLives;
+            m_GameView.startRemainingSnakesAnimation(m_Id, s_Red);
         }
     }
 
@@ -92,12 +104,14 @@ public class Snake {
     public void incrementPoints(long points) {
         if (points > 0) {
             m_Points += points;
+            m_GameView.startScoreAnimation(m_Id, s_Green);
         }
     }
 
     public void decrementPoints(long points) {
         if (points > 0) {
             m_Points = Math.max(0, m_Points - points);
+            m_GameView.startScoreAnimation(m_Id, s_Red);
         }
     }
 

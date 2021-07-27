@@ -16,13 +16,16 @@ package com.snakegame.client;
 import com.snakegame.application.IAppStateContext;
 import com.snakegame.opengl.*;
 import com.snakegame.rules.*;
+import com.snakegame.rules.Vector2i;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
+import java.lang.Math;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public class GameView implements IGameView {
@@ -35,10 +38,16 @@ public class GameView implements IGameView {
     private static final float s_ObjectYPosition = 0.5f;
     private static final float s_LightIntensity = 0.8735f;
     private static final float s_ItemYRotationInc = 60.0f;
-    private static final float s_ItemXRotationRadians = (float)Math.toRadians(5.0f);
+    private static final float s_ItemXRotationRadians = (float) Math.toRadians(5.0f);
     private static final float s_ItemBobOffsetMax = 0.30f;
     private static final float s_ItemBobRotationInc = 180.0f;
     private static final float s_MsPerFrame = 0.01666666f;
+    private static final float s_ToolbarAnimationSpeed = 6.0f;
+
+    private static final int s_P1RemainingSnakesAnimation = 0;
+    private static final int s_P1ScoreAnimation = 1;
+    private static final int s_P2RemainingSnakesAnimation = 2;
+    private static final int s_P2ScoreAnimation = 3;
 
     private static final Vector2i s_P1Snakes = new Vector2i(20, 905);
     private static final Vector2i s_P1Score = new Vector2i(110, 905);
@@ -46,6 +55,7 @@ public class GameView implements IGameView {
     private static final Vector2i s_P2Score = new Vector2i(1134, 905);
     private static final Vector2i s_CurrentLevel = new Vector2i(594, 905);
     private static final Vector2i s_NumLevels = new Vector2i(650, 905);
+    private static final Vector4f s_Yellow = new Vector4f(1.0f, 1.0f, 0.0f, 1.0f);
 
     private final Matrix4f m_MvMatrix;
     private final Matrix4f m_MvpMatrix;
@@ -56,6 +66,28 @@ public class GameView implements IGameView {
     private final GLSpecularDirectionalLightProgram m_SpecularDirectionalLightProgram;
     private final GLDirectionalLightProgram m_DirectionalLightProgram;
     private final Vector3f m_LightDirection;
+
+    private static class Animation {
+        private float m_Value;
+        private Vector4f m_Colour;
+        public Animation() {
+            m_Value = 1.0f;
+            m_Colour = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
+        }
+        public float getValue() {
+            return m_Value;
+        }
+        public void setValue(float value) {
+            m_Value = value;
+        }
+        public Vector4f getColour() {
+            return m_Colour;
+        }
+        public void setColour(Vector4f value) {
+            m_Colour = value;
+        }
+    }
+    private final Animation[] m_ToolbarAnimations;
 
     private GLTexture[] m_NumberTextures;
     private GLTexture[] m_PowerUpTextures;
@@ -90,6 +122,12 @@ public class GameView implements IGameView {
         m_DiffuseTexturedProgram = new GLDiffuseTextureProgram();
         m_SpecularDirectionalLightProgram = new GLSpecularDirectionalLightProgram();
         m_DirectionalLightProgram = new GLDirectionalLightProgram();
+
+        m_ToolbarAnimations = new Animation[4];
+        for (int i = 0; i < 4; ++i) {
+            m_ToolbarAnimations[i] = new Animation();
+            m_ToolbarAnimations[i].setColour(s_Yellow);
+        }
 
         m_ItemYRotation = 0.0f;
         m_ItemBobRotation = 0.0f;
@@ -363,6 +401,8 @@ public class GameView implements IGameView {
             m_ToolbarDisplayMesh = createRectangle(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
         }
 
+        updateToolbarAnimations();
+
         m_ModelMatrix.identity();
         drawOrthographicPolyhedron(m_ToolbarDisplayMesh, m_ModelMatrix);
 
@@ -371,21 +411,41 @@ public class GameView implements IGameView {
 
         // Draw the level's state
         if (level < 10) {
-            m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X, s_CurrentLevel.m_Z);
+            m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X, s_CurrentLevel.m_Z, 1.0f, s_Yellow);
         }
         else {
-            m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X - 8.0f, s_CurrentLevel.m_Z);
+            m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X - 8.0f, s_CurrentLevel.m_Z, 1.0f, s_Yellow);
         }
-        m_NumberFont.drawNumber(projectionMatrix, m_Controller.getLevelCount(), s_NumLevels.m_X, s_NumLevels.m_Z);
+        m_NumberFont.drawNumber(projectionMatrix, m_Controller.getLevelCount(), s_NumLevels.m_X, s_NumLevels.m_Z, 1.0f, s_Yellow);
 
         // Draw player 1's state
-        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getNumLives(), s_P1Snakes.m_X, s_P1Snakes.m_Z);
-        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getPoints(), s_P1Score.m_X, s_P1Score.m_Z);
+        Animation animation = m_ToolbarAnimations[s_P1RemainingSnakesAnimation];
+        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getNumLives(), s_P1Snakes.m_X, s_P1Snakes.m_Z,
+                animation.getValue(), animation.getColour());
+        animation = m_ToolbarAnimations[s_P1ScoreAnimation];
+        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getPoints(), s_P1Score.m_X, s_P1Score.m_Z,
+                animation.getValue(), animation.getColour());
 
         if (m_Snakes.length > 1) {
             // Draw player 2's state
-            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getNumLives(), s_P2Snakes.m_X, s_P2Snakes.m_Z);
-            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getPoints(), s_P2Score.m_X, s_P2Score.m_Z);
+            animation = m_ToolbarAnimations[s_P2RemainingSnakesAnimation];
+            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getNumLives(), s_P2Snakes.m_X, s_P2Snakes.m_Z,
+                    animation.getValue(), animation.getColour());
+            animation = m_ToolbarAnimations[s_P2ScoreAnimation];
+            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getPoints(), s_P2Score.m_X, s_P2Score.m_Z,
+                    animation.getValue(), animation.getColour());
+        }
+    }
+
+    private void updateToolbarAnimations() {
+        for (Animation animation : m_ToolbarAnimations) {
+            if (animation.getValue() > 1.0f) {
+                animation.setValue(animation.getValue() - s_ToolbarAnimationSpeed * s_MsPerFrame);
+                if (animation.getValue() < 1.0f) {
+                    animation.setValue(1.0f);
+                    animation.setColour(s_Yellow);
+                }
+            }
         }
     }
 
@@ -411,6 +471,20 @@ public class GameView implements IGameView {
         m_DiffuseTexturedProgram.setDiffuseColour(new Vector4f(1.0f, 1.0f, 1.0f, alpha));
         m_DiffuseTexturedProgram.activate(m_MvpMatrix);
         polyhedron.draw();
+    }
+
+    @Override
+    public void startRemainingSnakesAnimation(int playerId, Vector4f colour) {
+        int i = playerId == 0 ? s_P1RemainingSnakesAnimation : s_P2RemainingSnakesAnimation;
+        m_ToolbarAnimations[i].setValue(2.0f);
+        m_ToolbarAnimations[i].setColour(colour);
+    }
+
+    @Override
+    public void startScoreAnimation(int playerId, Vector4f colour) {
+        int i = playerId == 0 ? s_P1ScoreAnimation : s_P2ScoreAnimation;
+        m_ToolbarAnimations[i].setValue(2.0f);
+        m_ToolbarAnimations[i].setColour(colour);
     }
 
     @Override
