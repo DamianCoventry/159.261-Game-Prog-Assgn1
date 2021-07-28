@@ -144,12 +144,10 @@ public class RunningMenuAppState implements IAppState {
             m_ScrollOffsetX -= m_Context.getWindowWidth();
         }
 
-        m_ModelMatrix.identity();
-        m_ModelMatrix.translate(m_ScrollOffsetX, 0.0f, 0.0f);
+        m_ModelMatrix.identity().translate(m_ScrollOffsetX, 0.0f, 0.0f);
         m_View.drawOrthographicPolyhedron(m_BackgroundTextRectangle, m_ModelMatrix, s_BackgroundAlpha);
 
-        m_ModelMatrix.identity();
-        m_ModelMatrix.translate(m_ScrollOffsetX - m_Context.getWindowWidth(), 0.0f, 0.0f);
+        m_ModelMatrix.identity().translate(m_ScrollOffsetX - m_Context.getWindowWidth(), 0.0f, 0.0f);
         m_View.drawOrthographicPolyhedron(m_BackgroundTextRectangle, m_ModelMatrix, s_BackgroundAlpha);
 
         glDepthMask(true);
@@ -161,8 +159,7 @@ public class RunningMenuAppState implements IAppState {
     public void draw2d(long nowMs) throws IOException {
         float oneThird = m_Context.getWindowWidth() * 0.3333f;
         float halfWidth = m_MenuPageRectangles[0].getPiece(0).getDiffuseTexture().getWidth() / 2.0f;
-        m_ModelMatrix.identity();
-        m_ModelMatrix.setTranslation(-(oneThird - halfWidth), 0.0f, 0.0f);
+        m_ModelMatrix.identity().translate(-(oneThird - halfWidth), 0.0f, 0.0f);
         switch (m_Page) {
             case MAIN:
                 m_View.drawOrthographicPolyhedron(m_MenuPageRectangles[0], m_ModelMatrix);
@@ -185,8 +182,7 @@ public class RunningMenuAppState implements IAppState {
     }
 
     private void drawApple() {
-        m_ModelMatrix.identity();
-        m_ModelMatrix.setTranslation(s_AppleXPosition, 0.0f, s_AppleZPosition)
+        m_ModelMatrix.identity().translate(s_AppleXPosition, 0.0f, s_AppleZPosition)
                      .rotate((float)Math.toRadians(m_Angle), 0.0f, 1.0f, 0.0f);
 
         m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());

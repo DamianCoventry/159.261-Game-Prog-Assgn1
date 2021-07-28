@@ -42,6 +42,7 @@ public class GameView implements IGameView {
     private static final float s_ItemBobRotationInc = 180.0f;
     private static final float s_MsPerFrame = 0.01666666f;
     private static final float s_ToolbarAnimationSpeed = 6.0f;
+    private static final long s_MaxRandomPowerUpTypeTime = 250;
 
     private static final int s_P1RemainingSnakesAnimation = 0;
     private static final int s_P1ScoreAnimation = 1;
@@ -65,6 +66,7 @@ public class GameView implements IGameView {
     private final GLSpecularDirectionalLightProgram m_SpecularDirectionalLightProgram;
     private final GLDirectionalLightProgram m_DirectionalLightProgram;
     private final Vector3f m_LightDirection;
+    private final PowerUp.Type[] m_PowerUpTypes;
 
     private GLTexture[] m_NumberTextures;
     private GLTexture[] m_PowerUpTextures;
@@ -89,6 +91,8 @@ public class GameView implements IGameView {
     private float m_ItemYRotation;
     private float m_ItemBobRotation;
     private float m_ItemBobOffset;
+    private int m_RandomPowerUpType;
+    private long m_LastRandomPowerUpTypeTime;
 
     private static class Animation {
         private float m_Value;
@@ -133,6 +137,15 @@ public class GameView implements IGameView {
             m_ToolbarAnimations[i] = new Animation();
             m_ToolbarAnimations[i].setColour(s_Yellow);
         }
+
+        m_PowerUpTypes = new PowerUp.Type[] {
+                PowerUp.Type.INC_SPEED, PowerUp.Type.DEC_SPEED,
+                PowerUp.Type.INC_LIVES, PowerUp.Type.DEC_LIVES,
+                PowerUp.Type.INC_POINTS, PowerUp.Type.DEC_POINTS,
+                PowerUp.Type.DEC_LENGTH
+        };
+        m_RandomPowerUpType = 0;
+        m_LastRandomPowerUpTypeTime = 0;
 
         m_ItemYRotation = 0.0f;
         m_ItemBobRotation = 0.0f;
@@ -291,6 +304,13 @@ public class GameView implements IGameView {
         m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
         m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
 
+        if (nowMs - m_LastRandomPowerUpTypeTime >= s_MaxRandomPowerUpTypeTime) {
+            m_LastRandomPowerUpTypeTime = nowMs;
+            if (++m_RandomPowerUpType >= m_PowerUpTypes.length) {
+                m_RandomPowerUpType = 0;
+            }
+        }
+
         m_WorldDisplayMesh.draw();
 
         float startX = GameField.WIDTH / 2.0f * -s_CellSize;
@@ -302,12 +322,11 @@ public class GameView implements IGameView {
                 float cellOffsetX = (startX + x * s_CellSize) + (s_CellSize / 2.0f);
 
                 m_ModelMatrix.identity();
-
                 switch (m_GameField.getCellType(x, z)) {
                     case EMPTY:
                         break;
                     case WALL:
-                        m_ModelMatrix.setTranslation(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
+                        m_ModelMatrix.translate(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
                         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
                         m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
                         m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
@@ -315,45 +334,18 @@ public class GameView implements IGameView {
                         break;
                     case POWER_UP: {
                         m_ModelMatrix
-                                .setTranslation(cellOffsetX, s_ObjectYPosition + (s_ItemBobOffsetMax - m_ItemBobOffset), cellOffsetZ)
+                                .translate(cellOffsetX, s_ObjectYPosition + (s_ItemBobOffsetMax - m_ItemBobOffset), cellOffsetZ)
                                 .rotate((float)Math.toRadians(-m_ItemYRotation), 0.0f, 1.0f, 0.0f)
                                 .rotate(s_ItemXRotationRadians, 1.0f, 0.0f, 0.0f);
                         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
                         m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
                         m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
-                        PowerUp powerUp = m_GameField.getPowerUp(x, z);
-                        switch (powerUp.getType()) {
-                            case INC_SPEED:
-                                m_PowerUpIncreaseSpeedPolyhedron.draw();
-                                break;
-                            case DEC_SPEED:
-                                m_PowerUpDecreaseSpeedPolyhedron.draw();
-                                break;
-                            case INC_LIVES:
-                                m_PowerUpIncreaseLivesPolyhedron.draw();
-                                break;
-                            case DEC_LIVES:
-                                m_PowerUpDecreaseLivesPolyhedron.draw();
-                                break;
-                            case INC_POINTS:
-                                m_PowerUpIncreasePointsPolyhedron.draw();
-                                break;
-                            case DEC_POINTS:
-                                m_PowerUpDecreasePointsPolyhedron.draw();
-                                break;
-                            default:
-                            case DEC_LENGTH:
-                                m_PowerUpDecreaseLengthPolyhedron.draw();
-                                break;
-//                            case RANDOM:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[7]);
-//                                break;
-                        }
+                        drawPowerUp(m_GameField.getPowerUp(x, z).getType());
                         break;
                     }
                     case NUMBER: {
                         m_ModelMatrix
-                                .setTranslation(cellOffsetX, s_ObjectYPosition + m_ItemBobOffset, cellOffsetZ)
+                                .translate(cellOffsetX, s_ObjectYPosition + m_ItemBobOffset, cellOffsetZ)
                                 .rotate((float)Math.toRadians(m_ItemYRotation), 0.0f, 1.0f, 0.0f)
                                 .rotate(s_ItemXRotationRadians, 1.0f, 0.0f, 0.0f);
                         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
@@ -396,6 +388,9 @@ public class GameView implements IGameView {
             }
         }
 
+        m_DirectionalLightProgram.setLightDirection(m_LightDirection);
+        m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
+
         boolean firstLoop;
         for (var snake : m_Snakes) {
             firstLoop = true;
@@ -403,24 +398,48 @@ public class GameView implements IGameView {
                 float cellOffsetX = (startX + bodyPart.m_X * s_CellSize) + (s_CellSize / 2.0f);
                 float cellOffsetZ = (-startZ - bodyPart.m_Z * s_CellSize) - (s_CellSize / 2.0f);
 
-                m_ModelMatrix.identity();
-                m_ModelMatrix.setTranslation(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
-
+                m_ModelMatrix.identity().translate(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
                 m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
                 m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
-
-                m_DirectionalLightProgram.setLightDirection(m_LightDirection);
-                m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
                 m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
 
                 if (firstLoop) {
-                    m_PowerUpIncreaseSpeedPolyhedron.draw();
+                    m_WallPolyhedra[0].draw(); // temp
                 }
                 else {
-                    m_ApplePolyhedron.draw();
+                    m_ApplePolyhedron.draw(); // temp
                 }
                 firstLoop = false;
             }
+        }
+    }
+
+    private void drawPowerUp(PowerUp.Type type) {
+        switch (type) {
+            case INC_SPEED:
+                m_PowerUpIncreaseSpeedPolyhedron.draw();
+                break;
+            case DEC_SPEED:
+                m_PowerUpDecreaseSpeedPolyhedron.draw();
+                break;
+            case INC_LIVES:
+                m_PowerUpIncreaseLivesPolyhedron.draw();
+                break;
+            case DEC_LIVES:
+                m_PowerUpDecreaseLivesPolyhedron.draw();
+                break;
+            case INC_POINTS:
+                m_PowerUpIncreasePointsPolyhedron.draw();
+                break;
+            case DEC_POINTS:
+                m_PowerUpDecreasePointsPolyhedron.draw();
+                break;
+            case DEC_LENGTH:
+                m_PowerUpDecreaseLengthPolyhedron.draw();
+                break;
+            case RANDOM:
+                drawPowerUp(m_PowerUpTypes[m_RandomPowerUpType]);
+                break;
         }
     }
 
@@ -489,8 +508,7 @@ public class GameView implements IGameView {
         if (m_Context == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
-        m_MvpMatrix.identity();
-        m_MvpMatrix.set(m_Context.getOrthographicMatrix()).mul(modelMatrix);
+        m_MvpMatrix.identity().set(m_Context.getOrthographicMatrix()).mul(modelMatrix);
         m_DiffuseTexturedProgram.setDefaultDiffuseColour();
         m_DiffuseTexturedProgram.activate(m_MvpMatrix);
         polyhedron.draw();
@@ -501,8 +519,7 @@ public class GameView implements IGameView {
         if (m_Context == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
-        m_MvpMatrix.identity();
-        m_MvpMatrix.set(m_Context.getOrthographicMatrix()).mul(modelMatrix);
+        m_MvpMatrix.identity().set(m_Context.getOrthographicMatrix()).mul(modelMatrix);
         m_DiffuseTexturedProgram.setDiffuseColour(new Vector4f(1.0f, 1.0f, 1.0f, alpha));
         m_DiffuseTexturedProgram.activate(m_MvpMatrix);
         polyhedron.draw();
