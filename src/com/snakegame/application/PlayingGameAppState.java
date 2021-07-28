@@ -65,6 +65,7 @@ public class PlayingGameAppState implements IAppState {
     @Override
     public void think(long nowMs) throws IOException {
         m_Controller.think(nowMs);
+        m_View.think(nowMs);
     }
 
     @Override

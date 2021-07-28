@@ -130,7 +130,10 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void think(long nowMs) {
-        // Nothing to do
+        m_ScrollOffsetX += s_HorizontalScrollSpeed * s_MsPerFrame;
+        if (m_ScrollOffsetX >= m_Context.getWindowWidth()) {
+            m_ScrollOffsetX -= m_Context.getWindowWidth();
+        }
     }
 
     @Override
@@ -138,11 +141,6 @@ public class RunningMenuAppState implements IAppState {
         glDepthMask(false);
         m_ModelMatrix.identity();
         m_View.drawOrthographicPolyhedron(m_BackgroundRectangle, m_ModelMatrix);
-
-        m_ScrollOffsetX += s_HorizontalScrollSpeed * s_MsPerFrame;
-        if (m_ScrollOffsetX >= m_Context.getWindowWidth()) {
-            m_ScrollOffsetX -= m_Context.getWindowWidth();
-        }
 
         m_ModelMatrix.identity().translate(m_ScrollOffsetX, 0.0f, 0.0f);
         m_View.drawOrthographicPolyhedron(m_BackgroundTextRectangle, m_ModelMatrix, s_BackgroundAlpha);

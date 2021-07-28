@@ -67,7 +67,7 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void think(long nowMs) throws IOException {
-        // No work to do
+        m_View.think(nowMs);
     }
 
     @Override

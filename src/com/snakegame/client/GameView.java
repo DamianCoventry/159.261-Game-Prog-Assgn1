@@ -16,7 +16,6 @@ package com.snakegame.client;
 import com.snakegame.application.IAppStateContext;
 import com.snakegame.opengl.*;
 import com.snakegame.rules.*;
-import com.snakegame.rules.Vector2i;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -31,6 +30,7 @@ public class GameView implements IGameView {
     private static final int s_NumNumbers = 9;
     private static final int s_NumWallMeshes = 4;
     private static final float s_CellSize = 1.0f;
+    private static final float s_HalfCellSize = s_CellSize / 2.0f;
     private static final float s_CameraXRotation = -65.0f;
     private static final float s_CameraYPosition = 50.0f;
     private static final float s_CameraZPosition = 22.5f;
@@ -41,38 +41,23 @@ public class GameView implements IGameView {
     private static final float s_ItemBobOffsetMax = 0.30f;
     private static final float s_ItemBobRotationInc = 180.0f;
     private static final float s_MsPerFrame = 0.01666666f;
-    private static final float s_ToolbarAnimationSpeed = 6.0f;
     private static final long s_MaxRandomPowerUpTypeTime = 250;
-
-    private static final int s_P1RemainingSnakesAnimation = 0;
-    private static final int s_P1ScoreAnimation = 1;
-    private static final int s_P2RemainingSnakesAnimation = 2;
-    private static final int s_P2ScoreAnimation = 3;
-
-    private static final Vector2i s_P1Snakes = new Vector2i(20, 905);
-    private static final Vector2i s_P1Score = new Vector2i(110, 905);
-    private static final Vector2i s_P2Snakes = new Vector2i(1046, 905);
-    private static final Vector2i s_P2Score = new Vector2i(1134, 905);
-    private static final Vector2i s_CurrentLevel = new Vector2i(594, 905);
-    private static final Vector2i s_NumLevels = new Vector2i(650, 905);
-    private static final Vector4f s_Yellow = new Vector4f(1.0f, 1.0f, 0.0f, 1.0f);
 
     private final Matrix4f m_MvMatrix;
     private final Matrix4f m_MvpMatrix;
     private final Matrix4f m_ProjectionMatrix;
     private final Matrix4f m_ModelMatrix;
     private final Matrix4f m_ViewMatrix;
+
     private final GLDiffuseTextureProgram m_DiffuseTexturedProgram;
     private final GLSpecularDirectionalLightProgram m_SpecularDirectionalLightProgram;
     private final GLDirectionalLightProgram m_DirectionalLightProgram;
-    private final Vector3f m_LightDirection;
     private final PowerUp.Type[] m_PowerUpTypes;
 
     private GLTexture[] m_NumberTextures;
     private GLTexture[] m_PowerUpTextures;
     private GLTexture m_DotTexture;
     private GLTexture m_HeadTexture;
-    private NumberFont m_NumberFont;
     private GLStaticPolyhedronVxTcNm m_WorldDisplayMesh;
     private GLStaticPolyhedronVxTcNm m_ApplePolyhedron;
     private GLStaticPolyhedronVxTcNm m_PowerUpIncreaseSpeedPolyhedron;
@@ -83,9 +68,8 @@ public class GameView implements IGameView {
     private GLStaticPolyhedronVxTcNm m_PowerUpDecreaseLivesPolyhedron;
     private GLStaticPolyhedronVxTcNm m_PowerUpDecreaseLengthPolyhedron;
     private GLStaticPolyhedronVxTcNm[] m_WallPolyhedra;
-    private GLStaticPolyhedronVxTc m_ToolbarPolyhedron;
     private IAppStateContext m_Context;
-    private IGameController m_Controller;
+    private Toolbar m_Toolbar;
     private GameField m_GameField;
     private Snake[] m_Snakes;
     private float m_ItemYRotation;
@@ -93,28 +77,6 @@ public class GameView implements IGameView {
     private float m_ItemBobOffset;
     private int m_RandomPowerUpType;
     private long m_LastRandomPowerUpTypeTime;
-
-    private static class Animation {
-        private float m_Value;
-        private Vector4f m_Colour;
-        public Animation() {
-            m_Value = 1.0f;
-            m_Colour = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
-        }
-        public float getValue() {
-            return m_Value;
-        }
-        public void setValue(float value) {
-            m_Value = value;
-        }
-        public Vector4f getColour() {
-            return m_Colour;
-        }
-        public void setColour(Vector4f value) {
-            m_Colour = value;
-        }
-    }
-    private final Animation[] m_ToolbarAnimations;
 
     public GameView() throws IOException {
         m_MvMatrix = new Matrix4f();
@@ -126,17 +88,12 @@ public class GameView implements IGameView {
         m_ViewMatrix.rotate((float)Math.toRadians(-s_CameraXRotation), 1.0f, 0.0f, 0.0f)
                     .translate(0, -s_CameraYPosition, -s_CameraZPosition);
 
-        m_LightDirection = new Vector3f(-0.5f, 0.0f, 1.0f).normalize();
-
         m_DiffuseTexturedProgram = new GLDiffuseTextureProgram();
         m_SpecularDirectionalLightProgram = new GLSpecularDirectionalLightProgram();
-        m_DirectionalLightProgram = new GLDirectionalLightProgram();
 
-        m_ToolbarAnimations = new Animation[4];
-        for (int i = 0; i < 4; ++i) {
-            m_ToolbarAnimations[i] = new Animation();
-            m_ToolbarAnimations[i].setColour(s_Yellow);
-        }
+        m_DirectionalLightProgram = new GLDirectionalLightProgram();
+        m_DirectionalLightProgram.setLightDirection(new Vector3f(-0.5f, 0.0f, 1.0f).normalize());
+        m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
 
         m_PowerUpTypes = new PowerUp.Type[] {
                 PowerUp.Type.INC_SPEED, PowerUp.Type.DEC_SPEED,
@@ -153,11 +110,11 @@ public class GameView implements IGameView {
     }
 
     @Override
-    public void setAppStateContext(IAppStateContext appStateContext) {
-        m_Context = appStateContext;
-        m_Controller = m_Context.getController();
-        m_GameField = m_Controller.getGameField();
-        m_Snakes = m_Controller.getSnakes();
+    public void setAppStateContext(IAppStateContext context) throws IOException {
+        m_Context = context;
+        m_GameField = m_Context.getController().getGameField();
+        m_Snakes = m_Context.getController().getSnakes();
+        m_Toolbar = new Toolbar(m_Context);
     }
 
     @Override
@@ -194,7 +151,6 @@ public class GameView implements IGameView {
 
         m_DotTexture = new GLTexture(ImageIO.read(new File("images\\dot.png")));
         m_HeadTexture = new GLTexture(ImageIO.read(new File("images\\head.png")));
-        m_NumberFont = new ToolbarNumberFont(m_DiffuseTexturedProgram);
     }
 
     @Override
@@ -227,10 +183,6 @@ public class GameView implements IGameView {
         if (m_HeadTexture != null ) {
             m_HeadTexture.freeNativeResource();
             m_HeadTexture = null;
-        }
-        if (m_NumberFont != null ) {
-            m_NumberFont.freeNativeResource();
-            m_NumberFont = null;
         }
         if (m_WorldDisplayMesh != null ) {
             m_WorldDisplayMesh.freeNativeResources();
@@ -268,9 +220,9 @@ public class GameView implements IGameView {
             m_PowerUpDecreaseLengthPolyhedron.freeNativeResources();
             m_PowerUpDecreaseLengthPolyhedron = null;
         }
-        if (m_ToolbarPolyhedron != null) {
-            m_ToolbarPolyhedron.freeNativeResources();
-            m_ToolbarPolyhedron = null;
+        if (m_Toolbar != null) {
+            m_Toolbar.freeNativeResources();
+            m_Toolbar = null;
         }
     }
 
@@ -281,28 +233,18 @@ public class GameView implements IGameView {
     }
 
     @Override
-    public void draw3d(long nowMs) {
-        if (m_Context == null) {
-            throw new RuntimeException("Application state context hasn't been set");
-        }
-
+    public void think(long nowMs) {
         m_ItemYRotation += s_MsPerFrame * s_ItemYRotationInc;
         if (m_ItemYRotation >= 360.0f) {
             m_ItemYRotation -= 360.0f;
         }
+
         m_ItemBobRotation += s_MsPerFrame * s_ItemBobRotationInc;
         if (m_ItemBobRotation >= 360.0f) {
             m_ItemBobRotation -= 360.0f;
         }
+
         m_ItemBobOffset = s_ItemBobOffsetMax * (float)Math.sin(Math.toRadians(m_ItemBobRotation));
-
-        m_ModelMatrix.identity();
-        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
-        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
-
-        m_DirectionalLightProgram.setLightDirection(m_LightDirection);
-        m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
-        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
 
         if (nowMs - m_LastRandomPowerUpTypeTime >= s_MaxRandomPowerUpTypeTime) {
             m_LastRandomPowerUpTypeTime = nowMs;
@@ -311,136 +253,19 @@ public class GameView implements IGameView {
             }
         }
 
-        m_WorldDisplayMesh.draw();
-
-        float startX = GameField.WIDTH / 2.0f * -s_CellSize;
-        float startZ = GameField.HEIGHT / 2.0f * -s_CellSize;
-
-        for (int z = 0; z < GameField.HEIGHT; ++z) {
-            float cellOffsetZ = (-startZ - z * s_CellSize) - (s_CellSize / 2.0f);
-            for (int x = 0; x < GameField.WIDTH; ++x) {
-                float cellOffsetX = (startX + x * s_CellSize) + (s_CellSize / 2.0f);
-
-                m_ModelMatrix.identity();
-                switch (m_GameField.getCellType(x, z)) {
-                    case EMPTY:
-                        break;
-                    case WALL:
-                        m_ModelMatrix.translate(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
-                        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
-                        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
-                        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
-                        m_WallPolyhedra[(x + z) % s_NumWallMeshes].draw();
-                        break;
-                    case POWER_UP: {
-                        m_ModelMatrix
-                                .translate(cellOffsetX, s_ObjectYPosition + (s_ItemBobOffsetMax - m_ItemBobOffset), cellOffsetZ)
-                                .rotate((float)Math.toRadians(-m_ItemYRotation), 0.0f, 1.0f, 0.0f)
-                                .rotate(s_ItemXRotationRadians, 1.0f, 0.0f, 0.0f);
-                        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
-                        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
-                        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
-                        drawPowerUp(m_GameField.getPowerUp(x, z).getType());
-                        break;
-                    }
-                    case NUMBER: {
-                        m_ModelMatrix
-                                .translate(cellOffsetX, s_ObjectYPosition + m_ItemBobOffset, cellOffsetZ)
-                                .rotate((float)Math.toRadians(m_ItemYRotation), 0.0f, 1.0f, 0.0f)
-                                .rotate(s_ItemXRotationRadians, 1.0f, 0.0f, 0.0f);
-                        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
-                        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
-                        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
-                        m_ApplePolyhedron.draw();
-//                        Number number = m_GameField.getNumber(x, y);
-//                        switch (number.getType()) {
-//                            case NUM_1:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[0]);
-//                                break;
-//                            case NUM_2:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[1]);
-//                                break;
-//                            case NUM_3:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[2]);
-//                                break;
-//                            case NUM_4:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[3]);
-//                                break;
-//                            case NUM_5:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[4]);
-//                                break;
-//                            case NUM_6:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[5]);
-//                                break;
-//                            case NUM_7:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[6]);
-//                                break;
-//                            case NUM_8:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[7]);
-//                                break;
-//                            case NUM_9:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[8]);
-//                                break;
-//                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        m_DirectionalLightProgram.setLightDirection(m_LightDirection);
-        m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
-
-        boolean firstLoop;
-        for (var snake : m_Snakes) {
-            firstLoop = true;
-            for (var bodyPart : snake.getBodyParts()) {
-                float cellOffsetX = (startX + bodyPart.m_X * s_CellSize) + (s_CellSize / 2.0f);
-                float cellOffsetZ = (-startZ - bodyPart.m_Z * s_CellSize) - (s_CellSize / 2.0f);
-
-                m_ModelMatrix.identity().translate(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
-                m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
-                m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
-                m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
-
-                if (firstLoop) {
-                    m_WallPolyhedra[0].draw(); // temp
-                }
-                else {
-                    m_ApplePolyhedron.draw(); // temp
-                }
-                firstLoop = false;
-            }
+        if (m_Toolbar != null) {
+            m_Toolbar.think(nowMs);
         }
     }
 
-    private void drawPowerUp(PowerUp.Type type) {
-        switch (type) {
-            case INC_SPEED:
-                m_PowerUpIncreaseSpeedPolyhedron.draw();
-                break;
-            case DEC_SPEED:
-                m_PowerUpDecreaseSpeedPolyhedron.draw();
-                break;
-            case INC_LIVES:
-                m_PowerUpIncreaseLivesPolyhedron.draw();
-                break;
-            case DEC_LIVES:
-                m_PowerUpDecreaseLivesPolyhedron.draw();
-                break;
-            case INC_POINTS:
-                m_PowerUpIncreasePointsPolyhedron.draw();
-                break;
-            case DEC_POINTS:
-                m_PowerUpDecreasePointsPolyhedron.draw();
-                break;
-            case DEC_LENGTH:
-                m_PowerUpDecreaseLengthPolyhedron.draw();
-                break;
-            case RANDOM:
-                drawPowerUp(m_PowerUpTypes[m_RandomPowerUpType]);
-                break;
+    @Override
+    public void draw3d(long nowMs) {
+        if (m_Context == null) {
+            throw new RuntimeException("Application state context hasn't been set");
         }
+        drawWorld();
+        drawGameField();
+        drawSnakes();
     }
 
     @Override
@@ -448,59 +273,7 @@ public class GameView implements IGameView {
         if (m_Context == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
-
-        if (m_ToolbarPolyhedron == null) {
-            GLTexture toolbarTexture = new GLTexture(ImageIO.read(new File("images\\Toolbar.png")));
-            float y = m_Context.getWindowHeight() - toolbarTexture.getHeight();
-            m_ToolbarPolyhedron = createRectangle(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
-        }
-
-        updateToolbarAnimations();
-
-        m_ModelMatrix.identity();
-        drawOrthographicPolyhedron(m_ToolbarPolyhedron, m_ModelMatrix);
-
-        int level = m_Controller.getCurrentLevel() + 1;
-        Matrix4f projectionMatrix = m_Context.getOrthographicMatrix();
-
-        // Draw the level's state
-        if (level < 10) {
-            m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X, s_CurrentLevel.m_Z, 1.0f, s_Yellow);
-        }
-        else {
-            m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X - 8.0f, s_CurrentLevel.m_Z, 1.0f, s_Yellow);
-        }
-        m_NumberFont.drawNumber(projectionMatrix, m_Controller.getLevelCount(), s_NumLevels.m_X, s_NumLevels.m_Z, 1.0f, s_Yellow);
-
-        // Draw player 1's state
-        Animation animation = m_ToolbarAnimations[s_P1RemainingSnakesAnimation];
-        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getNumLives(), s_P1Snakes.m_X, s_P1Snakes.m_Z,
-                animation.getValue(), animation.getColour());
-        animation = m_ToolbarAnimations[s_P1ScoreAnimation];
-        m_NumberFont.drawNumber(projectionMatrix, m_Snakes[0].getPoints(), s_P1Score.m_X, s_P1Score.m_Z,
-                animation.getValue(), animation.getColour());
-
-        if (m_Snakes.length > 1) {
-            // Draw player 2's state
-            animation = m_ToolbarAnimations[s_P2RemainingSnakesAnimation];
-            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getNumLives(), s_P2Snakes.m_X, s_P2Snakes.m_Z,
-                    animation.getValue(), animation.getColour());
-            animation = m_ToolbarAnimations[s_P2ScoreAnimation];
-            m_NumberFont.drawNumber(projectionMatrix, m_Snakes[1].getPoints(), s_P2Score.m_X, s_P2Score.m_Z,
-                    animation.getValue(), animation.getColour());
-        }
-    }
-
-    private void updateToolbarAnimations() {
-        for (Animation animation : m_ToolbarAnimations) {
-            if (animation.getValue() > 1.0f) {
-                animation.setValue(animation.getValue() - s_ToolbarAnimationSpeed * s_MsPerFrame);
-                if (animation.getValue() < 1.0f) {
-                    animation.setValue(1.0f);
-                    animation.setColour(s_Yellow);
-                }
-            }
-        }
+        m_Toolbar.draw2d(nowMs);
     }
 
     @Override
@@ -527,16 +300,12 @@ public class GameView implements IGameView {
 
     @Override
     public void startRemainingSnakesAnimation(int playerId, Vector4f colour) {
-        int i = playerId == 0 ? s_P1RemainingSnakesAnimation : s_P2RemainingSnakesAnimation;
-        m_ToolbarAnimations[i].setValue(2.0f);
-        m_ToolbarAnimations[i].setColour(colour);
+        m_Toolbar.startRemainingSnakesAnimation(playerId, colour);
     }
 
     @Override
     public void startScoreAnimation(int playerId, Vector4f colour) {
-        int i = playerId == 0 ? s_P1ScoreAnimation : s_P2ScoreAnimation;
-        m_ToolbarAnimations[i].setValue(2.0f);
-        m_ToolbarAnimations[i].setColour(colour);
+        m_Toolbar.startScoreAnimation(playerId, colour);
     }
 
     @Override
@@ -764,5 +533,163 @@ public class GameView implements IGameView {
     @Override
     public GLDirectionalLightProgram getDirectionalLightProgram() {
         return m_DirectionalLightProgram;
+    }
+
+    private void drawWorld() {
+        m_MvMatrix.identity().mul(m_ViewMatrix);
+        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
+        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
+        m_WorldDisplayMesh.draw();
+    }
+
+    private void drawGameField() {
+        float startX = GameField.WIDTH / 2.0f * -s_CellSize;
+        float startZ = GameField.HEIGHT / 2.0f * -s_CellSize;
+        for (int cellZIndex = 0; cellZIndex < GameField.HEIGHT; ++cellZIndex) {
+            float cellDrawZ = (-startZ - cellZIndex * s_CellSize) - s_HalfCellSize;
+            for (int cellXIndex = 0; cellXIndex < GameField.WIDTH; ++cellXIndex) {
+                float cellDrawX = (startX + cellXIndex * s_CellSize) + s_HalfCellSize;
+                switch (m_GameField.getCellType(cellXIndex, cellZIndex)) {
+                    case WALL:
+                        drawGameFieldWall(cellXIndex, cellZIndex, cellDrawX, cellDrawZ);
+                        break;
+                    case POWER_UP: {
+                        drawGameFieldPowerUp(cellXIndex, cellZIndex, cellDrawX, cellDrawZ);
+                        break;
+                    }
+                    case NUMBER: {
+                        drawGameFieldNumber(cellDrawX, cellDrawZ);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+
+    private void drawGameFieldWall(int cellXIndex, int cellZIndex, float cellDrawX, float cellDrawZ) {
+        m_ModelMatrix
+                .identity()
+                .translate(cellDrawX, s_ObjectYPosition, cellDrawZ);
+
+        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
+        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
+        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
+
+        m_WallPolyhedra[(cellXIndex + cellZIndex) % s_NumWallMeshes].draw();
+    }
+
+    private void drawGameFieldPowerUp(int cellXIndex, int cellZIndex, float cellDrawX, float cellDrawZ) {
+        m_ModelMatrix
+                .identity()
+                .translate(cellDrawX, s_ObjectYPosition + (s_ItemBobOffsetMax - m_ItemBobOffset), cellDrawZ)
+                .rotate((float)Math.toRadians(-m_ItemYRotation), 0.0f, 1.0f, 0.0f)
+                .rotate(s_ItemXRotationRadians, 1.0f, 0.0f, 0.0f);
+
+        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
+        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
+        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
+
+        submitPowerUpPolygons(m_GameField.getPowerUp(cellXIndex, cellZIndex).getType());
+    }
+
+    private void submitPowerUpPolygons(PowerUp.Type type) {
+        switch (type) {
+            case INC_SPEED:
+                m_PowerUpIncreaseSpeedPolyhedron.draw();
+                break;
+            case DEC_SPEED:
+                m_PowerUpDecreaseSpeedPolyhedron.draw();
+                break;
+            case INC_LIVES:
+                m_PowerUpIncreaseLivesPolyhedron.draw();
+                break;
+            case DEC_LIVES:
+                m_PowerUpDecreaseLivesPolyhedron.draw();
+                break;
+            case INC_POINTS:
+                m_PowerUpIncreasePointsPolyhedron.draw();
+                break;
+            case DEC_POINTS:
+                m_PowerUpDecreasePointsPolyhedron.draw();
+                break;
+            case DEC_LENGTH:
+                m_PowerUpDecreaseLengthPolyhedron.draw();
+                break;
+            case RANDOM:
+                submitPowerUpPolygons(m_PowerUpTypes[m_RandomPowerUpType]);
+                break;
+        }
+    }
+
+    private void drawGameFieldNumber(float cellDrawX, float cellDrawZ) {
+        m_ModelMatrix
+                .identity()
+                .translate(cellDrawX, s_ObjectYPosition + m_ItemBobOffset, cellDrawZ)
+                .rotate((float)Math.toRadians(m_ItemYRotation), 0.0f, 1.0f, 0.0f)
+                .rotate(s_ItemXRotationRadians, 1.0f, 0.0f, 0.0f);
+
+        m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
+        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
+        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
+
+        m_ApplePolyhedron.draw();
+//        Number number = m_GameField.getNumber(x, y);
+//        switch (number.getType()) {
+//            case NUM_1:
+//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[0]);
+//                break;
+//            case NUM_2:
+//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[1]);
+//                break;
+//            case NUM_3:
+//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[2]);
+//                break;
+//            case NUM_4:
+//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[3]);
+//                break;
+//            case NUM_5:
+//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[4]);
+//                break;
+//            case NUM_6:
+//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[5]);
+//                break;
+//            case NUM_7:
+//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[6]);
+//                break;
+//            case NUM_8:
+//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[7]);
+//                break;
+//            case NUM_9:
+//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[8]);
+//                break;
+//        }
+    }
+
+    private void drawSnakes() {
+        float startX = GameField.WIDTH / 2.0f * -s_CellSize;
+        float startZ = GameField.HEIGHT / 2.0f * -s_CellSize;
+
+        for (var snake : m_Snakes) {
+            boolean firstLoop = true;
+            for (var bodyPart : snake.getBodyParts()) {
+                float cellOffsetX = (startX + bodyPart.m_X * s_CellSize) + s_HalfCellSize;
+                float cellOffsetZ = (-startZ - bodyPart.m_Z * s_CellSize) - s_HalfCellSize;
+
+                m_ModelMatrix.identity().translate(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
+                m_MvMatrix.identity().mul(m_ViewMatrix).mul(m_ModelMatrix);
+                m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
+                m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
+
+                if (firstLoop) {
+                    m_WallPolyhedra[0].draw(); // temp
+                }
+                else {
+                    m_ApplePolyhedron.draw(); // temp
+                }
+                firstLoop = false;
+            }
+        }
     }
 }

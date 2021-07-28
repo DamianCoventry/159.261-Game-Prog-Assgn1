@@ -47,8 +47,8 @@ public class GameController implements IGameController {
     private int m_WallsTimeoutId;
     private int m_CurrentLevel;
 
-    public GameController(IAppStateContext appStateContext) {
-        m_Context = appStateContext;
+    public GameController(IAppStateContext context) {
+        m_Context = context;
         m_Rng = new Random();
         m_Mode = Mode.SINGLE_PLAYER; // startNewGame() will change this
         m_Snakes = null; // startNewGame() will allocate this

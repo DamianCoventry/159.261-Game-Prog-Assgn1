@@ -22,12 +22,13 @@ import java.io.IOException;
 
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public interface IGameView {
-    void setAppStateContext(IAppStateContext appStateContext);
+    void setAppStateContext(IAppStateContext context) throws IOException;
 
     void loadResources() throws Exception;
     void unloadResources();
     void freeNativeResources();
 
+    void think(long nowMs);
     void draw3d(long nowMs);
     void draw2d(long nowMs) throws IOException;
     void drawOrthographicPolyhedron(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix);

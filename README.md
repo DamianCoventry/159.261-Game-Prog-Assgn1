@@ -31,11 +31,9 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - ~~implement the 'random' power up~~
 - ~~change the colour of a few of the power ups~~
 - ~~animate the power-ups by rotating around the y-axis and bobbing up and down~~
-- update the toolbar background texture by adding a gradient similar to the menu
-- animate the toolbar background
+- ~~update the toolbar background texture by adding a gradient similar to the menu~~
+- ~~animate the toolbar background~~
 - correct the glow around panel graphics
-- change the lighting to be in world space, not camera space.
-- create the normal Matrix and pass it into the shaders
 - create final meshes for the snakes:
   - head mesh (1 blue, 1 red)
   - corner mesh (1 blue, 1 red)
@@ -90,4 +88,6 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - add a shadow map for the levels to use
 - implement tangent space mapping for bumps
 - do the smoothing groups need to be loaded from the object file?
+- change the lighting to be in world space, not camera space.
+- create the normal Matrix and pass it into the shaders
 - put a point light source on a power ups and apples
