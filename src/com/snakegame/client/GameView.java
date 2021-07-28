@@ -79,6 +79,7 @@ public class GameView implements IGameView {
     private GLStaticPolyhedronVxTcNm m_PowerUpDecreasePointsPolyhedron;
     private GLStaticPolyhedronVxTcNm m_PowerUpIncreaseLivesPolyhedron;
     private GLStaticPolyhedronVxTcNm m_PowerUpDecreaseLivesPolyhedron;
+    private GLStaticPolyhedronVxTcNm m_PowerUpDecreaseLengthPolyhedron;
     private GLStaticPolyhedronVxTcNm[] m_WallPolyhedra;
     private GLStaticPolyhedronVxTc m_ToolbarPolyhedron;
     private IAppStateContext m_Context;
@@ -166,6 +167,7 @@ public class GameView implements IGameView {
         m_PowerUpDecreasePointsPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreasePoints.obj");
         m_PowerUpIncreaseLivesPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpIncreaseLives.obj");
         m_PowerUpDecreaseLivesPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseLives.obj");
+        m_PowerUpDecreaseLengthPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseLength.obj");
 
         m_PowerUpTextures = new GLTexture[PowerUp.s_NumPowerUps];
         m_PowerUpTextures[0] = new GLTexture(ImageIO.read(new File("images\\DecreaseLength.png")));
@@ -248,6 +250,10 @@ public class GameView implements IGameView {
         if (m_PowerUpIncreaseLivesPolyhedron != null ) {
             m_PowerUpIncreaseLivesPolyhedron.freeNativeResources();
             m_PowerUpIncreaseLivesPolyhedron = null;
+        }
+        if (m_PowerUpDecreaseLengthPolyhedron != null) {
+            m_PowerUpDecreaseLengthPolyhedron.freeNativeResources();
+            m_PowerUpDecreaseLengthPolyhedron = null;
         }
         if (m_ToolbarPolyhedron != null) {
             m_ToolbarPolyhedron.freeNativeResources();
@@ -332,13 +338,13 @@ public class GameView implements IGameView {
                             case INC_POINTS:
                                 m_PowerUpIncreasePointsPolyhedron.draw();
                                 break;
-                            default:
-//                            case DEC_POINTS:
+                            case DEC_POINTS:
                                 m_PowerUpDecreasePointsPolyhedron.draw();
                                 break;
-//                            case DEC_LENGTH:
-//                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[0]);
-//                                break;
+                            default:
+                            case DEC_LENGTH:
+                                m_PowerUpDecreaseLengthPolyhedron.draw();
+                                break;
 //                            case RANDOM:
 //                                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_PowerUpTextures[7]);
 //                                break;

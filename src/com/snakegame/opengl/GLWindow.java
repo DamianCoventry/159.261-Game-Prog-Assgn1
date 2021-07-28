@@ -77,7 +77,7 @@ public class GLWindow {
                     glViewport(0, 0, width, height);
                 }
                 m_ActualWidth = (float)Math.max(width, 1);
-                m_ActualHeight = (float)Math.max(height, 1);
+                m_ActualHeight = (float)Math.max(height, 1); // because we divide to get the aspect ratio
             }
         });
 
