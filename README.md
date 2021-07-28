@@ -33,7 +33,7 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - ~~animate the power-ups by rotating around the y-axis and bobbing up and down~~
 - ~~update the toolbar background texture by adding a gradient similar to the menu~~
 - ~~animate the toolbar background~~
-- correct the glow around panel graphics
+- ~~correct the glow around panel graphics~~
 - create final meshes for the snakes:
   - head mesh (1 blue, 1 red)
   - corner mesh (1 blue, 1 red)

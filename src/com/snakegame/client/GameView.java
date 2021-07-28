@@ -27,7 +27,6 @@ import java.util.ArrayList;
 
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public class GameView implements IGameView {
-    private static final int s_NumNumbers = 9;
     private static final int s_NumWallMeshes = 4;
     private static final float s_CellSize = 1.0f;
     private static final float s_HalfCellSize = s_CellSize / 2.0f;
@@ -54,10 +53,6 @@ public class GameView implements IGameView {
     private final GLDirectionalLightProgram m_DirectionalLightProgram;
     private final PowerUp.Type[] m_PowerUpTypes;
 
-    private GLTexture[] m_NumberTextures;
-    private GLTexture[] m_PowerUpTextures;
-    private GLTexture m_DotTexture;
-    private GLTexture m_HeadTexture;
     private GLStaticPolyhedronVxTcNm m_WorldDisplayMesh;
     private GLStaticPolyhedronVxTcNm m_ApplePolyhedron;
     private GLStaticPolyhedronVxTcNm m_PowerUpIncreaseSpeedPolyhedron;
@@ -119,11 +114,6 @@ public class GameView implements IGameView {
 
     @Override
     public void loadResources() throws Exception {
-        m_NumberTextures = new GLTexture[s_NumNumbers];
-        for (int i = 0; i < s_NumNumbers; ++i) {
-            m_NumberTextures[i] = new GLTexture(ImageIO.read(new File(String.format("images\\Apple%d.png", i + 1))));
-        }
-
         m_WallPolyhedra = new GLStaticPolyhedronVxTcNm[s_NumWallMeshes];
         for (int i = 0; i < s_NumWallMeshes; ++i) {
             m_WallPolyhedra[i] = loadDisplayMeshWithNormals(String.format("meshes\\WallDisplayMesh%d.obj", i));
@@ -138,51 +128,15 @@ public class GameView implements IGameView {
         m_PowerUpIncreaseLivesPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpIncreaseLives.obj");
         m_PowerUpDecreaseLivesPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseLives.obj");
         m_PowerUpDecreaseLengthPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseLength.obj");
-
-        m_PowerUpTextures = new GLTexture[PowerUp.s_NumPowerUps];
-        m_PowerUpTextures[0] = new GLTexture(ImageIO.read(new File("images\\DecreaseLength.png")));
-        m_PowerUpTextures[1] = new GLTexture(ImageIO.read(new File("images\\IncreaseSpeed.png")));
-        m_PowerUpTextures[2] = new GLTexture(ImageIO.read(new File("images\\DecreaseSpeed.png")));
-        m_PowerUpTextures[3] = new GLTexture(ImageIO.read(new File("images\\IncreaseLives.png")));
-        m_PowerUpTextures[4] = new GLTexture(ImageIO.read(new File("images\\DecreaseLives.png")));
-        m_PowerUpTextures[5] = new GLTexture(ImageIO.read(new File("images\\IncreasePoints.png")));
-        m_PowerUpTextures[6] = new GLTexture(ImageIO.read(new File("images\\DecreasePoints.png")));
-        m_PowerUpTextures[7] = new GLTexture(ImageIO.read(new File("images\\Random.png")));
-
-        m_DotTexture = new GLTexture(ImageIO.read(new File("images\\dot.png")));
-        m_HeadTexture = new GLTexture(ImageIO.read(new File("images\\head.png")));
     }
 
     @Override
     public void unloadResources() {
-        if (m_NumberTextures != null) {
-            for (int i = 0; i < s_NumNumbers; ++i) {
-                m_NumberTextures[i].freeNativeResource();
-            }
-            m_NumberTextures = null;
-        }
-
         if (m_WallPolyhedra != null) {
             for (int i = 0; i < s_NumWallMeshes; ++i) {
                 m_WallPolyhedra[i].freeNativeResources();
             }
             m_WallPolyhedra = null;
-        }
-
-        if (m_PowerUpTextures != null) {
-            for (int i = 0; i < PowerUp.s_NumPowerUps; ++i) {
-                m_PowerUpTextures[i].freeNativeResource();
-            }
-            m_PowerUpTextures = null;
-        }
-
-        if (m_DotTexture != null ) {
-            m_DotTexture.freeNativeResource();
-            m_DotTexture = null;
-        }
-        if (m_HeadTexture != null ) {
-            m_HeadTexture.freeNativeResource();
-            m_HeadTexture = null;
         }
         if (m_WorldDisplayMesh != null ) {
             m_WorldDisplayMesh.freeNativeResources();
