@@ -22,8 +22,8 @@ import java.util.*;
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public class GameController implements IGameController {
     private static final int s_MaxPlayers = 2;
-    private static final long s_MaxSnakeSpeedTimeoutMs = 200;
-    private static final long s_MinSnakeSpeedTimeoutMs = 125;
+    private static final long s_SlowestSnakeSpeed = 200;
+    private static final long s_FastestSnakeSpeed = 125;
     private static final long s_SnakeSpeedPowerUpAdjustment = 15;
     private static final long s_SnakeSpeedLevelAdjustment = 12;
     private static final long s_PowerUpInitialTimeoutMs = 3750;
@@ -196,7 +196,7 @@ public class GameController implements IGameController {
     }
 
     private void setSnakeMovementSpeedForCurrentLevel() {
-        m_SnakeTimeoutMs = Math.max(s_MinSnakeSpeedTimeoutMs, s_MaxSnakeSpeedTimeoutMs - (s_SnakeSpeedLevelAdjustment * m_CurrentLevel));
+        m_SnakeTimeoutMs = Math.max(s_FastestSnakeSpeed, s_SlowestSnakeSpeed - (s_SnakeSpeedLevelAdjustment * m_CurrentLevel));
     }
 
     private void moveSnakesToNewStartPositions() {
@@ -237,24 +237,70 @@ public class GameController implements IGameController {
         });
     }
 
-    private PowerUp.Type chooseRandomPowerUpType() {
-        final PowerUp.Type[] powerUps = {
-                PowerUp.Type.INC_SPEED, PowerUp.Type.DEC_SPEED, PowerUp.Type.INC_LIVES, PowerUp.Type.DEC_LIVES,
-                PowerUp.Type.INC_POINTS, PowerUp.Type.DEC_POINTS, PowerUp.Type.DEC_LENGTH, PowerUp.Type.RANDOM
-        };
-        return powerUps[m_Rng.nextInt(powerUps.length)];
+    private PowerUp.Type chooseRandomPowerUpType(boolean includeTheRandomPowerUp) {
+        ArrayList<PowerUp.Type> powerUps = new ArrayList<>(8);
+        if (isIncreaseSpeedPowerUpRelevant()) {
+            powerUps.add(PowerUp.Type.INC_SPEED);
+        }
+        if (isDecreaseSpeedPowerUpRelevant()) {
+            powerUps.add(PowerUp.Type.DEC_SPEED);
+        }
+        if (isIncreaseLivesPowerUpRelevant()) {
+            powerUps.add(PowerUp.Type.INC_LIVES);
+        }
+        if (isDecreaseLivesPowerUpRelevant()) {
+            powerUps.add(PowerUp.Type.DEC_LIVES);
+        }
+        if (isDecreasePointsPowerUpRelevant()) {
+            powerUps.add(PowerUp.Type.DEC_POINTS);
+        }
+        if (isDecreaseLengthPowerUpRelevant()) {
+            powerUps.add(PowerUp.Type.DEC_LENGTH);
+        }
+        // Increase points is always relevant
+        powerUps.add(PowerUp.Type.INC_POINTS);
+        if (includeTheRandomPowerUp) {
+            powerUps.add(PowerUp.Type.RANDOM);
+        }
+        return powerUps.get(m_Rng.nextInt(powerUps.size()));
     }
 
-    private PowerUp.Type chooseRandomPowerUpTypeExceptForRandom() {
-        final PowerUp.Type[] powerUps = {
-                PowerUp.Type.INC_SPEED, PowerUp.Type.DEC_SPEED, PowerUp.Type.INC_LIVES, PowerUp.Type.DEC_LIVES,
-                PowerUp.Type.INC_POINTS, PowerUp.Type.DEC_POINTS, PowerUp.Type.DEC_LENGTH
-        };
-        return powerUps[m_Rng.nextInt(powerUps.length)];
+    private boolean isIncreaseSpeedPowerUpRelevant() {
+        // If the snakes are moving slower than the fastest speed then this power up is relevant
+        return m_SnakeTimeoutMs > s_FastestSnakeSpeed;
+    }
+
+    private boolean isDecreaseSpeedPowerUpRelevant() {
+        // If the snakes are moving faster than the slowest speed then this power up is relevant
+        return m_SnakeTimeoutMs < s_SlowestSnakeSpeed;
+    }
+
+    private boolean isIncreaseLivesPowerUpRelevant() {
+        // If either snake has fewer than the max remaining lives then this power up is relevant
+        return m_Snakes[0].getNumLives() < Snake.s_MaxNumLives ||
+                (m_Snakes.length > 1 && m_Snakes[1].getNumLives() < Snake.s_MaxNumLives);
+    }
+
+    private boolean isDecreaseLivesPowerUpRelevant() {
+        // If either snake has at least 1 life remaining then this power up is relevant
+        return m_Snakes[0].getNumLives() > 0 ||
+                (m_Snakes.length > 1 && m_Snakes[1].getNumLives() > 0);
+    }
+
+    private boolean isDecreasePointsPowerUpRelevant() {
+        // If either snake greater than 1000 points then this power up is relevant
+        return m_Snakes[0].getPoints() > Snake.s_PowerUpPointsBonus ||
+                (m_Snakes.length > 1 && m_Snakes[1].getPoints() > Snake.s_PowerUpPointsBonus);
+    }
+
+    private boolean isDecreaseLengthPowerUpRelevant() {
+        // If either snake is able to shrink in length then this power up is relevant
+        return m_Snakes[0].getBodyParts().size() > Snake.s_MinBodyParts ||
+                (m_Snakes.length > 1 && m_Snakes[1].getBodyParts().size() > Snake.s_MinBodyParts);
     }
 
     private void insertRandomPowerUp() {
-        insertPowerUp(chooseRandomPowerUpType());
+        insertPowerUp(chooseRandomPowerUpType(true));
         scheduleExpirePowerUp();
     }
 
@@ -475,15 +521,15 @@ public class GameController implements IGameController {
 
         switch (powerUpType) {
             case INC_SPEED:
-                m_SnakeTimeoutMs = Math.max(s_MinSnakeSpeedTimeoutMs, m_SnakeTimeoutMs - s_SnakeSpeedPowerUpAdjustment);
+                m_SnakeTimeoutMs = Math.max(s_FastestSnakeSpeed, m_SnakeTimeoutMs - s_SnakeSpeedPowerUpAdjustment);
                 refreshSnakeMovementTimeout();
                 break;
             case DEC_SPEED:
-                m_SnakeTimeoutMs = Math.min(s_MaxSnakeSpeedTimeoutMs, m_SnakeTimeoutMs + s_SnakeSpeedPowerUpAdjustment);
+                m_SnakeTimeoutMs = Math.min(s_SlowestSnakeSpeed, m_SnakeTimeoutMs + s_SnakeSpeedPowerUpAdjustment);
                 refreshSnakeMovementTimeout();
                 break;
             case RANDOM: {
-                awardPowerUp(chooseRandomPowerUpTypeExceptForRandom(), snake, false);
+                awardPowerUp(chooseRandomPowerUpType(false), snake, false);
                 break;
             }
             default:

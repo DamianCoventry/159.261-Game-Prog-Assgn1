@@ -20,11 +20,11 @@ import java.util.LinkedList;
 
 public class Snake {
     private static final int s_NumStartingLives = 3;
-    private static final int s_MaxNumLives = 5;
+    public static final int s_MaxNumLives = 5;
     public static final int s_MinBodyParts = 3;
     private static final int s_NumBodyPartsToAdd = 1;
     private static final int s_NumBodyPartsToRemove = 3;
-    private static final long s_PowerUpPointsBonus = 1000;
+    public static final long s_PowerUpPointsBonus = 1000;
     private static final long s_PowerUpPoints = 100;
 
     private final LinkedList<Vector2i> m_BodyParts;
