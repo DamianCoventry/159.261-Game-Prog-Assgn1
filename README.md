@@ -34,13 +34,13 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - ~~update the toolbar background texture by adding a gradient similar to the menu~~
 - ~~animate the toolbar background~~
 - ~~correct the glow around panel graphics~~
-- create final meshes for the snakes:
-  - head mesh (1 blue, 1 red)
-  - corner mesh (1 blue, 1 red)
-  - straight mesh (1 blue, 1 red)
-  - tail mesh (1 blue, 1 red)
-- add code for choosing the correct mesh and rotation when rendering the snake
-- create an animation to use when a snake is dying
+- ~~create final meshes for the snakes:~~
+  - ~~head mesh (1 blue, 1 red)~~
+  - ~~corner mesh (1 blue, 1 red)~~
+  - ~~straight mesh (1 blue, 1 red)~~
+  - ~~tail mesh (1 blue, 1 red)~~
+- ~~add code for choosing the correct mesh and rotation when rendering the snake~~
+- ~~create an animation to use when a snake is dying~~
 - make the help page
 - allow the help page to be scrolled vertically
 - make the menu buttons clickable with the mouse cursor
@@ -78,8 +78,8 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - play sound samples
 - stream an MP3 file for the menu
 - stream an MP3 file for the levels
-- initialise bullet
-- create a collision shape for the world
+- ~~initialise bullet~~
+- ~~create a collision shape for the world~~
 - create a collision shape for the walls
 - create a collision shape for snake body parts
 - create a rigid body for mesh particles (the rigid bodies must be removed when at rest)

@@ -62,6 +62,17 @@ public class SnakeDyingAppState implements IAppState {
         GLTexture bothPlayersDiedTexture = new GLTexture(ImageIO.read(new File("images\\BothSnakesDied.png")));
         m_Rectangles[2] = m_View.createCenteredRectangle(bothPlayersDiedTexture.getWidth(), bothPlayersDiedTexture.getHeight(), bothPlayersDiedTexture);
 
+        if (m_BothSnakes) {
+            m_Controller.getSnakes()[0].setDead(); // This stops this snake being displayed
+            m_Controller.getSnakes()[1].setDead(); // This stops this snake being displayed
+            m_View.spawnSnakeGiblets(m_Controller.getSnakes()[0]);
+            m_View.spawnSnakeGiblets(m_Controller.getSnakes()[1]);
+        }
+        else {
+            m_Controller.getSnakes()[m_Player].setDead(); // This stops this snake being displayed
+            m_View.spawnSnakeGiblets(m_Controller.getSnakes()[m_Player]);
+        }
+
         m_Context.addTimeout(2000, (callCount) -> {
             if (m_Controller.getMode() == IGameController.Mode.TWO_PLAYERS) {
                 subtractSnakeTwoPlayersGame();

@@ -38,10 +38,10 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        long startTimeMs = System.currentTimeMillis();
-
         GLTexture loadingTexture = new GLTexture(ImageIO.read(new File("images\\Loading.png")));
         m_Rectangle = m_View.createCenteredRectangle(loadingTexture.getWidth(), loadingTexture.getHeight(), loadingTexture);
+
+        m_View.resetSnakeGiblets();
 
         m_Context.addTimeout(50, (callCount) ->{
             try {

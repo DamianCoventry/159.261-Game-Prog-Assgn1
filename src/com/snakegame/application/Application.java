@@ -13,12 +13,15 @@
 
 package com.snakegame.application;
 
+import com.jme3.bullet.PhysicsSpace;
+import com.jme3.system.NativeLibraryLoader;
 import com.snakegame.client.*;
 import com.snakegame.opengl.*;
 import com.snakegame.rules.*;
 import org.joml.*;
 import org.lwjgl.glfw.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.function.Function;
 
@@ -30,6 +33,7 @@ import java.util.function.Function;
 public class Application implements IAppStateContext {
     private static final int s_DesiredWindowWidth = 1280;
     private static final int s_DesiredWindowHeight = 960;
+    private static final float s_MsPerFrame = 0.01666666f;
     private static final String s_WindowTitle = "159.261 Game Programming (Assignment 1)";
     private static final Vector4f s_White = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -39,6 +43,7 @@ public class Application implements IAppStateContext {
     private final IGameView m_View;
     private final DebugNumberFont m_DebugNumberFont;
 
+    private final PhysicsSpace m_PhysicsSpace;
     private IAppState m_PendingState = null;
     private IAppState m_CurrentState = null;
     private long m_LastFrameCountTime = 0;
@@ -47,6 +52,12 @@ public class Application implements IAppStateContext {
     private long m_DebugFrameTime;
 
     public Application() throws Exception {
+        File directory = new File("../Libbulletjme/dist"); // TODO: determine the correct path at runtime
+        boolean success = NativeLibraryLoader.loadLibbulletjme(true, directory, "Release", "Dp");
+        if (!success) {
+            throw new RuntimeException("Failed to load the Bullet run-time library");
+        }
+
         m_GLWindow = new GLWindow(s_DesiredWindowWidth, s_DesiredWindowHeight, s_WindowTitle);
         m_GLWindow.setKeyCallback(new GLFWKeyCallback() {
             @Override
@@ -67,6 +78,8 @@ public class Application implements IAppStateContext {
         m_View.setAppStateContext(this);
 
         m_DebugNumberFont = new DebugNumberFont(m_View.getTexturedProgram());
+
+        m_PhysicsSpace = new PhysicsSpace(PhysicsSpace.BroadphaseType.DBVT);
 
         changeStateNow(new RunningMenuAppState(this), System.currentTimeMillis());
     }
@@ -116,6 +129,11 @@ public class Application implements IAppStateContext {
         return m_GLWindow.getOrthographicMatrix();
     }
 
+    @Override
+    public PhysicsSpace getPhysicsSpace() {
+        return m_PhysicsSpace;
+    }
+
     public void freeNativeResources() {
         m_DebugNumberFont.freeNativeResource();
         m_View.unloadResources();
@@ -127,6 +145,8 @@ public class Application implements IAppStateContext {
         long nowMs, prevMs = 0;
         stampFrameCountStart();
         while (!m_GLWindow.quitRequested()) {
+            m_PhysicsSpace.update(s_MsPerFrame, 0); // 16ms time step
+
             nowMs = System.currentTimeMillis();
             prevMs = updateFrameTime(nowMs, prevMs);
 

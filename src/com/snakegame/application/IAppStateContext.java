@@ -13,6 +13,7 @@
 
 package com.snakegame.application;
 
+import com.jme3.bullet.PhysicsSpace;
 import com.snakegame.client.*;
 import com.snakegame.rules.IGameController;
 import org.joml.Matrix4f;
@@ -33,4 +34,5 @@ public interface IAppStateContext {
     IGameView getView();
     Matrix4f getPerspectiveMatrix();
     Matrix4f getOrthographicMatrix();
+    PhysicsSpace getPhysicsSpace();
 }

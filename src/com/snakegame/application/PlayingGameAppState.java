@@ -33,6 +33,7 @@ public class PlayingGameAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) {
+        m_View.resetSnakeGiblets();
         m_Controller.start(nowMs);
     }
 

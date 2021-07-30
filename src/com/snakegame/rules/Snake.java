@@ -70,6 +70,7 @@ public class Snake {
     private int m_AddBodyParts;
     private int m_RemoveBodyParts;
     private long m_Points;
+    private boolean m_Alive;
 
     public Snake(int id, IGameView gameView, Direction startDirection, Vector2i minBounds, Vector2i maxBounds) {
         m_Id = id;
@@ -79,6 +80,7 @@ public class Snake {
         m_MinBounds = minBounds;
         m_MaxBounds = maxBounds;
         m_NumLives = s_NumStartingLives - 1; // Allocate a life immediately
+        m_Alive = true;
     }
 
     public void setStartPosition(Vector2i startPosition) {
@@ -86,8 +88,19 @@ public class Snake {
         m_LastDirectionChangeCell = startPosition.createCopy();
     }
 
+    public int getId() {
+        return m_Id;
+    }
+
     public Direction getStartDirection() {
         return m_StartDirection;
+    }
+
+    public void setDead() {
+        m_Alive = false; // This only affects painting
+    }
+    public boolean isAlive() {
+        return m_Alive;
     }
 
     public void moveToStartPosition() {
@@ -96,6 +109,7 @@ public class Snake {
         }
         m_AddBodyParts = m_RemoveBodyParts = 0;
         m_CurrentDirection = m_StartDirection;
+        m_Alive = false;
 
         Vector2i movementDelta = getMovementDelta(getOppositeDirection(m_StartDirection));
         Vector2i currentPosition = m_StartPosition.createCopy();

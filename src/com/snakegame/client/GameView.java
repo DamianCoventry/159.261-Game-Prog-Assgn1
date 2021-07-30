@@ -13,6 +13,12 @@
 
 package com.snakegame.client;
 
+import com.jme3.bullet.collision.shapes.BoxCollisionShape;
+import com.jme3.bullet.collision.shapes.MeshCollisionShape;
+import com.jme3.bullet.collision.shapes.infos.IndexedMesh;
+import com.jme3.bullet.objects.PhysicsRigidBody;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Transform;
 import com.snakegame.application.IAppStateContext;
 import com.snakegame.opengl.*;
 import com.snakegame.rules.*;
@@ -25,6 +31,7 @@ import java.io.*;
 import java.lang.Math;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Random;
 
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public class GameView implements IGameView {
@@ -42,6 +49,7 @@ public class GameView implements IGameView {
     private static final float s_ItemBobRotationInc = 180.0f;
     private static final float s_MsPerFrame = 0.01666666f;
     private static final float s_LightShininess = 32.0f;
+    private static final float s_SnakeGibletHalfSize = 0.25f;
     private static final long s_MaxRandomPowerUpTypeTime = 250;
 
     private final Matrix4f m_MvMatrix;
@@ -54,6 +62,7 @@ public class GameView implements IGameView {
     private final GLSpecularDirectionalLightProgram m_SpecularDirectionalLightProgram;
     private final GLDirectionalLightProgram m_DirectionalLightProgram;
     private final PowerUp.Type[] m_PowerUpTypes;
+    private final Random m_Rng;
 
     private GLStaticPolyhedronVxTcNm m_WorldDisplayMesh;
     private GLStaticPolyhedronVxTcNm m_ApplePolyhedron;
@@ -69,6 +78,7 @@ public class GameView implements IGameView {
     private GLStaticPolyhedronVxTcNm[] m_SnakeHeadPolyhedra;
     private GLStaticPolyhedronVxTcNm[] m_SnakeTailPolyhedra;
     private GLStaticPolyhedronVxTcNm[] m_SnakeElbowPolyhedra;
+    private GLStaticPolyhedronVxTcNm m_SnakeGibPolyhedron;
     private GLTexture m_BlueSnakeSkinTexture;
     private GLTexture m_RedSnakeSkinTexture;
 
@@ -82,7 +92,18 @@ public class GameView implements IGameView {
     private int m_RandomPowerUpType;
     private long m_LastRandomPowerUpTypeTime;
 
-    public GameView() throws IOException {
+    private static class SnakeGiblet {
+        PhysicsRigidBody m_RigidBody;
+        GLTexture m_SnakeSkinTexture;
+        public SnakeGiblet(PhysicsRigidBody rigidBody, GLTexture snakeSkinTexture) {
+            m_RigidBody = rigidBody;
+            m_SnakeSkinTexture = snakeSkinTexture;
+        }
+    }
+
+    private final ArrayList<SnakeGiblet> m_SnakeGibRigidBodies;
+
+    public GameView() throws Exception {
         m_MvMatrix = new Matrix4f();
         m_MvpMatrix = new Matrix4f();
         m_ProjectionMatrix = new Matrix4f();
@@ -118,6 +139,9 @@ public class GameView implements IGameView {
         m_ItemYRotation = 0.0f;
         m_ItemBobRotation = 0.0f;
         m_ItemBobOffset = 0.0f;
+
+        m_SnakeGibRigidBodies = new ArrayList<>();
+        m_Rng = new Random();
     }
 
     @Override
@@ -157,6 +181,8 @@ public class GameView implements IGameView {
         m_SnakeElbowPolyhedra[2] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartElbowBL.obj");
         m_SnakeElbowPolyhedra[3] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartElbowBR.obj");
 
+        m_SnakeGibPolyhedron = loadDisplayMeshWithNormals("meshes\\SnakeGib.obj");
+
         m_BlueSnakeSkinTexture = m_SnakeBodyPolyhedra[0].getPiece(0).getDiffuseTexture();
         m_RedSnakeSkinTexture = new GLTexture(ImageIO.read(new File("meshes\\SnakeSkinRed.png")));
 
@@ -170,6 +196,43 @@ public class GameView implements IGameView {
         m_PowerUpIncreaseLivesPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpIncreaseLives.obj");
         m_PowerUpDecreaseLivesPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseLives.obj");
         m_PowerUpDecreaseLengthPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseLength.obj");
+
+        loadWorldCollisionMesh();
+    }
+
+    private void loadWorldCollisionMesh() throws Exception {
+        if (m_Context == null) {
+            throw new RuntimeException("Application state context hasn't been set");
+        }
+        final ObjFile objFile = new ObjFile("meshes\\LevelCollisionMesh.obj");
+        if (objFile.getObjects() == null || objFile.getObjects().isEmpty()) {
+            throw new RuntimeException("Object file has no objects");
+        }
+
+        var positionArray = new com.jme3.math.Vector3f[objFile.getVertices().size()];
+        for (int i = 0; i < objFile.getVertices().size(); ++i) {
+            ObjFile.Vertex vertex = objFile.getVertices().get(i);
+            positionArray[i] = new com.jme3.math.Vector3f(vertex.m_X, vertex.m_Y, vertex.m_Z);
+        }
+
+        int totalVertices = 0;
+        for (var piece : objFile.getObjects().get(0).getPieces()) {
+            totalVertices += piece.getFaces().size() * 3;
+        }
+
+        final int[] indexArray = new int[totalVertices];
+        int count = 0;
+        for (var piece : objFile.getObjects().get(0).getPieces()) {
+            for (var face : piece.getFaces()) {
+                indexArray[count++] = face.m_Vertices[0];
+                indexArray[count++] = face.m_Vertices[1];
+                indexArray[count++] = face.m_Vertices[2];
+            }
+        }
+
+        IndexedMesh indexedMesh = new IndexedMesh(positionArray, indexArray);
+        MeshCollisionShape mcs = new MeshCollisionShape(true, indexedMesh);
+        m_Context.getPhysicsSpace().addCollisionObject(new PhysicsRigidBody(mcs, 0f));
     }
 
     @Override
@@ -240,6 +303,10 @@ public class GameView implements IGameView {
             m_PowerUpDecreaseLengthPolyhedron.freeNativeResources();
             m_PowerUpDecreaseLengthPolyhedron = null;
         }
+        if (m_SnakeGibPolyhedron != null) {
+            m_SnakeGibPolyhedron.freeNativeResources();
+            m_SnakeGibPolyhedron = null;
+        }
         if (m_Toolbar != null) {
             m_Toolbar.freeNativeResources();
             m_Toolbar = null;
@@ -287,6 +354,7 @@ public class GameView implements IGameView {
         drawWorld();
         drawGameField();
         drawSnakes();
+        drawGiblets();
     }
 
     @Override
@@ -327,6 +395,44 @@ public class GameView implements IGameView {
     @Override
     public void startScoreAnimation(int playerId, Vector4f colour) {
         m_Toolbar.startScoreAnimation(playerId, colour);
+    }
+
+    @Override
+    public void resetSnakeGiblets() {
+        m_SnakeGibRigidBodies.clear();
+    }
+
+    @Override
+    public void spawnSnakeGiblets(Snake snake) {
+        float startX = GameField.WIDTH / 2.0f * -s_CellSize;
+        float startZ = GameField.HEIGHT / 2.0f * -s_CellSize;
+
+        BoxCollisionShape bcs = new BoxCollisionShape(s_SnakeGibletHalfSize, s_SnakeGibletHalfSize, s_SnakeGibletHalfSize);
+
+        for (int bodyPart = 1; bodyPart < snake.getBodyParts().size(); ++bodyPart) { // <-- note we don't start from 0, because the head will be oob
+            float x = (startX + snake.getBodyParts().get(bodyPart).m_Location.m_X * s_CellSize) + s_HalfCellSize;
+            float z = (-startZ - snake.getBodyParts().get(bodyPart).m_Location.m_Z * s_CellSize) - s_HalfCellSize;
+
+            int numGiblets = 2 + m_Rng.nextInt(3); // random int in the range (2, 4)
+
+            for (int giblet = 0; giblet < numGiblets; ++giblet) {
+                float xOffset = m_Rng.nextFloat() * 0.5f - 0.25f; // random float in the range (-0.25, 0.25)
+                float zOffset = m_Rng.nextFloat() * 0.5f - 0.25f; // random float in the range (-0.25, 0.25)
+
+                int numRows = 2 + m_Rng.nextInt(2); // random int in the range (2, 3)
+                for (int row = 0; row < numRows; ++row) {
+                    PhysicsRigidBody rigidBody = new PhysicsRigidBody(bcs, 1.0f);
+                    rigidBody.setPhysicsLocation(new com.jme3.math.Vector3f(x + xOffset, (row + 1) * s_ObjectYPosition, z + zOffset));
+                    rigidBody.setPhysicsRotation(new Quaternion().fromAngles(
+                            0.0f, (float) Math.toRadians(m_Rng.nextFloat() * 360.0f),
+                            (float) Math.toRadians(m_Rng.nextFloat() * 360.0f)));
+                    GLTexture snakeSkin = snake.getId() == 0 ? m_BlueSnakeSkinTexture : m_RedSnakeSkinTexture;
+                    m_SnakeGibRigidBodies.add(new SnakeGiblet(rigidBody, snakeSkin));
+
+                    m_Context.getPhysicsSpace().addCollisionObject(rigidBody);
+                }
+            }
+        }
     }
 
     @Override
@@ -688,9 +794,47 @@ public class GameView implements IGameView {
     }
 
     private void drawSnakes() {
-        drawSnake(m_Snakes[0], m_BlueSnakeSkinTexture);
-        if (m_Snakes.length > 1) {
+        if (m_Snakes[0].isAlive()) {
+            drawSnake(m_Snakes[0], m_BlueSnakeSkinTexture);
+        }
+        if (m_Snakes.length > 1 && m_Snakes[1].isAlive()) {
             drawSnake(m_Snakes[1], m_RedSnakeSkinTexture);
+        }
+    }
+
+    private void drawGiblets() {
+        Transform transform = new Transform();
+        com.jme3.math.Matrix4f transformMatrix = new com.jme3.math.Matrix4f();
+
+        for (var giblet : m_SnakeGibRigidBodies) {
+            transform = giblet.m_RigidBody.getMotionState().physicsTransform(transform);
+            transformMatrix = transform.toTransformMatrix(transformMatrix);
+
+            m_ModelMatrix.m00(transformMatrix.m00);
+            m_ModelMatrix.m01(transformMatrix.m10);
+            m_ModelMatrix.m02(transformMatrix.m20);
+            m_ModelMatrix.m03(transformMatrix.m30);
+
+            m_ModelMatrix.m10(transformMatrix.m01);
+            m_ModelMatrix.m11(transformMatrix.m11);
+            m_ModelMatrix.m12(transformMatrix.m21);
+            m_ModelMatrix.m13(transformMatrix.m31);
+
+            m_ModelMatrix.m20(transformMatrix.m02);
+            m_ModelMatrix.m21(transformMatrix.m12);
+            m_ModelMatrix.m22(transformMatrix.m22);
+            m_ModelMatrix.m23(transformMatrix.m32);
+
+            m_ModelMatrix.m30(transformMatrix.m03);
+            m_ModelMatrix.m31(transformMatrix.m13);
+            m_ModelMatrix.m32(transformMatrix.m23);
+            m_ModelMatrix.m33(transformMatrix.m33);
+
+            m_MvMatrix.identity().mul(m_ViewMatrix).mul(m_ModelMatrix);
+            m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
+            m_SpecularDirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
+            m_SnakeGibPolyhedron.getPiece(0).setDiffuseTexture(giblet.m_SnakeSkinTexture);
+            m_SnakeGibPolyhedron.draw();
         }
     }
 

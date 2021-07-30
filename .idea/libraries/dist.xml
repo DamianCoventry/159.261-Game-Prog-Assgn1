@@ -1,0 +1,16 @@
+<component name="libraryTable">
+  <library name="dist">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../Libbulletjme/dist" />
+    </CLASSES>
+    <JAVADOC />
+    <NATIVE>
+      <root url="file://$PROJECT_DIR$/../Libbulletjme/dist" />
+    </NATIVE>
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../Libbulletjme/dist" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/../Libbulletjme/dist" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/../Libbulletjme/dist" recursive="false" type="SOURCES" />
+  </library>
+</component>

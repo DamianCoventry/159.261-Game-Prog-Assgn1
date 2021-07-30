@@ -15,6 +15,7 @@ package com.snakegame.client;
 
 import com.snakegame.application.IAppStateContext;
 import com.snakegame.opengl.*;
+import com.snakegame.rules.Snake;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
@@ -36,6 +37,9 @@ public interface IGameView {
 
     void startRemainingSnakesAnimation(int playerId, Vector4f colour);
     void startScoreAnimation(int playerId, Vector4f colour);
+
+    void resetSnakeGiblets();
+    void spawnSnakeGiblets(Snake snake);
 
     GLStaticPolyhedronVxTc createRectangle(float x, float y, float width, float height, GLTexture texture);
     GLStaticPolyhedronVxTc createCenteredRectangle(float width, float height, GLTexture texture);
