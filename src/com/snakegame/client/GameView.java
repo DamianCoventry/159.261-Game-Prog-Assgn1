@@ -24,6 +24,7 @@ import javax.imageio.ImageIO;
 import java.io.*;
 import java.lang.Math;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public class GameView implements IGameView {
@@ -36,10 +37,11 @@ public class GameView implements IGameView {
     private static final float s_ObjectYPosition = 0.5f;
     private static final float s_LightIntensity = 0.8735f;
     private static final float s_ItemYRotationInc = 60.0f;
-    private static final float s_ItemXRotationRadians = (float) Math.toRadians(5.0f);
+    private static final float s_ItemXRotationRadians = (float)Math.toRadians(7.5f);
     private static final float s_ItemBobOffsetMax = 0.30f;
     private static final float s_ItemBobRotationInc = 180.0f;
     private static final float s_MsPerFrame = 0.01666666f;
+    private static final float s_LightShininess = 32.0f;
     private static final long s_MaxRandomPowerUpTypeTime = 250;
 
     private final Matrix4f m_MvMatrix;
@@ -63,6 +65,13 @@ public class GameView implements IGameView {
     private GLStaticPolyhedronVxTcNm m_PowerUpDecreaseLivesPolyhedron;
     private GLStaticPolyhedronVxTcNm m_PowerUpDecreaseLengthPolyhedron;
     private GLStaticPolyhedronVxTcNm[] m_WallPolyhedra;
+    private GLStaticPolyhedronVxTcNm[] m_SnakeBodyPolyhedra;
+    private GLStaticPolyhedronVxTcNm[] m_SnakeHeadPolyhedra;
+    private GLStaticPolyhedronVxTcNm[] m_SnakeTailPolyhedra;
+    private GLStaticPolyhedronVxTcNm[] m_SnakeElbowPolyhedra;
+    private GLTexture m_BlueSnakeSkinTexture;
+    private GLTexture m_RedSnakeSkinTexture;
+
     private IAppStateContext m_Context;
     private Toolbar m_Toolbar;
     private GameField m_GameField;
@@ -84,10 +93,17 @@ public class GameView implements IGameView {
                     .translate(0, -s_CameraYPosition, -s_CameraZPosition);
 
         m_DiffuseTexturedProgram = new GLDiffuseTextureProgram();
+
+        Vector3f lightDirection = new Vector3f(-0.5f, 0.0f, 1.0f).normalize();
+
         m_SpecularDirectionalLightProgram = new GLSpecularDirectionalLightProgram();
+        m_SpecularDirectionalLightProgram.setAmbientLight(new Vector3f(0.15f, 0.15f, 0.15f));
+        m_SpecularDirectionalLightProgram.setLightDirection(lightDirection);
+        m_SpecularDirectionalLightProgram.setLightIntensity(s_LightIntensity);
+        m_SpecularDirectionalLightProgram.setShininess(s_LightShininess);
 
         m_DirectionalLightProgram = new GLDirectionalLightProgram();
-        m_DirectionalLightProgram.setLightDirection(new Vector3f(-0.5f, 0.0f, 1.0f).normalize());
+        m_DirectionalLightProgram.setLightDirection(lightDirection);
         m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
 
         m_PowerUpTypes = new PowerUp.Type[] {
@@ -119,8 +135,34 @@ public class GameView implements IGameView {
             m_WallPolyhedra[i] = loadDisplayMeshWithNormals(String.format("meshes\\WallDisplayMesh%d.obj", i));
         }
 
+        m_SnakeBodyPolyhedra = new GLStaticPolyhedronVxTcNm[2];
+        m_SnakeBodyPolyhedra[0] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartHoriz.obj");
+        m_SnakeBodyPolyhedra[1] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartVert.obj");
+
+        m_SnakeHeadPolyhedra = new GLStaticPolyhedronVxTcNm[4];
+        m_SnakeHeadPolyhedra[0] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartHeadLeft.obj");
+        m_SnakeHeadPolyhedra[1] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartHeadTop.obj");
+        m_SnakeHeadPolyhedra[2] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartHeadRight.obj");
+        m_SnakeHeadPolyhedra[3] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartHeadBottom.obj");
+
+        m_SnakeTailPolyhedra = new GLStaticPolyhedronVxTcNm[4];
+        m_SnakeTailPolyhedra[0] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartTailLeft.obj");
+        m_SnakeTailPolyhedra[1] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartTailTop.obj");
+        m_SnakeTailPolyhedra[2] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartTailRight.obj");
+        m_SnakeTailPolyhedra[3] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartTailBottom.obj");
+
+        m_SnakeElbowPolyhedra = new GLStaticPolyhedronVxTcNm[4];
+        m_SnakeElbowPolyhedra[0] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartElbowTL.obj");
+        m_SnakeElbowPolyhedra[1] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartElbowTR.obj");
+        m_SnakeElbowPolyhedra[2] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartElbowBL.obj");
+        m_SnakeElbowPolyhedra[3] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartElbowBR.obj");
+
+        m_BlueSnakeSkinTexture = m_SnakeBodyPolyhedra[0].getPiece(0).getDiffuseTexture();
+        m_RedSnakeSkinTexture = new GLTexture(ImageIO.read(new File("meshes\\SnakeSkinRed.png")));
+
         m_WorldDisplayMesh = loadDisplayMeshWithNormals("meshes\\LevelDisplayMesh.obj");
         m_ApplePolyhedron = loadDisplayMeshWithNormals("meshes\\AppleLoResDisplayMesh.obj");
+
         m_PowerUpIncreaseSpeedPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpIncreaseSpeed.obj");
         m_PowerUpDecreaseSpeedPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseSpeed.obj");
         m_PowerUpIncreasePointsPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpIncreasePoints.obj");
@@ -133,10 +175,34 @@ public class GameView implements IGameView {
     @Override
     public void unloadResources() {
         if (m_WallPolyhedra != null) {
-            for (int i = 0; i < s_NumWallMeshes; ++i) {
-                m_WallPolyhedra[i].freeNativeResources();
+            for (var polyhedron : m_WallPolyhedra) {
+                polyhedron.freeNativeResources();
             }
             m_WallPolyhedra = null;
+        }
+        if (m_SnakeBodyPolyhedra != null) {
+            for (var polyhedron : m_SnakeBodyPolyhedra) {
+                polyhedron.freeNativeResources();
+            }
+            m_SnakeBodyPolyhedra = null;
+        }
+        if (m_SnakeTailPolyhedra != null) {
+            for (var polyhedron : m_SnakeTailPolyhedra) {
+                polyhedron.freeNativeResources();
+            }
+            m_SnakeTailPolyhedra = null;
+        }
+        if (m_SnakeElbowPolyhedra != null) {
+            for (var polyhedron : m_SnakeElbowPolyhedra) {
+                polyhedron.freeNativeResources();
+            }
+            m_SnakeElbowPolyhedra = null;
+        }
+        if (m_SnakeHeadPolyhedra != null) {
+            for (var polyhedron : m_SnakeHeadPolyhedra) {
+                polyhedron.freeNativeResources();
+            }
+            m_SnakeHeadPolyhedra = null;
         }
         if (m_WorldDisplayMesh != null ) {
             m_WorldDisplayMesh.freeNativeResources();
@@ -183,6 +249,7 @@ public class GameView implements IGameView {
     @Override
     public void freeNativeResources() {
         m_DiffuseTexturedProgram.freeNativeResource();
+        m_DirectionalLightProgram.freeNativeResource();
         m_SpecularDirectionalLightProgram.freeNativeResource();
     }
 
@@ -499,23 +566,22 @@ public class GameView implements IGameView {
     private void drawGameField() {
         float startX = GameField.WIDTH / 2.0f * -s_CellSize;
         float startZ = GameField.HEIGHT / 2.0f * -s_CellSize;
+
         for (int cellZIndex = 0; cellZIndex < GameField.HEIGHT; ++cellZIndex) {
             float cellDrawZ = (-startZ - cellZIndex * s_CellSize) - s_HalfCellSize;
+
             for (int cellXIndex = 0; cellXIndex < GameField.WIDTH; ++cellXIndex) {
                 float cellDrawX = (startX + cellXIndex * s_CellSize) + s_HalfCellSize;
+
                 switch (m_GameField.getCellType(cellXIndex, cellZIndex)) {
                     case WALL:
                         drawGameFieldWall(cellXIndex, cellZIndex, cellDrawX, cellDrawZ);
                         break;
-                    case POWER_UP: {
+                    case POWER_UP:
                         drawGameFieldPowerUp(cellXIndex, cellZIndex, cellDrawX, cellDrawZ);
                         break;
-                    }
-                    case NUMBER: {
+                    case NUMBER:
                         drawGameFieldNumber(cellDrawX, cellDrawZ);
-                        break;
-                    }
-                    default:
                         break;
                 }
             }
@@ -543,7 +609,7 @@ public class GameView implements IGameView {
 
         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
         m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
-        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
+        m_SpecularDirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
 
         submitPowerUpPolygons(m_GameField.getPowerUp(cellXIndex, cellZIndex).getType());
     }
@@ -586,7 +652,7 @@ public class GameView implements IGameView {
 
         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
         m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
-        m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
+        m_SpecularDirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
 
         m_ApplePolyhedron.draw();
 //        Number number = m_GameField.getNumber(x, y);
@@ -622,28 +688,106 @@ public class GameView implements IGameView {
     }
 
     private void drawSnakes() {
+        drawSnake(m_Snakes[0], m_BlueSnakeSkinTexture);
+        if (m_Snakes.length > 1) {
+            drawSnake(m_Snakes[1], m_RedSnakeSkinTexture);
+        }
+    }
+
+    private void drawSnake(Snake snake, GLTexture snakeSkinTexture) {
+        Snake.BodyPart bodyPart = snake.getBodyParts().getFirst();
+        drawSnakeHeadOrTail(m_SnakeHeadPolyhedra, bodyPart.m_LeavingCellDirection, bodyPart.m_Location, snakeSkinTexture);
+
+        for (int i = 1; i < snake.getBodyParts().size() - 1; ++i) { // <-- Note the indices
+            drawSnakeMiddleBodyPart(snake.getBodyParts(), i, snakeSkinTexture);
+        }
+
+        bodyPart = snake.getBodyParts().getLast();
+        drawSnakeHeadOrTail(m_SnakeTailPolyhedra, bodyPart.m_LeavingCellDirection, bodyPart.m_Location, snakeSkinTexture);
+    }
+
+    private void drawSnakeHeadOrTail(GLStaticPolyhedronVxTcNm[] polyhedra, Snake.Direction direction, Vector2i location, GLTexture snakeSkinTexture) {
+        switch (direction) {
+            case Left:
+                drawSnakeBodyPart(polyhedra[0], location, snakeSkinTexture);
+                break;
+            case Up:
+                drawSnakeBodyPart(polyhedra[1], location, snakeSkinTexture);
+                break;
+            case Right:
+                drawSnakeBodyPart(polyhedra[2], location, snakeSkinTexture);
+                break;
+            case Down:
+                drawSnakeBodyPart(polyhedra[3], location, snakeSkinTexture);
+                break;
+        }
+    }
+
+    private void drawSnakeMiddleBodyPart(LinkedList<Snake.BodyPart> bodyParts, int i, GLTexture snakeSkinTexture) {
+        Snake.BodyPart bodyPart = bodyParts.get(i);
+        switch (classifyBodyPart(bodyParts, i)) {
+            case HORIZONTAL:
+                drawSnakeBodyPart(m_SnakeBodyPolyhedra[0], bodyPart.m_Location, snakeSkinTexture);
+                break;
+            case VERTICAL:
+                drawSnakeBodyPart(m_SnakeBodyPolyhedra[1], bodyPart.m_Location, snakeSkinTexture);
+                break;
+            case ELBOW_TL:
+                drawSnakeBodyPart(m_SnakeElbowPolyhedra[0], bodyPart.m_Location, snakeSkinTexture);
+                break;
+            case ELBOW_TR:
+                drawSnakeBodyPart(m_SnakeElbowPolyhedra[1], bodyPart.m_Location, snakeSkinTexture);
+                break;
+            case ELBOW_BL:
+                drawSnakeBodyPart(m_SnakeElbowPolyhedra[2], bodyPart.m_Location, snakeSkinTexture);
+                break;
+            case ELBOW_BR:
+                drawSnakeBodyPart(m_SnakeElbowPolyhedra[3], bodyPart.m_Location, snakeSkinTexture);
+                break;
+        }
+    }
+
+    private enum Classification { HORIZONTAL, VERTICAL, ELBOW_TL, ELBOW_TR, ELBOW_BL, ELBOW_BR }
+
+    private Classification classifyBodyPart(LinkedList<Snake.BodyPart> bodyParts, int i) {
+        Snake.BodyPart current = bodyParts.get(i);
+        Snake.BodyPart previous = bodyParts.get(i - 1);
+        Snake.BodyPart next = bodyParts.get(i + 1);
+        Snake.Direction previousDirection = current.classifyNeighbour(previous.m_Location);
+        Snake.Direction nextDirection = current.classifyNeighbour(next.m_Location);
+        if ((previousDirection == Snake.Direction.Right && nextDirection == Snake.Direction.Left) ||
+            (previousDirection == Snake.Direction.Left && nextDirection == Snake.Direction.Right)) {
+            return Classification.HORIZONTAL;
+        }
+        if ((previousDirection == Snake.Direction.Down && nextDirection == Snake.Direction.Up) ||
+            (previousDirection == Snake.Direction.Up && nextDirection == Snake.Direction.Down)) {
+            return Classification.VERTICAL;
+        }
+        switch (previousDirection) {
+            case Left:
+                return nextDirection == Snake.Direction.Up ? Classification.ELBOW_TL : Classification.ELBOW_BL;
+            case Up:
+                return nextDirection == Snake.Direction.Left ? Classification.ELBOW_TL : Classification.ELBOW_TR;
+            case Right:
+                return nextDirection == Snake.Direction.Up ? Classification.ELBOW_TR : Classification.ELBOW_BR;
+        }
+        return nextDirection == Snake.Direction.Left ? Classification.ELBOW_BL : Classification.ELBOW_BR;
+    }
+
+    private void drawSnakeBodyPart(GLStaticPolyhedronVxTcNm polyhedron, Vector2i location, GLTexture snakeSkinTexture) {
         float startX = GameField.WIDTH / 2.0f * -s_CellSize;
         float startZ = GameField.HEIGHT / 2.0f * -s_CellSize;
 
-        for (var snake : m_Snakes) {
-            boolean firstLoop = true;
-            for (var bodyPart : snake.getBodyParts()) {
-                float cellOffsetX = (startX + bodyPart.m_X * s_CellSize) + s_HalfCellSize;
-                float cellOffsetZ = (-startZ - bodyPart.m_Z * s_CellSize) - s_HalfCellSize;
+        float cellOffsetX = (startX + location.m_X * s_CellSize) + s_HalfCellSize;
+        float cellOffsetZ = (-startZ - location.m_Z * s_CellSize) - s_HalfCellSize;
 
-                m_ModelMatrix.identity().translate(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
-                m_MvMatrix.identity().mul(m_ViewMatrix).mul(m_ModelMatrix);
-                m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
-                m_DirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
+        m_ModelMatrix.identity().translate(cellOffsetX, s_ObjectYPosition, cellOffsetZ);
+        m_MvMatrix.identity().mul(m_ViewMatrix).mul(m_ModelMatrix);
+        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
+        m_SpecularDirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
 
-                if (firstLoop) {
-                    m_WallPolyhedra[0].draw(); // temp
-                }
-                else {
-                    m_ApplePolyhedron.draw(); // temp
-                }
-                firstLoop = false;
-            }
-        }
+        // Change the texture of the first piece
+        polyhedron.getPiece(0).setDiffuseTexture(snakeSkinTexture);
+        polyhedron.draw();
     }
 }

@@ -86,6 +86,12 @@ public class RunningMenuAppState implements IAppState {
         GLTexture helpMenuTexture = new GLTexture(ImageIO.read(new File("images\\HelpMenu.png")));
         m_MenuPageRectangles[1] = m_View.createCenteredRectangle(helpMenuTexture.getWidth(), helpMenuTexture.getHeight(), helpMenuTexture);
 
+        GLSpecularDirectionalLightProgram program = m_View.getSpecularDirectionalLightProgram();
+        program.setAmbientLight(m_AmbientLight);
+        program.setLightDirection(m_LightDirection);
+        program.setLightIntensity(s_LightIntensity);
+        program.setShininess(s_LightShininess);
+
         m_Page = Page.MAIN;
     }
 
@@ -187,10 +193,6 @@ public class RunningMenuAppState implements IAppState {
         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
 
         GLSpecularDirectionalLightProgram program = m_View.getSpecularDirectionalLightProgram();
-        program.setAmbientLight(m_AmbientLight);
-        program.setLightDirection(m_LightDirection);
-        program.setLightIntensity(s_LightIntensity);
-        program.setShininess(s_LightShininess);
         program.activate(m_MvMatrix, m_ProjectionMatrix);
         m_AppleDisplayMesh.draw();
     }

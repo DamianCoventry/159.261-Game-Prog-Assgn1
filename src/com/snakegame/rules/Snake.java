@@ -27,7 +27,33 @@ public class Snake {
     public static final long s_PowerUpPointsBonus = 1000;
     private static final long s_PowerUpPoints = 100;
 
-    private final LinkedList<Vector2i> m_BodyParts;
+    public static class BodyPart {
+        public Direction m_LeavingCellDirection;
+        public Vector2i m_Location;
+
+        public BodyPart(Direction leavingCellDirection, Vector2i location) {
+            m_LeavingCellDirection = leavingCellDirection;
+            m_Location = location;
+        }
+
+        public Direction classifyNeighbour(Vector2i neighbour) {
+            if (m_Location.isLeftOf(neighbour)) {
+                return Direction.Left;
+            }
+            if (m_Location.isRightOf(neighbour)) {
+                return Direction.Right;
+            }
+            if (m_Location.isBelow(neighbour)) {
+                return Direction.Down;
+            }
+            if (m_Location.isAbove(neighbour)) {
+                return Direction.Up;
+            }
+            throw new RuntimeException("Invalid neighbour");
+        }
+    }
+
+    private final LinkedList<BodyPart> m_BodyParts;
     private final Vector2i m_MinBounds;
     private final Vector2i m_MaxBounds;
     private final Direction m_StartDirection;
@@ -60,6 +86,10 @@ public class Snake {
         m_LastDirectionChangeCell = startPosition.createCopy();
     }
 
+    public Direction getStartDirection() {
+        return m_StartDirection;
+    }
+
     public void moveToStartPosition() {
         if (m_StartPosition == null) {
             throw new RuntimeException("Start position hasn't been set");
@@ -73,7 +103,7 @@ public class Snake {
 
         m_BodyParts.clear();
         for (int i = 0; i < s_MinBodyParts; ++i) {
-            m_BodyParts.add(currentPosition);
+            m_BodyParts.add(new BodyPart(m_StartDirection, currentPosition));
             currentPosition = currentPosition.add(movementDelta);
             checkBounds(currentPosition);
         }
@@ -153,7 +183,8 @@ public class Snake {
 
     public void moveForwards() {
         Vector2i movementDelta = getMovementDelta(m_CurrentDirection);
-        m_BodyParts.addFirst(m_BodyParts.getFirst().add(movementDelta));
+        m_BodyParts.getFirst().m_LeavingCellDirection = m_CurrentDirection;
+        m_BodyParts.push(new BodyPart(m_CurrentDirection, m_BodyParts.getFirst().m_Location.add(movementDelta)));
         if (m_AddBodyParts > 0) {
             --m_AddBodyParts;
         }
@@ -168,9 +199,9 @@ public class Snake {
 
     public boolean isCollidingWithItself() {
         for (int outer = 0; outer < m_BodyParts.size(); ++outer) {
-            Vector2i outerBodyPart = m_BodyParts.get(outer);
+            var outerBodyPart = m_BodyParts.get(outer);
             for (int inner = 0; inner < m_BodyParts.size(); ++inner) {
-                if (outer != inner && outerBodyPart.equals(m_BodyParts.get(inner))) {
+                if (outer != inner && outerBodyPart.m_Location.equals(m_BodyParts.get(inner).m_Location)) {
                     return true;
                 }
             }
@@ -180,7 +211,7 @@ public class Snake {
 
     public boolean isCollidingWith(Snake otherSnake) {
         for (var other : otherSnake.m_BodyParts) {
-            if (m_BodyParts.getFirst().equals(other)) {
+            if (m_BodyParts.getFirst().m_Location.equals(other.m_Location)) {
                 return true;
             }
         }
@@ -193,13 +224,13 @@ public class Snake {
     }
     public void setDirection(Direction direction) {
         // Prevent more than one direction change per cell
-        if (m_LastDirectionChangeCell.notEquals(m_BodyParts.getFirst())) {
+        if (m_LastDirectionChangeCell.notEquals(m_BodyParts.getFirst().m_Location)) {
             m_CurrentDirection = direction;
-            m_LastDirectionChangeCell = m_BodyParts.getFirst().createCopy();
+            m_LastDirectionChangeCell = m_BodyParts.getFirst().m_Location.createCopy();
         }
     }
 
-    public LinkedList<Vector2i> getBodyParts() {
+    public LinkedList<BodyPart> getBodyParts() {
         return m_BodyParts;
     }
 

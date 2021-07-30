@@ -17,7 +17,7 @@ import static org.lwjgl.system.MemoryUtil.memFree;
 public class GLStaticPolyhedronPieceBase {
     private final int m_VaoId;
     private final int m_NumVertices;
-    private final GLTexture m_DiffuseTexture;
+    private GLTexture m_DiffuseTexture;
     protected int[] m_VboIds;
 
     public GLStaticPolyhedronPieceBase(GLTexture diffuseTexture, int numVertices) {
@@ -28,6 +28,9 @@ public class GLStaticPolyhedronPieceBase {
 
     public GLTexture getDiffuseTexture() {
         return m_DiffuseTexture;
+    }
+    public void setDiffuseTexture(GLTexture texture) {
+        m_DiffuseTexture = texture;
     }
 
     public void freeNativeResources() {

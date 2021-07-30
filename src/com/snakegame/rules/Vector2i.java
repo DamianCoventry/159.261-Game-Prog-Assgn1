@@ -40,4 +40,20 @@ public class Vector2i {
         double deltaY = Math.abs(m_Z - other.m_Z);
         return (int)Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     }
+
+    public boolean isBelow(Vector2i other) {
+        return m_X == other.m_X && m_Z - 1 == other.m_Z;
+    }
+
+    public boolean isAbove(Vector2i other) {
+        return m_X == other.m_X && m_Z + 1 == other.m_Z;
+    }
+
+    public boolean isLeftOf(Vector2i other) {
+        return m_X - 1 == other.m_X && m_Z == other.m_Z;
+    }
+
+    public boolean isRightOf(Vector2i other) {
+        return m_X + 1 == other.m_X && m_Z == other.m_Z;
+    }
 }

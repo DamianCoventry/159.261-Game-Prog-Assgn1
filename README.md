@@ -91,3 +91,5 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - change the lighting to be in world space, not camera space.
 - create the normal Matrix and pass it into the shaders
 - put a point light source on a power ups and apples
+- test that the apples are being placed away from the snake at the beginning of the level.
+- 

@@ -435,7 +435,7 @@ public class GameController implements IGameController {
     }
 
     private boolean isSnakesOutOfBounds(Snake snake) {
-        Vector2i position = snake.getBodyParts().getFirst();
+        Vector2i position = snake.getBodyParts().getFirst().m_Location;
         return position.m_X < 0 || position.m_Z < 0 || position.m_X >= GameField.WIDTH || position.m_Z >= GameField.HEIGHT;
     }
 
@@ -472,7 +472,7 @@ public class GameController implements IGameController {
     }
 
     private boolean isSnakeCollidingWithWall(Snake snake) {
-        return m_GameField.getCellType(snake.getBodyParts().getFirst()) == GameField.CellType.WALL;
+        return m_GameField.getCellType(snake.getBodyParts().getFirst().m_Location) == GameField.CellType.WALL;
     }
 
     private void checkSnakeForCollisionWithNumber(Snake snake) {
@@ -489,11 +489,11 @@ public class GameController implements IGameController {
     }
 
     private boolean isSnakeCollidingWithNumber(Snake snake) {
-        return m_GameField.getCellType(snake.getBodyParts().getFirst()) == GameField.CellType.NUMBER;
+        return m_GameField.getCellType(snake.getBodyParts().getFirst().m_Location) == GameField.CellType.NUMBER;
     }
 
     private boolean isSnakeCollidingWithPowerUp(Snake snake) {
-        return m_GameField.getCellType(snake.getBodyParts().getFirst()) == GameField.CellType.POWER_UP;
+        return m_GameField.getCellType(snake.getBodyParts().getFirst().m_Location) == GameField.CellType.POWER_UP;
     }
 
     private void awardNumber(Number.Type numberType, Snake snake) {
@@ -574,7 +574,7 @@ public class GameController implements IGameController {
     private boolean isNeitherSnakeUsingThisCell(Vector2i cell) {
         for (var snake : m_Snakes) {
             for (var bodyPart : snake.getBodyParts()) {
-                if (bodyPart.equals(cell)) {
+                if (bodyPart.m_Location.equals(cell)) {
                     return false;
                 }
             }
