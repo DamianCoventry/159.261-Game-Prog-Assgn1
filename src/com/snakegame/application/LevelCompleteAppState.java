@@ -26,7 +26,7 @@ public class LevelCompleteAppState implements IAppState {
     private final IGameController m_Controller;
     private final IGameView m_View;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedronVxTc m_Rectangle;
+    private GLStaticPolyhedronVxTc m_Polyhedron;
 
     public LevelCompleteAppState(IAppStateContext context) {
         m_Context = context;
@@ -38,7 +38,7 @@ public class LevelCompleteAppState implements IAppState {
     @Override
     public void begin(long nowMs) throws IOException {
         GLTexture levelCompleteTexture = new GLTexture(ImageIO.read(new File("images\\LevelComplete.png")));
-        m_Rectangle = m_View.createCenteredRectangle(levelCompleteTexture.getWidth(), levelCompleteTexture.getHeight(), levelCompleteTexture);
+        m_Polyhedron = m_View.createCenteredPolyhedron(levelCompleteTexture.getWidth(), levelCompleteTexture.getHeight(), levelCompleteTexture);
 
         m_Context.addTimeout(2000, (callCount) -> {
             if (m_Controller.isLastLevel()) {
@@ -58,11 +58,21 @@ public class LevelCompleteAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
-        m_Rectangle.freeNativeResources();
+        m_Polyhedron.freeNativeResources();
     }
 
     @Override
     public void processKey(long window, int key, int scanCode, int action, int mods) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseButton(long window, int button, int action, int mods) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseWheel(long window, double xOffset, double yOffset) {
         // No work to do
     }
 
@@ -79,6 +89,6 @@ public class LevelCompleteAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
-        m_View.drawOrthographicPolyhedron(m_Rectangle, m_ModelMatrix);
+        m_View.drawOrthographicPolyhedron(m_Polyhedron, m_ModelMatrix);
     }
 }

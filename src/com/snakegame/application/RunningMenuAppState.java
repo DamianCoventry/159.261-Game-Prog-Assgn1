@@ -34,6 +34,10 @@ public class RunningMenuAppState implements IAppState {
     private static final float s_BackgroundAlpha = 0.075f;
     private static final float s_LightIntensity = 2.0f;
     private static final float s_LightShininess = 16.0f;
+    private static final float s_ScrollWheelScale = 20.0f;
+    private static final float s_MaxScrollYOffset = 0.0f;
+    private static final float s_HelpTextFadeRange = 100.0f;
+    private static final float s_HelpTextPadding = 2.0f * s_HelpTextFadeRange;
 
     private final IAppStateContext m_Context;
     private final IGameView m_View;
@@ -44,14 +48,18 @@ public class RunningMenuAppState implements IAppState {
     private final Vector3f m_LightDirection;
     private final Vector3f m_AmbientLight;
 
-    private GLStaticPolyhedronVxTc m_BackgroundTextRectangle;
-    private GLStaticPolyhedronVxTc m_BackgroundRectangle;
-    private GLStaticPolyhedronVxTc[] m_MenuPageRectangles;
+    private GLStaticPolyhedronVxTc m_BackgroundTextPolyhedron;
+    private GLStaticPolyhedronVxTc m_BackgroundPolyhedron;
+    private GLStaticPolyhedronVxTc[] m_MenuPagePolyhedra;
     private GLStaticPolyhedronVxTcNm m_AppleDisplayMesh;
+    private GLStaticPolyhedronVxTc m_ExitHelpPolyhedron;
+
     private enum Page {MAIN, HELP }
     private Page m_Page;
     private float m_Angle;
     private float m_ScrollOffsetX;
+    private float m_ScrollOffsetY;
+    private float m_MinScrollYOffset;
 
     public RunningMenuAppState(IAppStateContext context) {
         m_Context = context;
@@ -62,7 +70,7 @@ public class RunningMenuAppState implements IAppState {
         m_ViewMatrix = new Matrix4f().translate(0.0f, 0.0f, -s_CameraZPosition);
         m_ModelMatrix = new Matrix4f();
 
-        m_Angle = m_ScrollOffsetX = 0.0f;
+        m_Angle = m_ScrollOffsetX = m_ScrollOffsetY = 0.0f;
 
         m_LightDirection = new Vector3f(-10.0f, 7.50f, 8.75f).normalize();
         m_AmbientLight = new Vector3f(0.05f, 0.05f, 0.05f);
@@ -75,16 +83,28 @@ public class RunningMenuAppState implements IAppState {
         m_AppleDisplayMesh = m_View.loadDisplayMeshWithNormals("meshes\\AppleHiResDisplayMesh.obj");
 
         GLTexture backgroundTexture = new GLTexture(ImageIO.read(new File("images\\MainMenuBackground.png")));
-        m_BackgroundRectangle = m_View.createRectangle(0, 0, backgroundTexture.getWidth(), backgroundTexture.getHeight(), backgroundTexture);
+        m_BackgroundPolyhedron = m_View.createPolyhedron(0, 0, backgroundTexture.getWidth(), backgroundTexture.getHeight(), backgroundTexture);
 
         GLTexture backgroundTextTexture = new GLTexture(ImageIO.read(new File("images\\MainMenuBackgroundText.png")));
-        m_BackgroundTextRectangle = m_View.createRectangle(0, 0, backgroundTextTexture.getWidth(), backgroundTextTexture.getHeight(), backgroundTextTexture);
+        m_BackgroundTextPolyhedron = m_View.createPolyhedron(0, 0, backgroundTextTexture.getWidth(), backgroundTextTexture.getHeight(), backgroundTextTexture);
 
-        m_MenuPageRectangles = new GLStaticPolyhedronVxTc[2];
+        m_MenuPagePolyhedra = new GLStaticPolyhedronVxTc[2];
         GLTexture mainMenuTexture = new GLTexture(ImageIO.read(new File("images\\MainMenu.png")));
-        m_MenuPageRectangles[0] = m_View.createCenteredRectangle(mainMenuTexture.getWidth(), mainMenuTexture.getHeight(), mainMenuTexture);
+        m_MenuPagePolyhedra[0] = m_View.createCenteredPolyhedron(mainMenuTexture.getWidth(), mainMenuTexture.getHeight(), mainMenuTexture);
         GLTexture helpMenuTexture = new GLTexture(ImageIO.read(new File("images\\HelpMenu.png")));
-        m_MenuPageRectangles[1] = m_View.createCenteredRectangle(helpMenuTexture.getWidth(), helpMenuTexture.getHeight(), helpMenuTexture);
+        m_MenuPagePolyhedra[1] = m_View.createPolyhedron(0, 0, helpMenuTexture.getWidth(), helpMenuTexture.getHeight(), helpMenuTexture);
+
+        GLTexture exitHelpTexture = new GLTexture(ImageIO.read(new File("images\\ExitHelpButton.png")));
+        m_ExitHelpPolyhedron = m_View.createPolyhedron(0, 0, exitHelpTexture.getWidth(), exitHelpTexture.getHeight(), exitHelpTexture);
+
+        float availableHeight = m_Context.getWindowHeight() - (s_HelpTextPadding * 2.0f);
+        if (availableHeight < helpMenuTexture.getHeight()) {
+            m_MinScrollYOffset = -(helpMenuTexture.getHeight() - availableHeight);
+        }
+        else {
+            m_MinScrollYOffset = 0.0f;
+        }
+        m_ScrollOffsetY = m_MinScrollYOffset;
 
         GLSpecularDirectionalLightProgram program = m_View.getSpecularDirectionalLightProgram();
         program.setAmbientLight(m_AmbientLight);
@@ -97,41 +117,70 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
-        m_MenuPageRectangles[1].freeNativeResources();
-        m_MenuPageRectangles[0].freeNativeResources();
-        m_BackgroundTextRectangle.freeNativeResources();
-        m_BackgroundRectangle.freeNativeResources();
+        for (var menuPage : m_MenuPagePolyhedra) {
+            menuPage.freeNativeResources();
+        }
+        m_BackgroundTextPolyhedron.freeNativeResources();
+        m_BackgroundPolyhedron.freeNativeResources();
         m_AppleDisplayMesh.freeNativeResources();
+        m_ExitHelpPolyhedron.freeNativeResources();
     }
 
     @Override
     public void processKey(long window, int key, int scanCode, int action, int mods) throws IOException {
-        if (action != GLFW_PRESS) {
-            return;
-        }
-
-        if (m_Page == Page.HELP) {
-            if (key == GLFW_KEY_ESCAPE) {
-                m_Page = Page.MAIN;
+        if (m_Page == Page.MAIN) {
+            if (action == GLFW_PRESS) {
+                switch (key) {
+                    case GLFW_KEY_1:
+                        startNewGame(IGameController.Mode.SINGLE_PLAYER);
+                        break;
+                    case GLFW_KEY_2:
+                        startNewGame(IGameController.Mode.TWO_PLAYERS);
+                        break;
+                    case GLFW_KEY_3:
+                        m_Page = Page.HELP;
+                        break;
+                    case GLFW_KEY_ESCAPE:
+                        glfwSetWindowShouldClose(window, true);
+                        break;
+                }
             }
-            return;
         }
+        else {
+            switch (key)
+            {
+                case GLFW_KEY_ESCAPE:
+                    if (action == GLFW_PRESS) {
+                        m_Page = Page.MAIN;
+                    }
+                    break;
+                case GLFW_KEY_UP: {
+                    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+                        double min = Math.min(s_MaxScrollYOffset, m_ScrollOffsetY - s_ScrollWheelScale);
+                        m_ScrollOffsetY = (float) Math.max(m_MinScrollYOffset, min);
+                    }
+                    break;
+                }
+                case GLFW_KEY_DOWN: {
+                    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+                        double min = Math.min(s_MaxScrollYOffset, m_ScrollOffsetY + s_ScrollWheelScale);
+                        m_ScrollOffsetY = (float) Math.max(m_MinScrollYOffset, min);
+                    }
+                    break;
+                }
+            }
+        }
+    }
 
-        switch (key)
-        {
-            case GLFW_KEY_1:
-                startNewGame(IGameController.Mode.SINGLE_PLAYER);
-                break;
-            case GLFW_KEY_2:
-                startNewGame(IGameController.Mode.TWO_PLAYERS);
-                break;
-            case GLFW_KEY_3:
-                m_Page = Page.HELP;
-                break;
-            case GLFW_KEY_ESCAPE:
-                glfwSetWindowShouldClose(window, true);
-                break;
-        }
+    @Override
+    public void processMouseButton(long window, int button, int action, int mods) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseWheel(long window, double xOffset, double yOffset) {
+        double min = Math.min(s_MaxScrollYOffset, m_ScrollOffsetY - yOffset * s_ScrollWheelScale);
+        m_ScrollOffsetY = (float)Math.max(m_MinScrollYOffset, min);
     }
 
     @Override
@@ -146,13 +195,13 @@ public class RunningMenuAppState implements IAppState {
     public void draw3d(long nowMs) {
         glDepthMask(false);
         m_ModelMatrix.identity();
-        m_View.drawOrthographicPolyhedron(m_BackgroundRectangle, m_ModelMatrix);
+        m_View.drawOrthographicPolyhedron(m_BackgroundPolyhedron, m_ModelMatrix);
 
         m_ModelMatrix.identity().translate(m_ScrollOffsetX, 0.0f, 0.0f);
-        m_View.drawOrthographicPolyhedron(m_BackgroundTextRectangle, m_ModelMatrix, s_BackgroundAlpha);
+        m_View.drawOrthographicPolyhedron(m_BackgroundTextPolyhedron, m_ModelMatrix, s_BackgroundAlpha);
 
         m_ModelMatrix.identity().translate(m_ScrollOffsetX - m_Context.getWindowWidth(), 0.0f, 0.0f);
-        m_View.drawOrthographicPolyhedron(m_BackgroundTextRectangle, m_ModelMatrix, s_BackgroundAlpha);
+        m_View.drawOrthographicPolyhedron(m_BackgroundTextPolyhedron, m_ModelMatrix, s_BackgroundAlpha);
 
         glDepthMask(true);
         animateApple();
@@ -161,17 +210,36 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void draw2d(long nowMs) throws IOException {
-        float oneThird = m_Context.getWindowWidth() * 0.3333f;
-        float halfWidth = m_MenuPageRectangles[0].getPiece(0).getDiffuseTexture().getWidth() / 2.0f;
-        m_ModelMatrix.identity().translate(-(oneThird - halfWidth), 0.0f, 0.0f);
         switch (m_Page) {
             case MAIN:
-                m_View.drawOrthographicPolyhedron(m_MenuPageRectangles[0], m_ModelMatrix);
+                drawMainMenuPage();
                 break;
             case HELP:
-                //m_View.drawOrthographicPolyhedron(m_Rectangles[1]);
+                drawHelpMenuPage();
                 break;
         }
+    }
+
+    private void drawMainMenuPage() {
+        float oneThird = m_Context.getWindowWidth() * 0.3333f;
+        float halfWidth = m_MenuPagePolyhedra[0].getPiece(0).getDiffuseTexture().getWidth() / 2.0f;
+
+        m_ModelMatrix.identity().translate(-(oneThird - halfWidth), 0.0f, 0.0f);
+
+        m_View.drawOrthographicPolyhedron(m_MenuPagePolyhedra[0], m_ModelMatrix);
+    }
+
+    private void drawHelpMenuPage() {
+        float oneThird = m_Context.getWindowWidth() * 0.3333f;
+        float halfWidth = m_MenuPagePolyhedra[1].getPiece(0).getDiffuseTexture().getWidth() / 2.0f;
+
+        m_ModelMatrix.identity().translate(oneThird - halfWidth, m_ScrollOffsetY + s_HelpTextPadding, 0.0f);
+        m_View.drawOrthographicPolyhedronWithFadeRange(m_MenuPagePolyhedra[1], m_ModelMatrix, s_HelpTextFadeRange);
+
+        float halfWindowWidth = m_Context.getWindowWidth() / 2.0f;
+        float halfButtonWidth = m_ExitHelpPolyhedron.getPiece(0).getDiffuseTexture().getWidth() / 2.0f;
+        m_ModelMatrix.identity().translate(halfWindowWidth - halfButtonWidth, 2.0f, 0.0f);
+        m_View.drawOrthographicPolyhedron(m_ExitHelpPolyhedron, m_ModelMatrix);
     }
 
     private void startNewGame(IGameController.Mode mode) {

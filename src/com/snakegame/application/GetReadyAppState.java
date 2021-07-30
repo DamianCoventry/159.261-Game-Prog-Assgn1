@@ -27,9 +27,9 @@ public class GetReadyAppState implements IAppState {
     private final IGameView m_View;
     private final boolean m_ResetState;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedronVxTc[] m_GetReadyRectangles;
+    private GLStaticPolyhedronVxTc[] m_GetReadyPolyhedra;
     private int m_TimeoutId;
-    private int m_CurrentRectangle;
+    private int m_CurrentPolyhedron;
 
     public GetReadyAppState(IAppStateContext context, boolean resetState) {
         m_Context = context;
@@ -40,34 +40,34 @@ public class GetReadyAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_GetReadyRectangles = new GLStaticPolyhedronVxTc[3];
+        m_GetReadyPolyhedra = new GLStaticPolyhedronVxTc[3];
 
         GLTexture getReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady3.png")));
-        m_GetReadyRectangles[0] = m_View.createCenteredRectangle(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
+        m_GetReadyPolyhedra[0] = m_View.createCenteredPolyhedron(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
         getReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady2.png")));
-        m_GetReadyRectangles[1] = m_View.createCenteredRectangle(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
+        m_GetReadyPolyhedra[1] = m_View.createCenteredPolyhedron(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
         getReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady1.png")));
-        m_GetReadyRectangles[2] = m_View.createCenteredRectangle(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
+        m_GetReadyPolyhedra[2] = m_View.createCenteredPolyhedron(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
 
         if (m_ResetState) {
             m_Context.getController().resetAfterSnakeDeath(nowMs);
         }
 
-        m_CurrentRectangle = 0;
+        m_CurrentPolyhedron = 0;
         m_TimeoutId = m_Context.addTimeout(1000, (callCount) -> {
-            if (m_CurrentRectangle == 2) {
+            if (m_CurrentPolyhedron == 2) {
                 m_Context.changeState(new PlayingGameAppState(m_Context));
                 return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
             }
-            ++m_CurrentRectangle;
+            ++m_CurrentPolyhedron;
             return TimeoutManager.CallbackResult.KEEP_CALLING;
         });
     }
 
     @Override
     public void end(long nowMs) {
-        for (var rectangle : m_GetReadyRectangles) {
-            rectangle.freeNativeResources();
+        for (var Polyhedron : m_GetReadyPolyhedra) {
+            Polyhedron.freeNativeResources();
         }
     }
 
@@ -83,6 +83,16 @@ public class GetReadyAppState implements IAppState {
     }
 
     @Override
+    public void processMouseButton(long window, int button, int action, int mods) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseWheel(long window, double xOffset, double yOffset) {
+        // No work to do
+    }
+
+    @Override
     public void think(long nowMs) throws IOException {
         m_View.think(nowMs);
     }
@@ -95,6 +105,6 @@ public class GetReadyAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
-        m_View.drawOrthographicPolyhedron(m_GetReadyRectangles[m_CurrentRectangle], m_ModelMatrix);
+        m_View.drawOrthographicPolyhedron(m_GetReadyPolyhedra[m_CurrentPolyhedron], m_ModelMatrix);
     }
 }

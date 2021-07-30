@@ -26,7 +26,7 @@ public class GamePausedAppState implements IAppState {
     private final IAppStateContext m_Context;
     private final IGameView m_View;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedronVxTc m_Rectangle;
+    private GLStaticPolyhedronVxTc m_Polyhedron;
 
     public GamePausedAppState(IAppStateContext context) {
         m_Context = context;
@@ -37,12 +37,12 @@ public class GamePausedAppState implements IAppState {
     @Override
     public void begin(long nowMs) throws IOException {
         GLTexture gamePausedTexture = new GLTexture(ImageIO.read(new File("images\\GamePaused.png")));
-        m_Rectangle = m_View.createCenteredRectangle(gamePausedTexture.getWidth(), gamePausedTexture.getHeight(), gamePausedTexture);
+        m_Polyhedron = m_View.createCenteredPolyhedron(gamePausedTexture.getWidth(), gamePausedTexture.getHeight(), gamePausedTexture);
     }
 
     @Override
     public void end(long nowMs) {
-        m_Rectangle.freeNativeResources();
+        m_Polyhedron.freeNativeResources();
     }
 
     @Override
@@ -59,6 +59,16 @@ public class GamePausedAppState implements IAppState {
     }
 
     @Override
+    public void processMouseButton(long window, int button, int action, int mods) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseWheel(long window, double xOffset, double yOffset) {
+        // No work to do
+    }
+
+    @Override
     public void think(long nowMs) throws IOException {
         m_View.think(nowMs);
     }
@@ -71,6 +81,6 @@ public class GamePausedAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
-        m_View.drawOrthographicPolyhedron(m_Rectangle, m_ModelMatrix);
+        m_View.drawOrthographicPolyhedron(m_Polyhedron, m_ModelMatrix);
     }
 }

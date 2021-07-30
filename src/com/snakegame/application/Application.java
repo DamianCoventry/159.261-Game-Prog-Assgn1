@@ -71,6 +71,22 @@ public class Application implements IAppStateContext {
                 }
             }
         });
+        m_GLWindow.setMouseButtonCallback(new GLFWMouseButtonCallback() {
+            @Override
+            public void invoke(long window, int button, int action, int mods) {
+                if (m_CurrentState != null) {
+                    m_CurrentState.processMouseButton(window, button, action, mods);
+                }
+            }
+        });
+        m_GLWindow.setMouseWheelCallback(new GLFWScrollCallback() {
+            @Override
+            public void invoke(long window, double xOffset, double yOffset) {
+                if (m_CurrentState != null) {
+                    m_CurrentState.processMouseWheel(window, xOffset, yOffset);
+                }
+            }
+        });
 
         m_Controller = new GameController(this);
         m_TimeoutManager = new TimeoutManager();

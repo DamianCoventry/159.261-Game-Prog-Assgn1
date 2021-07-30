@@ -109,7 +109,7 @@ public class Snake {
         }
         m_AddBodyParts = m_RemoveBodyParts = 0;
         m_CurrentDirection = m_StartDirection;
-        m_Alive = false;
+        m_Alive = true;
 
         Vector2i movementDelta = getMovementDelta(getOppositeDirection(m_StartDirection));
         Vector2i currentPosition = m_StartPosition.createCopy();

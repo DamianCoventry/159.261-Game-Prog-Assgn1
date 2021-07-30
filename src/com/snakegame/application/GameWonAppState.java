@@ -27,7 +27,7 @@ public class GameWonAppState implements IAppState {
     private final Matrix4f m_ModelMatrix;
     private final int m_Player;
     private final boolean m_BothSnakes;
-    private GLStaticPolyhedronVxTc m_Rectangle;
+    private GLStaticPolyhedronVxTc m_Polyhedron;
 
     public GameWonAppState(IAppStateContext context, int player) {
         m_Context = context;
@@ -71,7 +71,7 @@ public class GameWonAppState implements IAppState {
             gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
         }
 
-        m_Rectangle = m_View.createCenteredRectangle(gameWonTexture.getWidth(), gameWonTexture.getHeight(), gameWonTexture);
+        m_Polyhedron = m_View.createCenteredPolyhedron(gameWonTexture.getWidth(), gameWonTexture.getHeight(), gameWonTexture);
 
         m_Context.addTimeout(3500, (callCount) -> {
             m_Context.changeState(new RunningMenuAppState(m_Context));
@@ -81,11 +81,21 @@ public class GameWonAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
-        m_Rectangle.freeNativeResources();
+        m_Polyhedron.freeNativeResources();
     }
 
     @Override
     public void processKey(long window, int key, int scanCode, int action, int mods) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseButton(long window, int button, int action, int mods) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseWheel(long window, double xOffset, double yOffset) {
         // No work to do
     }
 
@@ -102,6 +112,6 @@ public class GameWonAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
-        m_View.drawOrthographicPolyhedron(m_Rectangle, m_ModelMatrix);
+        m_View.drawOrthographicPolyhedron(m_Polyhedron, m_ModelMatrix);
     }
 }

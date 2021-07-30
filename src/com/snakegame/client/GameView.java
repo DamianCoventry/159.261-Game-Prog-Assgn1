@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Random;
 
+import static org.lwjgl.opengl.GL11.glDepthMask;
+
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public class GameView implements IGameView {
     private static final int s_NumWallMeshes = 4;
@@ -61,6 +63,8 @@ public class GameView implements IGameView {
     private final GLDiffuseTextureProgram m_DiffuseTexturedProgram;
     private final GLSpecularDirectionalLightProgram m_SpecularDirectionalLightProgram;
     private final GLDirectionalLightProgram m_DirectionalLightProgram;
+    private final GLDiffuseTextureAlphaFadeProgram m_DiffuseTextureAlphaFadeProgram;
+
     private final PowerUp.Type[] m_PowerUpTypes;
     private final Random m_Rng;
 
@@ -79,6 +83,7 @@ public class GameView implements IGameView {
     private GLStaticPolyhedronVxTcNm[] m_SnakeTailPolyhedra;
     private GLStaticPolyhedronVxTcNm[] m_SnakeElbowPolyhedra;
     private GLStaticPolyhedronVxTcNm m_SnakeGibPolyhedron;
+
     private GLTexture m_BlueSnakeSkinTexture;
     private GLTexture m_RedSnakeSkinTexture;
 
@@ -110,6 +115,9 @@ public class GameView implements IGameView {
         m_ModelMatrix = new Matrix4f();
         m_ViewMatrix = new Matrix4f();
 
+        m_SnakeGibRigidBodies = new ArrayList<>();
+        m_Rng = new Random();
+
         m_ViewMatrix.rotate((float)Math.toRadians(-s_CameraXRotation), 1.0f, 0.0f, 0.0f)
                     .translate(0, -s_CameraYPosition, -s_CameraZPosition);
 
@@ -127,6 +135,8 @@ public class GameView implements IGameView {
         m_DirectionalLightProgram.setLightDirection(lightDirection);
         m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
 
+        m_DiffuseTextureAlphaFadeProgram = new GLDiffuseTextureAlphaFadeProgram();
+
         m_PowerUpTypes = new PowerUp.Type[] {
                 PowerUp.Type.INC_SPEED, PowerUp.Type.DEC_SPEED,
                 PowerUp.Type.INC_LIVES, PowerUp.Type.DEC_LIVES,
@@ -139,9 +149,6 @@ public class GameView implements IGameView {
         m_ItemYRotation = 0.0f;
         m_ItemBobRotation = 0.0f;
         m_ItemBobOffset = 0.0f;
-
-        m_SnakeGibRigidBodies = new ArrayList<>();
-        m_Rng = new Random();
     }
 
     @Override
@@ -373,7 +380,9 @@ public class GameView implements IGameView {
         m_MvpMatrix.identity().set(m_Context.getOrthographicMatrix()).mul(modelMatrix);
         m_DiffuseTexturedProgram.setDefaultDiffuseColour();
         m_DiffuseTexturedProgram.activate(m_MvpMatrix);
+        glDepthMask(false);
         polyhedron.draw();
+        glDepthMask(true);
     }
 
     @Override
@@ -384,7 +393,26 @@ public class GameView implements IGameView {
         m_MvpMatrix.identity().set(m_Context.getOrthographicMatrix()).mul(modelMatrix);
         m_DiffuseTexturedProgram.setDiffuseColour(new Vector4f(1.0f, 1.0f, 1.0f, alpha));
         m_DiffuseTexturedProgram.activate(m_MvpMatrix);
+        glDepthMask(false);
         polyhedron.draw();
+        glDepthMask(true);
+    }
+
+    @Override
+    public void drawOrthographicPolyhedronWithFadeRange(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix, float fadeRange) {
+        if (m_Context == null) {
+            throw new RuntimeException("Application state context hasn't been set");
+        }
+
+        m_DiffuseTextureAlphaFadeProgram.setDefaultDiffuseColour();
+        m_DiffuseTextureAlphaFadeProgram.setWindowHeight(m_Context.getWindowHeight());
+        m_DiffuseTextureAlphaFadeProgram.setFadeRange(fadeRange);
+
+        m_MvpMatrix.identity().set(m_Context.getOrthographicMatrix()).mul(modelMatrix);
+        m_DiffuseTextureAlphaFadeProgram.activate(m_MvpMatrix);
+        glDepthMask(false);
+        polyhedron.draw();
+        glDepthMask(true);
     }
 
     @Override
@@ -436,7 +464,7 @@ public class GameView implements IGameView {
     }
 
     @Override
-    public GLStaticPolyhedronVxTc createRectangle(float x, float y, float width, float height, GLTexture texture) {
+    public GLStaticPolyhedronVxTc createPolyhedron(float x, float y, float width, float height, GLTexture texture) {
         float[] vertices = new float[]{
                 // triangle 0
                 x, y + height, 0.1f,
@@ -464,10 +492,10 @@ public class GameView implements IGameView {
     }
 
     @Override
-    public GLStaticPolyhedronVxTc createCenteredRectangle(float width, float height, GLTexture texture) {
+    public GLStaticPolyhedronVxTc createCenteredPolyhedron(float width, float height, GLTexture texture) {
         var x = (m_Context.getWindowWidth() / 2.0f) - (width / 2.0f);
         var y = (m_Context.getWindowHeight() / 2.0f) - (height / 2.0f);
-        return createRectangle(x, y, width, height, texture);
+        return createPolyhedron(x, y, width, height, texture);
     }
 
     @Override
@@ -660,6 +688,11 @@ public class GameView implements IGameView {
     @Override
     public GLDirectionalLightProgram getDirectionalLightProgram() {
         return m_DirectionalLightProgram;
+    }
+
+    @Override
+    public GLDiffuseTextureAlphaFadeProgram getDiffuseTextureAlphaFadeProgram() {
+        return m_DiffuseTextureAlphaFadeProgram;
     }
 
     private void drawWorld() {

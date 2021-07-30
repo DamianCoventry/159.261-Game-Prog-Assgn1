@@ -41,8 +41,9 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
   - ~~tail mesh (1 blue, 1 red)~~
 - ~~add code for choosing the correct mesh and rotation when rendering the snake~~
 - ~~create an animation to use when a snake is dying~~
-- make the help page
-- allow the help page to be scrolled vertically
+- ~~make the help page~~
+- ~~allow the help page to be scrolled vertically~~
+- indicate on the help page that the scroll wheel and arrow keys can be used to scroll the text
 - make the menu buttons clickable with the mouse cursor
 - add a focus animation to the menu buttons
 - add a click animation to the menu buttons

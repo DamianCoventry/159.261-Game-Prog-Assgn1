@@ -83,15 +83,15 @@ public class Toolbar {
 
         GLTexture toolbarTexture = new GLTexture(ImageIO.read(new File("images\\ToolbarBackgroundText.png")));
         float y = m_Context.getWindowHeight() - toolbarTexture.getHeight();
-        m_AnimatedText = m_View.createRectangle(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
+        m_AnimatedText = m_View.createPolyhedron(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
 
         toolbarTexture = new GLTexture(ImageIO.read(new File("images\\ToolbarPlaques.png")));
         y = m_Context.getWindowHeight() - toolbarTexture.getHeight();
-        m_Plaques = m_View.createRectangle(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
+        m_Plaques = m_View.createPolyhedron(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
 
         toolbarTexture = new GLTexture(ImageIO.read(new File("images\\ToolbarBackgroundGradient.png")));
         y = m_Context.getWindowHeight() - toolbarTexture.getHeight();
-        m_Gradient = m_View.createRectangle(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
+        m_Gradient = m_View.createPolyhedron(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
     }
     
     void freeNativeResources() {

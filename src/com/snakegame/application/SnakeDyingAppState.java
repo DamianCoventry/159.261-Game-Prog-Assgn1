@@ -29,7 +29,8 @@ public class SnakeDyingAppState implements IAppState {
     private final int m_Player;
     private final boolean m_BothSnakes;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedronVxTc[] m_Rectangles;
+    private GLStaticPolyhedronVxTc[] m_Polyhedra;
+    private boolean m_firstPhaseCompleted;
 
     public SnakeDyingAppState(IAppStateContext context, int player) {
         m_Context = context;
@@ -51,16 +52,16 @@ public class SnakeDyingAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        m_Rectangles = new GLStaticPolyhedronVxTc[3];
+        m_Polyhedra = new GLStaticPolyhedronVxTc[3];
 
         GLTexture player1DiedTexture = new GLTexture(ImageIO.read(new File("images\\Player1Died.png")));
-        m_Rectangles[0] = m_View.createCenteredRectangle(player1DiedTexture.getWidth(), player1DiedTexture.getHeight(), player1DiedTexture);
+        m_Polyhedra[0] = m_View.createCenteredPolyhedron(player1DiedTexture.getWidth(), player1DiedTexture.getHeight(), player1DiedTexture);
 
         GLTexture layer2DiedTexture = new GLTexture(ImageIO.read(new File("images\\Player2Died.png")));
-        m_Rectangles[1] = m_View.createCenteredRectangle(layer2DiedTexture.getWidth(), layer2DiedTexture.getHeight(), layer2DiedTexture);
+        m_Polyhedra[1] = m_View.createCenteredPolyhedron(layer2DiedTexture.getWidth(), layer2DiedTexture.getHeight(), layer2DiedTexture);
 
         GLTexture bothPlayersDiedTexture = new GLTexture(ImageIO.read(new File("images\\BothSnakesDied.png")));
-        m_Rectangles[2] = m_View.createCenteredRectangle(bothPlayersDiedTexture.getWidth(), bothPlayersDiedTexture.getHeight(), bothPlayersDiedTexture);
+        m_Polyhedra[2] = m_View.createCenteredPolyhedron(bothPlayersDiedTexture.getWidth(), bothPlayersDiedTexture.getHeight(), bothPlayersDiedTexture);
 
         if (m_BothSnakes) {
             m_Controller.getSnakes()[0].setDead(); // This stops this snake being displayed
@@ -73,26 +74,33 @@ public class SnakeDyingAppState implements IAppState {
             m_View.spawnSnakeGiblets(m_Controller.getSnakes()[m_Player]);
         }
 
-        m_Context.addTimeout(2000, (callCount) -> {
-            if (m_Controller.getMode() == IGameController.Mode.TWO_PLAYERS) {
-                subtractSnakeTwoPlayersGame();
-            }
-            else {
-                subtractSnakeSinglePlayerGame();
-            }
+        m_firstPhaseCompleted = false;
+        m_Context.addTimeout(2500, (callCount) -> {
+            m_firstPhaseCompleted = true;
+            scheduleStateTransition();
             return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
         });
     }
 
     @Override
     public void end(long nowMs) {
-        for (var r : m_Rectangles) {
+        for (var r : m_Polyhedra) {
             r.freeNativeResources();
         }
     }
 
     @Override
     public void processKey(long window, int key, int scanCode, int action, int mods) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseButton(long window, int button, int action, int mods) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseWheel(long window, double xOffset, double yOffset) {
         // No work to do
     }
 
@@ -109,15 +117,27 @@ public class SnakeDyingAppState implements IAppState {
     @Override
     public void draw2d(long nowMs) throws IOException {
         m_View.draw2d(nowMs);
-        if (m_BothSnakes) {
-            m_View.drawOrthographicPolyhedron(m_Rectangles[2], m_ModelMatrix);
+        if (m_firstPhaseCompleted) {
+            if (m_BothSnakes) {
+                m_View.drawOrthographicPolyhedron(m_Polyhedra[2], m_ModelMatrix);
+            } else if (m_Player == 0) {
+                m_View.drawOrthographicPolyhedron(m_Polyhedra[0], m_ModelMatrix);
+            } else {
+                m_View.drawOrthographicPolyhedron(m_Polyhedra[1], m_ModelMatrix);
+            }
         }
-        else if (m_Player == 0) {
-            m_View.drawOrthographicPolyhedron(m_Rectangles[0], m_ModelMatrix);
-        }
-        else {
-            m_View.drawOrthographicPolyhedron(m_Rectangles[1], m_ModelMatrix);
-        }
+    }
+
+    private void scheduleStateTransition() {
+        m_Context.addTimeout(1500, (callCount) -> {
+            if (m_Controller.getMode() == IGameController.Mode.TWO_PLAYERS) {
+                subtractSnakeTwoPlayersGame();
+            }
+            else {
+                subtractSnakeSinglePlayerGame();
+            }
+            return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
+        });
     }
 
     private void subtractSnakeSinglePlayerGame() {

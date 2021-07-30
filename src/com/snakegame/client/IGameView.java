@@ -34,6 +34,7 @@ public interface IGameView {
     void draw2d(long nowMs) throws IOException;
     void drawOrthographicPolyhedron(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix);
     void drawOrthographicPolyhedron(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix, float alpha);
+    void drawOrthographicPolyhedronWithFadeRange(GLStaticPolyhedronVxTc polyhedron, Matrix4f modelMatrix, float fadeRange);
 
     void startRemainingSnakesAnimation(int playerId, Vector4f colour);
     void startScoreAnimation(int playerId, Vector4f colour);
@@ -41,11 +42,12 @@ public interface IGameView {
     void resetSnakeGiblets();
     void spawnSnakeGiblets(Snake snake);
 
-    GLStaticPolyhedronVxTc createRectangle(float x, float y, float width, float height, GLTexture texture);
-    GLStaticPolyhedronVxTc createCenteredRectangle(float width, float height, GLTexture texture);
+    GLStaticPolyhedronVxTc createPolyhedron(float x, float y, float width, float height, GLTexture texture);
+    GLStaticPolyhedronVxTc createCenteredPolyhedron(float width, float height, GLTexture texture);
     GLStaticPolyhedronVxTc loadDisplayMeshWithoutNormals(String fileName) throws Exception;
     GLStaticPolyhedronVxTcNm loadDisplayMeshWithNormals(String fileName) throws Exception;
     GLDiffuseTextureProgram getTexturedProgram();
     GLSpecularDirectionalLightProgram getSpecularDirectionalLightProgram();
     GLDirectionalLightProgram getDirectionalLightProgram();
+    GLDiffuseTextureAlphaFadeProgram getDiffuseTextureAlphaFadeProgram();
 }

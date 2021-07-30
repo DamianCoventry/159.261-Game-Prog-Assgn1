@@ -27,7 +27,7 @@ public class GameLoadingAppState implements IAppState {
     private final IGameView m_View;
     private final IGameController.Mode m_Mode;
     private final Matrix4f m_ModelMatrix;
-    private GLStaticPolyhedronVxTc m_Rectangle;
+    private GLStaticPolyhedronVxTc m_Polyhedron;
 
     public GameLoadingAppState(IAppStateContext context, IGameController.Mode mode) {
         m_Context = context;
@@ -39,7 +39,7 @@ public class GameLoadingAppState implements IAppState {
     @Override
     public void begin(long nowMs) throws IOException {
         GLTexture loadingTexture = new GLTexture(ImageIO.read(new File("images\\Loading.png")));
-        m_Rectangle = m_View.createCenteredRectangle(loadingTexture.getWidth(), loadingTexture.getHeight(), loadingTexture);
+        m_Polyhedron = m_View.createCenteredPolyhedron(loadingTexture.getWidth(), loadingTexture.getHeight(), loadingTexture);
 
         m_View.resetSnakeGiblets();
 
@@ -57,11 +57,21 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void end(long nowMs) {
-        m_Rectangle.freeNativeResources();
+        m_Polyhedron.freeNativeResources();
     }
 
     @Override
     public void processKey(long window, int key, int scanCode, int action, int mods) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseButton(long window, int button, int action, int mods) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseWheel(long window, double xOffset, double yOffset) {
         // No work to do
     }
 
@@ -77,6 +87,6 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void draw2d(long nowMs) throws IOException {
-        m_View.drawOrthographicPolyhedron(m_Rectangle, m_ModelMatrix);
+        m_View.drawOrthographicPolyhedron(m_Polyhedron, m_ModelMatrix);
     }
 }
