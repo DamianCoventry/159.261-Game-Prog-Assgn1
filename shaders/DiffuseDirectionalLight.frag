@@ -12,6 +12,7 @@ uniform vec3 lightDirection;
 uniform vec3 lightColour;
 uniform float lightIntensity;
 
+// NOTE: Lights are in eye space
 vec4 diffuseDirectionalLight(vec4 materialDiffuse, vec3 lightDirection, vec3 lightColour, float lightIntensity, vec3 vertexNormal)
 {
     float diffuseFactor = max(dot(vertexNormal, lightDirection), 0.0);

@@ -14,12 +14,14 @@ uniform vec3 lightColour;
 uniform float lightIntensity;
 uniform float shininess;
 
+// NOTE: Lights are in eye space
 vec4 diffuseDirectionalLight(vec4 materialDiffuse, vec3 lightDirection, vec3 lightColour, float lightIntensity, vec3 vertexNormal)
 {
     float diffuseFactor = max(dot(vertexNormal, lightDirection), 0.0);
     return materialDiffuse * vec4(lightColour, 1.0) * lightIntensity * diffuseFactor;
 }
 
+// NOTE: Lights are in eye space
 vec4 specularDirectionalLight(vec4 materialSpecular, vec3 lightDirection, vec3 lightColour, float lightIntensity, vec3 vertexPosition, vec3 vertexNormal)
 {
     vec3 cameraDirection = normalize(-vertexPosition);
