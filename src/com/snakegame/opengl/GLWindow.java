@@ -14,8 +14,15 @@
 package com.snakegame.opengl;
 
 import org.joml.Matrix4f;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -30,13 +37,16 @@ public class GLWindow {
     private static final float s_FarClipPlane = 1000.0f;
 
     private final long m_Window;
+    private long m_ArrowMouseCursor;
+    private long m_HandMouseCursor;
+    private long m_GrabMouseCursor;
     private Matrix4f m_PerspectiveMatrix;
     private Matrix4f m_OrthographicMatrix;
 
     private float m_ActualWidth;
     private float m_ActualHeight;
 
-    public GLWindow(int desiredWindowWidth, int desiredWindowHeight, String windowTitle) {
+    public GLWindow(int desiredWindowWidth, int desiredWindowHeight, String windowTitle) throws IOException {
         glfwSetErrorCallback(GLFWErrorCallback.createPrint(System.err));
 
         if (!glfwInit()) {
@@ -93,6 +103,10 @@ public class GLWindow {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+        loadMouseCursors();
+        loadIcons();
+
+        glfwSetCursor(m_Window, m_ArrowMouseCursor);
         glfwShowWindow(m_Window);
 
         m_PerspectiveMatrix = createPerspectiveMatrix();
@@ -106,6 +120,7 @@ public class GLWindow {
         m_PerspectiveMatrix = createPerspectiveMatrix();
         return m_PerspectiveMatrix;
     }
+
     public Matrix4f getOrthographicMatrix() {
         m_OrthographicMatrix = createOrthographicMatrix();
         return m_OrthographicMatrix;
@@ -114,11 +129,27 @@ public class GLWindow {
     public float getActualWidth() {
         return m_ActualWidth;
     }
+
     public float getActualHeight() {
         return m_ActualHeight;
     }
 
+    public void activateArrowMouseCursor() {
+        glfwSetCursor(m_Window, m_ArrowMouseCursor);
+    }
+
+    public void activateHandMouseCursor() {
+        glfwSetCursor(m_Window, m_HandMouseCursor);
+    }
+
+    public void activateGrabMouseCursor() {
+        glfwSetCursor(m_Window, m_GrabMouseCursor);
+    }
+
     public void freeNativeResources() {
+        glfwDestroyCursor(m_ArrowMouseCursor);
+        glfwDestroyCursor(m_HandMouseCursor);
+        glfwDestroyCursor(m_GrabMouseCursor);
         glfwDestroyWindow(m_Window);
         glfwTerminate();
     }
@@ -146,6 +177,78 @@ public class GLWindow {
     public void endDrawing() {
         glfwSwapBuffers(m_Window);
         glfwPollEvents();
+    }
+
+    private void loadMouseCursors() throws IOException {
+        var image = loadImageFileAsGlfwImage("images\\ArrowMouseCursor.png");
+        m_ArrowMouseCursor = glfwCreateCursor(image, 0, 0);
+        image.free();
+        if (m_ArrowMouseCursor == NULL) {
+            throw new RuntimeException("Unable to create a mouse cursor");
+        }
+
+        image = loadImageFileAsGlfwImage("images\\HandMouseCursor.png");
+        m_HandMouseCursor = glfwCreateCursor(image, 19, 3);
+        image.free();
+        if (m_HandMouseCursor == NULL) {
+            throw new RuntimeException("Unable to create a mouse cursor");
+        }
+
+        image = loadImageFileAsGlfwImage("images\\GrabMouseCursor.png");
+        m_GrabMouseCursor = glfwCreateCursor(image, 23, 10);
+        if (m_GrabMouseCursor == NULL) {
+            throw new RuntimeException("Unable to create a mouse cursor");
+        }
+        image.free();
+    }
+
+    private void loadIcons() throws IOException {
+        final String[] fileNames = {
+                "images\\Snake64x64.png",
+                "images\\Snake32x32.png",
+                "images\\Snake24x24.png",
+                "images\\Snake16x16.png"
+        };
+
+        GLFWImage.Buffer images = GLFWImage.malloc(4);
+        int i = 0;
+        for (var fileName : fileNames) {
+            GLFWImage image = loadImageFileAsGlfwImage(fileName);
+            images.put(i++, image);
+            image.free();
+        }
+
+        glfwSetWindowIcon(m_Window, images);
+        images.free();
+    }
+
+    private GLFWImage loadImageFileAsGlfwImage(String fileName) throws IOException {
+        BufferedImage bufferedImage = ImageIO.read(new File(fileName));
+        if (bufferedImage == null) {
+            throw new RuntimeException("Unable to load the file [" + fileName + "]");
+        }
+
+        int[] pixels = new int[bufferedImage.getWidth() * bufferedImage.getHeight()];
+        bufferedImage.getRGB(0, 0, bufferedImage.getWidth(), bufferedImage.getHeight(), pixels, 0, bufferedImage.getWidth());
+
+        ByteBuffer buffer = BufferUtils.createByteBuffer(bufferedImage.getWidth() * bufferedImage.getHeight() * 4);
+        for(int y = 0; y < bufferedImage.getHeight(); y++){
+            for(int x = 0; x < bufferedImage.getWidth(); x++){
+                int pixel = pixels[y * bufferedImage.getWidth() + x];
+                buffer.put((byte) ((pixel >> 16) & 0xFF));     // Red component
+                buffer.put((byte) ((pixel >> 8) & 0xFF));      // Green component
+                buffer.put((byte) (pixel & 0xFF));             // Blue component
+                buffer.put((byte) ((pixel >> 24) & 0xFF));     // Alpha component. Only for RGBA
+            }
+        }
+
+        // After a sequence of channel-read or put operations, invoke this method to prepare for a
+        // sequence of channel-write or relative get operations.
+        buffer.flip();
+
+        GLFWImage image = GLFWImage.malloc();
+        image.set(bufferedImage.getWidth(), bufferedImage.getHeight(), buffer);
+        return image;
     }
 
     private Matrix4f createPerspectiveMatrix() {

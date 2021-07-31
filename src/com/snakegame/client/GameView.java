@@ -464,6 +464,21 @@ public class GameView implements IGameView {
     }
 
     @Override
+    public void activateArrowMouseCursor() {
+        m_Context.activateArrowMouseCursor();
+    }
+
+    @Override
+    public void activateHandMouseCursor() {
+        m_Context.activateHandMouseCursor();
+    }
+
+    @Override
+    public void activateGrabMouseCursor() {
+        m_Context.activateGrabMouseCursor();
+    }
+
+    @Override
     public GLStaticPolyhedronVxTc createPolyhedron(float x, float y, float width, float height, GLTexture texture) {
         float[] vertices = new float[]{
                 // triangle 0

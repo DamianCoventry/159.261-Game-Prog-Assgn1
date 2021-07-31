@@ -41,7 +41,9 @@ public class GLTexture {
             }
         }
 
-        buffer.flip(); // Because OpenGL considers the bottom left pixel to be the 'first' pixel.
+        // After a sequence of channel-read or put operations, invoke this method to prepare for a
+        // sequence of channel-write or relative get operations.
+        buffer.flip();
 
         m_Width = image.getWidth();
         m_Height = image.getHeight();

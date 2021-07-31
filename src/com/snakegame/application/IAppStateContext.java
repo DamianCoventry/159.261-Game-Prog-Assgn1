@@ -27,6 +27,10 @@ public interface IAppStateContext {
     float getWindowWidth();
     float getWindowHeight();
 
+    void activateArrowMouseCursor();
+    void activateHandMouseCursor();
+    void activateGrabMouseCursor();
+
     int addTimeout(long timeoutMs, Function<Integer, TimeoutManager.CallbackResult> callback);
     void removeTimeout(int timeoutId);
 

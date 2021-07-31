@@ -116,6 +116,21 @@ public class Application implements IAppStateContext {
     }
 
     @Override
+    public void activateArrowMouseCursor() {
+        m_GLWindow.activateArrowMouseCursor();
+    }
+
+    @Override
+    public void activateHandMouseCursor() {
+        m_GLWindow.activateHandMouseCursor();
+    }
+
+    @Override
+    public void activateGrabMouseCursor() {
+        m_GLWindow.activateGrabMouseCursor();
+    }
+
+    @Override
     public int addTimeout(long timeoutMs, Function<Integer, TimeoutManager.CallbackResult> callback) {
         return m_TimeoutManager.addTimeout(timeoutMs, callback);
     }

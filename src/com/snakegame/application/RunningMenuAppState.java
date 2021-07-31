@@ -112,6 +112,7 @@ public class RunningMenuAppState implements IAppState {
         program.setLightIntensity(s_LightIntensity);
         program.setShininess(s_LightShininess);
 
+        m_Context.getView().activateArrowMouseCursor();
         m_Page = Page.MAIN;
     }
 
@@ -138,6 +139,7 @@ public class RunningMenuAppState implements IAppState {
                         startNewGame(IGameController.Mode.TWO_PLAYERS);
                         break;
                     case GLFW_KEY_3:
+                        m_Context.getView().activateGrabMouseCursor();
                         m_Page = Page.HELP;
                         break;
                     case GLFW_KEY_ESCAPE:
@@ -151,6 +153,7 @@ public class RunningMenuAppState implements IAppState {
             {
                 case GLFW_KEY_ESCAPE:
                     if (action == GLFW_PRESS) {
+                        m_Context.getView().activateArrowMouseCursor();
                         m_Page = Page.MAIN;
                     }
                     break;

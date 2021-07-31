@@ -21,6 +21,8 @@ import org.joml.Vector4f;
 
 import java.io.IOException;
 
+import static org.lwjgl.glfw.GLFW.glfwSetCursor;
+
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public interface IGameView {
     void setAppStateContext(IAppStateContext context) throws IOException;
@@ -41,6 +43,10 @@ public interface IGameView {
 
     void resetSnakeGiblets();
     void spawnSnakeGiblets(Snake snake);
+
+    void activateArrowMouseCursor();
+    void activateHandMouseCursor();
+    void activateGrabMouseCursor();
 
     GLStaticPolyhedronVxTc createPolyhedron(float x, float y, float width, float height, GLTexture texture);
     GLStaticPolyhedronVxTc createCenteredPolyhedron(float width, float height, GLTexture texture);
