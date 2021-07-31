@@ -479,6 +479,11 @@ public class GameView implements IGameView {
     }
 
     @Override
+    public GLWindow.CursorPosition getMouseCursorPosition() {
+        return m_Context.getMouseCursorPosition();
+    }
+
+    @Override
     public GLStaticPolyhedronVxTc createPolyhedron(float x, float y, float width, float height, GLTexture texture) {
         float[] vertices = new float[]{
                 // triangle 0

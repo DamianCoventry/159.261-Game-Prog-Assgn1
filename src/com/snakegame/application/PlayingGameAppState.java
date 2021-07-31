@@ -74,6 +74,11 @@ public class PlayingGameAppState implements IAppState {
     }
 
     @Override
+    public void processMouseCursorMovement(long window, double xPos, double yPos) {
+        // No work to do
+    }
+
+    @Override
     public void think(long nowMs) throws IOException {
         m_Controller.think(nowMs);
         m_View.think(nowMs);

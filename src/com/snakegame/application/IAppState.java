@@ -19,9 +19,12 @@ import java.io.IOException;
 public interface IAppState {
     void begin(long nowMs) throws Exception;
     void end(long nowMs);
+
     void processKey(long window, int key, int scanCode, int action, int mods) throws IOException;
     void processMouseButton(long window, int button, int action, int mods);
     void processMouseWheel(long window, double xOffset, double yOffset);
+    void processMouseCursorMovement(long window, double xPos, double yPos);
+
     void think(long nowMs) throws IOException;
     void draw3d(long nowMs);
     void draw2d(long nowMs) throws IOException;

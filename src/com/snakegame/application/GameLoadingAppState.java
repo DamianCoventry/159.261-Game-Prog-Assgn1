@@ -42,6 +42,7 @@ public class GameLoadingAppState implements IAppState {
         m_Polyhedron = m_View.createCenteredPolyhedron(loadingTexture.getWidth(), loadingTexture.getHeight(), loadingTexture);
 
         m_View.resetSnakeGiblets();
+        m_View.activateArrowMouseCursor();
 
         m_Context.addTimeout(50, (callCount) ->{
             try {
@@ -72,6 +73,11 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void processMouseWheel(long window, double xOffset, double yOffset) {
+        // No work to do
+    }
+
+    @Override
+    public void processMouseCursorMovement(long window, double xPos, double yPos) {
         // No work to do
     }
 

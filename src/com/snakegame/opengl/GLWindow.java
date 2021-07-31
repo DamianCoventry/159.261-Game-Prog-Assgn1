@@ -40,6 +40,7 @@ public class GLWindow {
     private long m_ArrowMouseCursor;
     private long m_HandMouseCursor;
     private long m_GrabMouseCursor;
+    private long m_CurrentMouseCursor;
     private Matrix4f m_PerspectiveMatrix;
     private Matrix4f m_OrthographicMatrix;
 
@@ -107,6 +108,7 @@ public class GLWindow {
         loadIcons();
 
         glfwSetCursor(m_Window, m_ArrowMouseCursor);
+        m_CurrentMouseCursor = m_ArrowMouseCursor;
         glfwShowWindow(m_Window);
 
         m_PerspectiveMatrix = createPerspectiveMatrix();
@@ -114,6 +116,10 @@ public class GLWindow {
 
         m_ActualWidth = (float)desiredWindowWidth;
         m_ActualHeight = (float)desiredWindowHeight;
+    }
+
+    public void exitApplication() {
+        glfwSetWindowShouldClose(m_Window, true);
     }
 
     public Matrix4f getPerspectiveMatrix() {
@@ -135,15 +141,24 @@ public class GLWindow {
     }
 
     public void activateArrowMouseCursor() {
-        glfwSetCursor(m_Window, m_ArrowMouseCursor);
+        if (m_CurrentMouseCursor != m_ArrowMouseCursor) {
+            m_CurrentMouseCursor = m_ArrowMouseCursor;
+            glfwSetCursor(m_Window, m_ArrowMouseCursor);
+        }
     }
 
     public void activateHandMouseCursor() {
-        glfwSetCursor(m_Window, m_HandMouseCursor);
+        if (m_CurrentMouseCursor != m_HandMouseCursor) {
+            m_CurrentMouseCursor = m_HandMouseCursor;
+            glfwSetCursor(m_Window, m_HandMouseCursor);
+        }
     }
 
     public void activateGrabMouseCursor() {
-        glfwSetCursor(m_Window, m_GrabMouseCursor);
+        if (m_CurrentMouseCursor != m_GrabMouseCursor) {
+            m_CurrentMouseCursor = m_GrabMouseCursor;
+            glfwSetCursor(m_Window, m_GrabMouseCursor);
+        }
     }
 
     public void freeNativeResources() {
@@ -168,6 +183,26 @@ public class GLWindow {
 
     public void setMouseWheelCallback(GLFWScrollCallbackI callback) {
         glfwSetScrollCallback(m_Window, callback);
+    }
+
+    public void setMouseCursorMovementCallback(GLFWCursorPosCallback callback) {
+        glfwSetCursorPosCallback(m_Window, callback);
+    }
+
+    public static class CursorPosition {
+        public double m_XPos;
+        public double m_YPos;
+        public CursorPosition(double xPos, double yPos) {
+            m_XPos = xPos;
+            m_YPos = yPos;
+        }
+    }
+
+    public CursorPosition getMouseCursorPosition() {
+        double[] xPos = new double[1];
+        double[] yPos = new double[1];
+        glfwGetCursorPos(m_Window, xPos, yPos);
+        return new CursorPosition(xPos[0], yPos[0]);
     }
 
     public void beginDrawing() {

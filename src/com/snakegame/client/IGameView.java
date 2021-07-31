@@ -47,6 +47,7 @@ public interface IGameView {
     void activateArrowMouseCursor();
     void activateHandMouseCursor();
     void activateGrabMouseCursor();
+    GLWindow.CursorPosition getMouseCursorPosition();
 
     GLStaticPolyhedronVxTc createPolyhedron(float x, float y, float width, float height, GLTexture texture);
     GLStaticPolyhedronVxTc createCenteredPolyhedron(float width, float height, GLTexture texture);

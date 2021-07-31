@@ -59,34 +59,7 @@ public class Application implements IAppStateContext {
         }
 
         m_GLWindow = new GLWindow(s_DesiredWindowWidth, s_DesiredWindowHeight, s_WindowTitle);
-        m_GLWindow.setKeyCallback(new GLFWKeyCallback() {
-            @Override
-            public void invoke(long window, int key, int scancode, int action, int mods) {
-                if (m_CurrentState != null) {
-                    try {
-                        m_CurrentState.processKey(window, key, scancode, action, mods);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-        m_GLWindow.setMouseButtonCallback(new GLFWMouseButtonCallback() {
-            @Override
-            public void invoke(long window, int button, int action, int mods) {
-                if (m_CurrentState != null) {
-                    m_CurrentState.processMouseButton(window, button, action, mods);
-                }
-            }
-        });
-        m_GLWindow.setMouseWheelCallback(new GLFWScrollCallback() {
-            @Override
-            public void invoke(long window, double xOffset, double yOffset) {
-                if (m_CurrentState != null) {
-                    m_CurrentState.processMouseWheel(window, xOffset, yOffset);
-                }
-            }
-        });
+        setCallbacks();
 
         m_Controller = new GameController(this);
         m_TimeoutManager = new TimeoutManager();
@@ -98,6 +71,11 @@ public class Application implements IAppStateContext {
         m_PhysicsSpace = new PhysicsSpace(PhysicsSpace.BroadphaseType.DBVT);
 
         changeStateNow(new RunningMenuAppState(this), System.currentTimeMillis());
+    }
+
+    @Override
+    public void exitApplication() {
+        m_GLWindow.exitApplication();
     }
 
     @Override
@@ -128,6 +106,11 @@ public class Application implements IAppStateContext {
     @Override
     public void activateGrabMouseCursor() {
         m_GLWindow.activateGrabMouseCursor();
+    }
+
+    @Override
+    public GLWindow.CursorPosition getMouseCursorPosition() {
+        return m_GLWindow.getMouseCursorPosition();
     }
 
     @Override
@@ -193,6 +176,48 @@ public class Application implements IAppStateContext {
             performPendingStateChange(nowMs);
             updateFps(nowMs);
         }
+    }
+
+    private void setCallbacks() {
+        m_GLWindow.setKeyCallback(new GLFWKeyCallback() {
+            @Override
+            public void invoke(long window, int key, int scancode, int action, int mods) {
+                if (m_CurrentState != null) {
+                    try {
+                        m_CurrentState.processKey(window, key, scancode, action, mods);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        m_GLWindow.setMouseButtonCallback(new GLFWMouseButtonCallback() {
+            @Override
+            public void invoke(long window, int button, int action, int mods) {
+                if (m_CurrentState != null) {
+                    m_CurrentState.processMouseButton(window, button, action, mods);
+                }
+            }
+        });
+
+        m_GLWindow.setMouseWheelCallback(new GLFWScrollCallback() {
+            @Override
+            public void invoke(long window, double xOffset, double yOffset) {
+                if (m_CurrentState != null) {
+                    m_CurrentState.processMouseWheel(window, xOffset, yOffset);
+                }
+            }
+        });
+
+        m_GLWindow.setMouseCursorMovementCallback(new GLFWCursorPosCallback() {
+            @Override
+            public void invoke(long window, double xPos, double yPos) {
+                if (m_CurrentState != null) {
+                    m_CurrentState.processMouseCursorMovement(window, xPos, yPos);
+                }
+            }
+        });
     }
 
     private void drawDebugInfo() {

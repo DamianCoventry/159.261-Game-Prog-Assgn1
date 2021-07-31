@@ -105,6 +105,11 @@ public class SnakeDyingAppState implements IAppState {
     }
 
     @Override
+    public void processMouseCursorMovement(long window, double xPos, double yPos) {
+        // No work to do
+    }
+
+    @Override
     public void think(long nowMs) throws IOException {
         m_View.think(nowMs);
     }

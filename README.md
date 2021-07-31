@@ -43,10 +43,10 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - ~~create an animation to use when a snake is dying~~
 - ~~make the help page~~
 - ~~allow the help page to be scrolled vertically~~
-- indicate on the help page that the scroll wheel and arrow keys can be used to scroll the text
-- make the menu buttons clickable with the mouse cursor
-- add a focus animation to the menu buttons
-- add a click animation to the menu buttons
+- ~~indicate on the help page that the scroll wheel and arrow keys can be used to scroll the text~~
+- ~~make the menu buttons clickable with the mouse cursor~~
+- ~~add a focus animation to the menu buttons~~
+- ~~add a click animation to the menu buttons~~
 - add a menu transition from the main menu to the help menu
 - add a menu transition from the help menu to the main menu
 - add a screen transition from the main menu to the loading state

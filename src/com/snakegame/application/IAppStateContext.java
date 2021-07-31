@@ -15,6 +15,7 @@ package com.snakegame.application;
 
 import com.jme3.bullet.PhysicsSpace;
 import com.snakegame.client.*;
+import com.snakegame.opengl.GLWindow;
 import com.snakegame.rules.IGameController;
 import org.joml.Matrix4f;
 
@@ -22,6 +23,7 @@ import java.util.function.Function;
 
 // https://en.wikipedia.org/wiki/State_pattern
 public interface IAppStateContext {
+    void exitApplication();
     void changeState(IAppState newState);
 
     float getWindowWidth();
@@ -30,6 +32,7 @@ public interface IAppStateContext {
     void activateArrowMouseCursor();
     void activateHandMouseCursor();
     void activateGrabMouseCursor();
+    GLWindow.CursorPosition getMouseCursorPosition();
 
     int addTimeout(long timeoutMs, Function<Integer, TimeoutManager.CallbackResult> callback);
     void removeTimeout(int timeoutId);
