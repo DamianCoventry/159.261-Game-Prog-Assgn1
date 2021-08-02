@@ -23,7 +23,7 @@ import java.io.*;
 import static org.lwjgl.opengl.GL11.glDepthMask;
 
 public class NumberFont {
-    private static final int s_NumDigits = 10;
+    private static final int s_NumDigits = 11; // numbers 0-9, and a '%' character
     private final Character[] m_Characters;
     private final GLStaticPolyhedronVxTc[] m_Polyhedra;
     private final GLDiffuseTextureProgram m_DiffuseTexturedProgram;
@@ -59,6 +59,58 @@ public class NumberFont {
         extractCharacterInfo(numberGLTexture);
     }
 
+    public void freeNativeResource() {
+        for (var polyhedron : m_Polyhedra) {
+            polyhedron.freeNativeResources();
+        }
+    }
+    
+    public void drawNumber(Matrix4f projectionMatrix, long number, float x, float y, float scale, Vector4f colour) {
+        glDepthMask(false);
+        String text = String.valueOf(number);
+        for (int i = 0; i < text.length(); ++i) {
+            int index = text.charAt(i) - '0'; // Convert to an index into the m_Characters array
+            drawCharacter(index, projectionMatrix, x, y, scale, colour);
+            x += m_FrameWidth;
+        }
+        glDepthMask(true);
+    }
+
+    public void drawPercentage(Matrix4f projectionMatrix, long number, float x, float y, float scale, Vector4f colour) {
+        drawNumber(projectionMatrix, number, x, y, scale, colour);
+        glDepthMask(false);
+        drawCharacter(
+                s_NumDigits - 1,
+                projectionMatrix,
+                x + String.valueOf(number).length() * m_FrameWidth,
+                y, scale, colour);
+        glDepthMask(true);
+    }
+
+    public float calculateWidth(long number, boolean percentage) {
+        String text = String.valueOf(number);
+        return (text.length() + (percentage ? 1 : 0)) * m_FrameWidth;
+    }
+
+    private void drawCharacter(int index, Matrix4f projectionMatrix, float x, float y, float scale, Vector4f colour) {
+        if (index < 0 || index >= m_Polyhedra.length) {
+            return;
+        }
+
+        m_ModelMatrix
+                .identity()
+                .translate(x + m_HalfFrameWidth, y + m_HalfFrameHeight, 0.5f)
+                .scale(scale);
+
+        Matrix4f mvpMatrix = m_Copy
+                .set(projectionMatrix)
+                .mul(m_ModelMatrix);
+
+        m_DiffuseTexturedProgram.setDiffuseColour(colour);
+        m_DiffuseTexturedProgram.activate(mvpMatrix);
+        m_Polyhedra[index].draw();
+    }
+
     private void extractCharacterInfo(GLTexture numberGLTexture) {
         final float deltaU = m_FrameWidth / numberGLTexture.getWidth();
         final float deltaV = m_FrameHeight / numberGLTexture.getHeight();
@@ -88,33 +140,5 @@ public class NumberFont {
             polyhedron.addPiece(new GLStaticPolyhedronPieceVxTc(numberGLTexture, vertices, texCoordinates));
             m_Polyhedra[i] = polyhedron;
         }
-    }
-
-    public void freeNativeResource() {
-        for (var polyhedron : m_Polyhedra) {
-            polyhedron.freeNativeResources();
-        }
-    }
-    
-    public void drawNumber(Matrix4f projectionMatrix, long number, float x, float y, float scale, Vector4f colour) {
-        glDepthMask(false);
-        String text = String.valueOf(number);
-        for (int i = 0; i < text.length(); ++i) {
-            m_ModelMatrix.identity().translate(x + m_HalfFrameWidth, y + m_HalfFrameHeight, 0.5f).scale(scale);
-            Matrix4f mvpMatrix = m_Copy.set(projectionMatrix).mul(m_ModelMatrix);
-
-            m_DiffuseTexturedProgram.setDiffuseColour(colour);
-            m_DiffuseTexturedProgram.activate(mvpMatrix);
-            int j = text.charAt(i) - '0'; // Convert the character to an index into the m_Characters array
-            m_Polyhedra[j].draw();
-
-            x += m_FrameWidth;
-        }
-        glDepthMask(true);
-    }
-
-    public float calculateWidth(long number) {
-        String text = String.valueOf(number);
-        return text.length() * m_FrameWidth;
     }
 }

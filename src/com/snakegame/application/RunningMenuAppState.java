@@ -18,6 +18,7 @@ import com.snakegame.opengl.*;
 import com.snakegame.rules.IGameController;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -38,6 +39,7 @@ public class RunningMenuAppState implements IAppState {
     private static final float s_MaxScrollOffsetY = 0.0f;
     private static final float s_HelpTextFadeRange = 100.0f;
     private static final float s_HelpTextPadding = 2.0f * s_HelpTextFadeRange;
+    private static final float s_FadeOutSpeed = 1.0f; // alpha change per second
 
     private final IAppStateContext m_Context;
     private final IGameView m_View;
@@ -61,25 +63,25 @@ public class RunningMenuAppState implements IAppState {
 
     private enum Page {MAIN, HELP }
     private Page m_Page;
+
     private float m_Angle;
     private float m_ScrollOffsetX;
     private float m_ScrollOffsetY;
     private float m_MinScrollOffsetY;
+    private float m_DragOffsetY;
     private boolean m_DraggingHelpText;
-    private double m_DragOffsetY;
+
+    private boolean m_FadingOut;
+    private float m_FadingOutBackgroundAlpha;
+    private float m_FadingOutAlpha;
 
     public RunningMenuAppState(IAppStateContext context) {
         m_Context = context;
         m_View = m_Context.getView();
-        m_DraggingHelpText = false;
-
         m_MvMatrix = new Matrix4f();
         m_ProjectionMatrix = new Matrix4f();
         m_ViewMatrix = new Matrix4f().translate(0.0f, 0.0f, -s_CameraZPosition);
         m_ModelMatrix = new Matrix4f();
-
-        m_Angle = m_ScrollOffsetX = m_ScrollOffsetY = 0.0f;
-
         m_LightDirection = new Vector3f(-10.0f, 7.50f, 8.75f).normalize();
         m_AmbientLight = new Vector3f(0.05f, 0.05f, 0.05f);
     }
@@ -93,8 +95,15 @@ public class RunningMenuAppState implements IAppState {
         loadMenuBackground();
         loadButtons();
 
-        m_View.activateArrowMouseCursor();
+        m_Angle = m_ScrollOffsetX = m_ScrollOffsetY = 0.0f;
+        m_DraggingHelpText = false;
         m_Page = Page.MAIN;
+
+        m_FadingOut = false;
+        m_FadingOutBackgroundAlpha = s_BackgroundAlpha;
+        m_FadingOutAlpha = 1.0f;
+
+        m_View.activateArrowMouseCursor();
     }
 
     @Override
@@ -114,6 +123,9 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void processKey(long window, int key, int scanCode, int action, int mods) throws IOException {
+        if (m_FadingOut) {
+            return;
+        }
         switch (m_Page) {
             case MAIN:
                 processMainPageKey(key, action);
@@ -126,23 +138,26 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void processMouseButton(long window, int button, int action, int mods) {
+        if (m_FadingOut) {
+            return;
+        }
         GLWindow.CursorPosition cursorPosition = m_Context.getMouseCursorPosition();
-        double yPosInverted = m_Context.getWindowHeight() - cursorPosition.m_YPos;
+        float yPosInverted = m_Context.getWindowHeight() - cursorPosition.m_YPos;
         switch (m_Page) {
             case MAIN:
                 if (action == GLFW_PRESS) {
-                    processMainPageMouseButtonPressed(button, (float)cursorPosition.m_XPos, (float)yPosInverted);
+                    processMainPageMouseButtonPressed(button, cursorPosition.m_XPos, yPosInverted);
                 }
                 else if (action == GLFW_RELEASE) {
-                    processMainPageMouseButtonReleased(button, (float)cursorPosition.m_XPos, (float)yPosInverted);
+                    processMainPageMouseButtonReleased(button, cursorPosition.m_XPos, yPosInverted);
                 }
                 break;
             case HELP:
                 if (action == GLFW_PRESS) {
-                    processHelpPageMouseButtonPressed(button, (float)cursorPosition.m_XPos, (float)yPosInverted);
+                    processHelpPageMouseButtonPressed(button, cursorPosition.m_XPos, yPosInverted);
                 }
                 else if (action == GLFW_RELEASE) {
-                    processHelpPageMouseButtonRelease(button, (float)cursorPosition.m_XPos, (float)yPosInverted);
+                    processHelpPageMouseButtonRelease(button, cursorPosition.m_XPos, yPosInverted);
                 }
                 break;
         }
@@ -150,6 +165,9 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void processMouseWheel(long window, double xOffset, double yOffset) {
+        if (m_FadingOut) {
+            return;
+        }
         if (m_Page == Page.HELP) {
             setScrollOffsetY(m_ScrollOffsetY - yOffset * s_ScrollWheelScale);
         }
@@ -157,6 +175,9 @@ public class RunningMenuAppState implements IAppState {
 
     @Override
     public void processMouseCursorMovement(long window, double xPos, double yPos) {
+        if (m_FadingOut) {
+            return;
+        }
         float yPosInverted = m_Context.getWindowHeight() - (float)yPos;
         switch (m_Page) {
             case MAIN:
@@ -173,6 +194,11 @@ public class RunningMenuAppState implements IAppState {
         m_ScrollOffsetX += s_HorizontalScrollSpeed * s_MsPerFrame;
         if (m_ScrollOffsetX >= m_Context.getWindowWidth()) {
             m_ScrollOffsetX -= m_Context.getWindowWidth();
+        }
+
+        if (m_FadingOut) {
+            m_FadingOutBackgroundAlpha = Math.max(0.0f, m_FadingOutBackgroundAlpha - (s_FadeOutSpeed * 0.5f) * s_MsPerFrame);
+            m_FadingOutAlpha = Math.max(0.0f, m_FadingOutAlpha - s_FadeOutSpeed * s_MsPerFrame);
         }
 
         animateApple();
@@ -324,7 +350,7 @@ public class RunningMenuAppState implements IAppState {
     private void processHelpPageMouseButtonPressed(int button, float xPos, float yPos) {
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             GLWindow.CursorPosition cursorPosition = m_Context.getMouseCursorPosition();
-            double yPosInverted = m_Context.getWindowHeight() - cursorPosition.m_YPos;
+            float yPosInverted = m_Context.getWindowHeight() - cursorPosition.m_YPos;
             if (helpTextContainsPoint(cursorPosition.m_XPos, yPosInverted)) {
                 m_DragOffsetY = yPosInverted - m_ScrollOffsetY;
                 m_DraggingHelpText = true;
@@ -390,12 +416,12 @@ public class RunningMenuAppState implements IAppState {
         float oneThird = (float)Math.floor(m_Context.getWindowWidth() * 0.3333f);
         float halfWidth = m_MenuPagePolyhedra[0].getPiece(0).getDiffuseTexture().getWidth() / 2.0f;
         m_ModelMatrix.identity().translate(-(oneThird - halfWidth), 0.0f, 0.0f);
-        m_View.drawOrthographicPolyhedron(m_MenuPagePolyhedra[0], m_ModelMatrix);
-
-        m_SinglePlayerGameButton.draw2d();
-        m_TwoPlayersGameButton.draw2d();
-        m_HelpGameButton.draw2d();
-        m_ExitGameButton.draw2d();
+        m_View.drawOrthographicPolyhedron(m_MenuPagePolyhedra[0], m_ModelMatrix, m_FadingOutAlpha);
+        
+        m_SinglePlayerGameButton.draw2d(m_FadingOutAlpha);
+        m_TwoPlayersGameButton.draw2d(m_FadingOutAlpha);
+        m_HelpGameButton.draw2d(m_FadingOutAlpha);
+        m_ExitGameButton.draw2d(m_FadingOutAlpha);
     }
 
     private void drawHelpMenuPage() {
@@ -405,11 +431,16 @@ public class RunningMenuAppState implements IAppState {
         m_ModelMatrix.identity().translate(oneThird - halfWidth, m_ScrollOffsetY + s_HelpTextPadding, 0.0f);
         m_View.drawOrthographicPolyhedronWithFadeRange(m_MenuPagePolyhedra[1], m_ModelMatrix, s_HelpTextFadeRange);
 
-        m_BackGameButton.draw2d();
+        m_BackGameButton.draw2d(1.0f);
     }
 
     private void startNewGame(IGameController.Mode mode) {
-        m_Context.changeState(new GameLoadingAppState(m_Context, mode));
+        m_FadingOut = true;
+        m_Context.addTimeout(1000, (callCount) -> {
+            m_FadingOut = false;
+            m_Context.changeState(new GameLoadingAppState(m_Context, mode));
+            return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
+        });
     }
 
     private void animateApple() {
@@ -425,10 +456,10 @@ public class RunningMenuAppState implements IAppState {
         m_View.drawOrthographicPolyhedron(m_BackgroundPolyhedron, m_ModelMatrix);
 
         m_ModelMatrix.identity().translate(m_ScrollOffsetX, 0.0f, 0.0f);
-        m_View.drawOrthographicPolyhedron(m_BackgroundTextPolyhedron, m_ModelMatrix, s_BackgroundAlpha);
+        m_View.drawOrthographicPolyhedron(m_BackgroundTextPolyhedron, m_ModelMatrix, m_FadingOutBackgroundAlpha);
 
         m_ModelMatrix.identity().translate(m_ScrollOffsetX - m_Context.getWindowWidth(), 0.0f, 0.0f);
-        m_View.drawOrthographicPolyhedron(m_BackgroundTextPolyhedron, m_ModelMatrix, s_BackgroundAlpha);
+        m_View.drawOrthographicPolyhedron(m_BackgroundTextPolyhedron, m_ModelMatrix, m_FadingOutBackgroundAlpha);
         glDepthMask(true);
     }
 
@@ -445,6 +476,7 @@ public class RunningMenuAppState implements IAppState {
         program.setLightIntensity(s_LightIntensity);
         program.setShininess(s_LightShininess);
         program.activate(m_MvMatrix, m_ProjectionMatrix);
+        program.setDiffuseColour(new Vector4f(1.0f, 1.0f, 1.0f, m_FadingOutAlpha));
         m_AppleDisplayMesh.draw();
     }
 }

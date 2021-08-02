@@ -19,12 +19,14 @@ import com.snakegame.opengl.GLWindow;
 import com.snakegame.rules.IGameController;
 import org.joml.Matrix4f;
 
+import java.io.IOException;
 import java.util.function.Function;
 
 // https://en.wikipedia.org/wiki/State_pattern
 public interface IAppStateContext {
     void exitApplication();
     void changeState(IAppState newState);
+    void forceThinkAndDraw() throws IOException;
 
     float getWindowWidth();
     float getWindowHeight();

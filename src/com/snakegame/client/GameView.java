@@ -32,6 +32,7 @@ import java.lang.Math;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.function.BiConsumer;
 
 import static org.lwjgl.opengl.GL11.glDepthMask;
 
@@ -64,6 +65,7 @@ public class GameView implements IGameView {
     private final GLSpecularDirectionalLightProgram m_SpecularDirectionalLightProgram;
     private final GLDirectionalLightProgram m_DirectionalLightProgram;
     private final GLDiffuseTextureAlphaFadeProgram m_DiffuseTextureAlphaFadeProgram;
+    private final GLSpecularDirectionalLightClipPlaneProgram m_SpecularDirectionalLightClipPlaneProgram;
 
     private final PowerUp.Type[] m_PowerUpTypes;
     private final Random m_Rng;
@@ -136,6 +138,7 @@ public class GameView implements IGameView {
         m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
 
         m_DiffuseTextureAlphaFadeProgram = new GLDiffuseTextureAlphaFadeProgram();
+        m_SpecularDirectionalLightClipPlaneProgram = new GLSpecularDirectionalLightClipPlaneProgram("meshes\\Noise64x64.png");
 
         m_PowerUpTypes = new PowerUp.Type[] {
                 PowerUp.Type.INC_SPEED, PowerUp.Type.DEC_SPEED,
@@ -160,51 +163,82 @@ public class GameView implements IGameView {
     }
 
     @Override
-    public void loadResources() throws Exception {
-        m_WallPolyhedra = new GLStaticPolyhedronVxTcNm[s_NumWallMeshes];
-        for (int i = 0; i < s_NumWallMeshes; ++i) {
-            m_WallPolyhedra[i] = loadDisplayMeshWithNormals(String.format("meshes\\WallDisplayMesh%d.obj", i));
-        }
+    public void loadResources(BiConsumer<Long, Long> progress) throws Exception {
+        final long numberOfThingsToLoad = 26 + s_NumWallMeshes; // <-- there are 26 calls to loadXYZ() within this method
+        long numLoaded = 0;
+
+        progress.accept(numLoaded, numberOfThingsToLoad);
 
         m_SnakeBodyPolyhedra = new GLStaticPolyhedronVxTcNm[2];
         m_SnakeBodyPolyhedra[0] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartHoriz.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_SnakeBodyPolyhedra[1] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartVert.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
 
         m_SnakeHeadPolyhedra = new GLStaticPolyhedronVxTcNm[4];
         m_SnakeHeadPolyhedra[0] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartHeadLeft.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_SnakeHeadPolyhedra[1] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartHeadTop.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_SnakeHeadPolyhedra[2] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartHeadRight.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_SnakeHeadPolyhedra[3] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartHeadBottom.obj");
 
         m_SnakeTailPolyhedra = new GLStaticPolyhedronVxTcNm[4];
         m_SnakeTailPolyhedra[0] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartTailLeft.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_SnakeTailPolyhedra[1] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartTailTop.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_SnakeTailPolyhedra[2] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartTailRight.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_SnakeTailPolyhedra[3] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartTailBottom.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
 
         m_SnakeElbowPolyhedra = new GLStaticPolyhedronVxTcNm[4];
         m_SnakeElbowPolyhedra[0] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartElbowTL.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_SnakeElbowPolyhedra[1] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartElbowTR.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_SnakeElbowPolyhedra[2] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartElbowBL.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_SnakeElbowPolyhedra[3] = loadDisplayMeshWithNormals("meshes\\SnakeBodyPartElbowBR.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
 
         m_SnakeGibPolyhedron = loadDisplayMeshWithNormals("meshes\\SnakeGib.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
 
         m_BlueSnakeSkinTexture = m_SnakeBodyPolyhedra[0].getPiece(0).getDiffuseTexture();
         m_RedSnakeSkinTexture = new GLTexture(ImageIO.read(new File("meshes\\SnakeSkinRed.png")));
+        progress.accept(++numLoaded, numberOfThingsToLoad);
 
         m_WorldDisplayMesh = loadDisplayMeshWithNormals("meshes\\LevelDisplayMesh.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_ApplePolyhedron = loadDisplayMeshWithNormals("meshes\\AppleLoResDisplayMesh.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
+
+        m_WallPolyhedra = new GLStaticPolyhedronVxTcNm[s_NumWallMeshes];
+        for (int i = 0; i < s_NumWallMeshes; ++i) {
+            m_WallPolyhedra[i] = loadDisplayMeshWithNormals(String.format("meshes\\WallDisplayMesh%d.obj", i));
+            progress.accept(++numLoaded, numberOfThingsToLoad);
+        }
 
         m_PowerUpIncreaseSpeedPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpIncreaseSpeed.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_PowerUpDecreaseSpeedPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseSpeed.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_PowerUpIncreasePointsPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpIncreasePoints.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_PowerUpDecreasePointsPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreasePoints.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_PowerUpIncreaseLivesPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpIncreaseLives.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_PowerUpDecreaseLivesPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseLives.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
         m_PowerUpDecreaseLengthPolyhedron = loadDisplayMeshWithNormals("meshes\\PowerUpDecreaseLength.obj");
+        progress.accept(++numLoaded, numberOfThingsToLoad);
 
         loadWorldCollisionMesh();
+        progress.accept(numberOfThingsToLoad, numberOfThingsToLoad);
     }
 
     private void loadWorldCollisionMesh() throws Exception {
@@ -713,6 +747,11 @@ public class GameView implements IGameView {
     @Override
     public GLDiffuseTextureAlphaFadeProgram getDiffuseTextureAlphaFadeProgram() {
         return m_DiffuseTextureAlphaFadeProgram;
+    }
+
+    @Override
+    public GLSpecularDirectionalLightClipPlaneProgram getSpecularDirectionalLightClipPlaneProgram() {
+        return m_SpecularDirectionalLightClipPlaneProgram;
     }
 
     private void drawWorld() {

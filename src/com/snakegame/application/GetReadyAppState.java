@@ -20,15 +20,12 @@ import org.joml.Matrix4f;
 import javax.imageio.ImageIO;
 import java.io.*;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F5;
-
 public class GetReadyAppState implements IAppState {
     private final IAppStateContext m_Context;
     private final IGameView m_View;
     private final boolean m_ResetState;
     private final Matrix4f m_ModelMatrix;
     private GLStaticPolyhedronVxTc[] m_GetReadyPolyhedra;
-    private int m_TimeoutId;
     private int m_CurrentPolyhedron;
 
     public GetReadyAppState(IAppStateContext context, boolean resetState) {
@@ -54,7 +51,7 @@ public class GetReadyAppState implements IAppState {
         }
 
         m_CurrentPolyhedron = 0;
-        m_TimeoutId = m_Context.addTimeout(1000, (callCount) -> {
+        m_Context.addTimeout(1000, (callCount) -> {
             if (m_CurrentPolyhedron == 2) {
                 m_Context.changeState(new PlayingGameAppState(m_Context));
                 return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
@@ -73,13 +70,7 @@ public class GetReadyAppState implements IAppState {
 
     @Override
     public void processKey(long window, int key, int scanCode, int action, int mods) {
-        if (key == GLFW_KEY_F5) { // temp cheat key
-            if (m_TimeoutId != 0) {
-                m_Context.removeTimeout(m_TimeoutId);
-                m_TimeoutId = 0;
-            }
-            m_Context.changeState(new LevelCompleteAppState(m_Context));
-        }
+        // No work to do
     }
 
     @Override

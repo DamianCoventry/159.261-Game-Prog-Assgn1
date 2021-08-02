@@ -84,6 +84,16 @@ public class Application implements IAppStateContext {
     }
 
     @Override
+    public void forceThinkAndDraw() throws IOException {
+        long nowMs = System.currentTimeMillis();
+        m_CurrentState.think(nowMs);
+        m_GLWindow.beginDrawing();
+        m_CurrentState.draw3d(nowMs);
+        m_CurrentState.draw2d(nowMs);
+        m_GLWindow.endDrawing();
+    }
+
+    @Override
     public float getWindowWidth() {
         return m_GLWindow.getActualWidth();
     }

@@ -122,7 +122,7 @@ public class Button {
         m_Pressed = false;
     }
     
-    public void draw2d() {
+    public void draw2d(float alpha) {
         m_ModelMatrix.identity().translate(m_X, m_Y, 0.0f);
         if (m_Pressed) {
             m_Polyhedron.getPiece(0).setDiffuseTexture(m_PressedTexture);
@@ -133,6 +133,6 @@ public class Button {
         else {
             m_Polyhedron.getPiece(0).setDiffuseTexture(m_NotPressedTexture);
         }
-        m_View.drawOrthographicPolyhedron(m_Polyhedron, m_ModelMatrix);
+        m_View.drawOrthographicPolyhedron(m_Polyhedron, m_ModelMatrix, alpha);
     }
 }

@@ -51,11 +51,7 @@ public class PlayingGameAppState implements IAppState {
             m_Context.changeState(new GamePausedAppState(m_Context));
             return;
         }
-        if (key == GLFW_KEY_F5) { // temp cheat key
-            m_Context.changeState(new LevelCompleteAppState(m_Context));
-            return;
-        }
-        
+
         processKeyPress(m_Controller.getSnakes()[0], GLFW_KEY_W, GLFW_KEY_S, GLFW_KEY_A, GLFW_KEY_D, key);
 
         if (m_Controller.getMode() == IGameController.Mode.TWO_PLAYERS) {

@@ -26,7 +26,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="org.joml:joml:1.10.1" level="project" />
-    <orderEntry type="library" name="Libbulletjme-10.5.0-sources" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -37,5 +36,14 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="dist" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../Libbulletjme/dist/Libbulletjme-10.5.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

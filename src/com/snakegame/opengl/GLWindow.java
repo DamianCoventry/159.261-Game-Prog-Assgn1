@@ -190,9 +190,9 @@ public class GLWindow {
     }
 
     public static class CursorPosition {
-        public double m_XPos;
-        public double m_YPos;
-        public CursorPosition(double xPos, double yPos) {
+        public float m_XPos;
+        public float m_YPos;
+        public CursorPosition(float xPos, float yPos) {
             m_XPos = xPos;
             m_YPos = yPos;
         }
@@ -202,7 +202,7 @@ public class GLWindow {
         double[] xPos = new double[1];
         double[] yPos = new double[1];
         glfwGetCursorPos(m_Window, xPos, yPos);
-        return new CursorPosition(xPos[0], yPos[0]);
+        return new CursorPosition((float)xPos[0], (float)yPos[0]);
     }
 
     public void beginDrawing() {

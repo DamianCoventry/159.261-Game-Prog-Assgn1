@@ -20,6 +20,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
 import java.io.IOException;
+import java.util.function.BiConsumer;
 
 import static org.lwjgl.glfw.GLFW.glfwSetCursor;
 
@@ -27,7 +28,7 @@ import static org.lwjgl.glfw.GLFW.glfwSetCursor;
 public interface IGameView {
     void setAppStateContext(IAppStateContext context) throws IOException;
 
-    void loadResources() throws Exception;
+    void loadResources(BiConsumer<Long, Long> progress) throws Exception;
     void unloadResources();
     void freeNativeResources();
 
@@ -57,4 +58,5 @@ public interface IGameView {
     GLSpecularDirectionalLightProgram getSpecularDirectionalLightProgram();
     GLDirectionalLightProgram getDirectionalLightProgram();
     GLDiffuseTextureAlphaFadeProgram getDiffuseTextureAlphaFadeProgram();
+    GLSpecularDirectionalLightClipPlaneProgram getSpecularDirectionalLightClipPlaneProgram();
 }

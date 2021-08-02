@@ -107,6 +107,7 @@ public class Toolbar {
             m_Gradient.freeNativeResources();
             m_Gradient = null;
         }
+        m_NumberFont.freeNativeResource();
     }
 
     public void startRemainingSnakesAnimation(int playerId, Vector4f colour) {
