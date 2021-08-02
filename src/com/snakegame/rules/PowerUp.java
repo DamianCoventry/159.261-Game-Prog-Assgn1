@@ -14,6 +14,7 @@
 package com.snakegame.rules;
 
 public class PowerUp {
+    public final static int s_NumPowerUps = 7;
     private final Type m_Type;
     private final Vector2i m_Location;
 

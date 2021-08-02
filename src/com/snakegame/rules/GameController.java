@@ -539,6 +539,7 @@ public class GameController implements IGameController {
 
         if (scheduleNext) {
             scheduleInsertPowerUp(s_PowerUpSubsequentTimeoutMs);
+            m_Context.getView().startPowerUpAnimation(snake.getId(), powerUpType);
         }
     }
 

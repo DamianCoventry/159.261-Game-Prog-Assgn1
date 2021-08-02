@@ -69,7 +69,7 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - create an animation for use when collecting a DEC_POINTS power-up
 - create an animation for use when collecting a DEC_LENGTH power-up
 - create an animation for use when inserting a wall into the field
-- combine the .obj mesh -> display mesh conversion code 
+- ~~combine the .obj mesh -> display mesh conversion code~~ 
 - initialise the sound system
 - play sound samples
 - stream an MP3 file for the menu
@@ -87,4 +87,4 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - change the lighting to be in world space, not camera space.
 - create the normal Matrix and pass it into the shaders
 - put a point light source on a power ups and apples
-- test that the apples are being placed away from the snake at the beginning of the level.
+- ~~test that the apples are being placed away from the snake at the beginning of the level.~~

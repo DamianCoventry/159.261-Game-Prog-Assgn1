@@ -15,6 +15,7 @@ package com.snakegame.client;
 
 import com.snakegame.application.IAppStateContext;
 import com.snakegame.opengl.*;
+import com.snakegame.rules.PowerUp;
 import com.snakegame.rules.Snake;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
@@ -39,6 +40,7 @@ public interface IGameView {
 
     void startRemainingSnakesAnimation(int playerId, Vector4f colour);
     void startScoreAnimation(int playerId, Vector4f colour);
+    void startPowerUpAnimation(int playerId, PowerUp.Type powerUpType);
 
     void resetSnakeGiblets();
     void spawnSnakeGiblets(Snake snake);

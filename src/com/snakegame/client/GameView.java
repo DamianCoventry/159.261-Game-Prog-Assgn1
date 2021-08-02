@@ -52,6 +52,10 @@ public class GameView implements IGameView {
     private static final float s_SnakeGibletHalfSize = 0.25f;
     private static final long s_MaxRandomPowerUpTypeTime = 250;
     private static final float s_AppleNumberScale = 0.05f;
+    private static final float s_PowerUpScaleStart = 0.03f;
+    private static final float s_PowerUpScaleInc = 0.00005f;
+    private static final float s_PowerUpVerticalMovement = 0.03222f;
+    private static final float s_PowerUpFadeOutInc = 0.008f;
     private static final Vector4f s_Yellow = new Vector4f(1.0f, 1.0f, 0.0f, 1.0f);
 
     private final Matrix4f m_MvMatrix;
@@ -85,8 +89,15 @@ public class GameView implements IGameView {
     private GLStaticPolyhedronVxTcNm[] m_SnakeElbowPolyhedra;
     private GLStaticPolyhedronVxTcNm m_SnakeGibPolyhedron;
 
+    private boolean m_PowerUpAnimationActive;
+    private Vector3f m_PowerUpAnimationPosition;
+    private float m_PowerUpFadeOut;
+    private GLStaticPolyhedronVxTc m_PowerUpTextPolyhedron;
+    private int m_PowerUpTextTimeoutId;
+
     private GLTexture m_BlueSnakeSkinTexture;
     private GLTexture m_RedSnakeSkinTexture;
+    private GLTexture[] m_PowerUpTextTextures;
 
     private IAppStateContext m_Context;
     private Toolbar m_Toolbar;
@@ -95,6 +106,7 @@ public class GameView implements IGameView {
     private float m_ItemYRotation;
     private float m_ItemBobRotation;
     private float m_ItemBobOffset;
+    private float m_PowerUpScale;
     private int m_RandomPowerUpType;
     private long m_LastRandomPowerUpTypeTime;
 
@@ -147,6 +159,7 @@ public class GameView implements IGameView {
         };
         m_RandomPowerUpType = 0;
         m_LastRandomPowerUpTypeTime = 0;
+        m_PowerUpTextTimeoutId = 0;
 
         m_ItemYRotation = 0.0f;
         m_ItemBobRotation = 0.0f;
@@ -236,12 +249,47 @@ public class GameView implements IGameView {
         m_PowerUpDecreaseLengthPolyhedron = loadDisplayMesh("meshes\\PowerUpDecreaseLength.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
 
+        m_PowerUpTextTextures = new GLTexture[PowerUp.s_NumPowerUps];
+        m_PowerUpTextTextures[0] = new GLTexture(ImageIO.read(new File("images\\PowerUpTextSpeedUp.png")));
+        m_PowerUpTextTextures[1] = new GLTexture(ImageIO.read(new File("images\\PowerUpTextSpeedDown.png")));
+        m_PowerUpTextTextures[2] = new GLTexture(ImageIO.read(new File("images\\PowerUpTextExtraSnake.png")));
+        m_PowerUpTextTextures[3] = new GLTexture(ImageIO.read(new File("images\\PowerUpTextLoseASnake.png")));
+        m_PowerUpTextTextures[4] = new GLTexture(ImageIO.read(new File("images\\PowerUpText1kPoints.png")));
+        m_PowerUpTextTextures[5] = new GLTexture(ImageIO.read(new File("images\\PowerUpText-1kPoints.png")));
+        m_PowerUpTextTextures[6] = new GLTexture(ImageIO.read(new File("images\\PowerUpTextDecreaseLength.png")));
+        m_PowerUpTextPolyhedron = createPolyhedron(
+                -m_PowerUpTextTextures[0].getWidth() / 2.0f, -m_PowerUpTextTextures[0].getHeight() / 2.0f,
+                m_PowerUpTextTextures[0].getWidth(), m_PowerUpTextTextures[0].getHeight(), m_PowerUpTextTextures[0]);
+
         loadWorldCollisionMesh();
         progress.accept(numberOfThingsToLoad, numberOfThingsToLoad);
     }
 
     @Override
     public void unloadResources() {
+        if (m_PowerUpTextTimeoutId != 0) {
+            m_Context.removeTimeout(m_PowerUpTextTimeoutId);
+            m_PowerUpTextTimeoutId = 0;
+        }
+
+        for (var rigidBody : m_SnakeGibRigidBodies) {
+            m_Context.getPhysicsSpace().remove(rigidBody.m_RigidBody);
+            rigidBody.m_SnakeSkinTexture.freeNativeResource();
+        }
+        m_SnakeGibRigidBodies.clear();
+
+        if (m_PowerUpTextPolyhedron != null) {
+            m_PowerUpTextPolyhedron.freeNativeResources();
+            m_PowerUpTextPolyhedron = null;
+        }
+
+        if (m_PowerUpTextTextures != null) {
+            for (var texture : m_PowerUpTextTextures) {
+                texture.freeNativeResource();
+            }
+            m_PowerUpTextTextures = null;
+        }
+
         if (m_WallPolyhedra != null) {
             for (var polyhedron : m_WallPolyhedra) {
                 polyhedron.freeNativeResources();
@@ -349,6 +397,12 @@ public class GameView implements IGameView {
         if (m_Toolbar != null) {
             m_Toolbar.think();
         }
+
+        if (m_PowerUpAnimationActive) {
+            m_PowerUpScale += s_PowerUpScaleInc;
+            m_PowerUpAnimationPosition.y += s_PowerUpVerticalMovement;
+            m_PowerUpFadeOut = Math.max(0.0f, m_PowerUpFadeOut - s_PowerUpFadeOutInc);
+        }
     }
 
     @Override
@@ -367,7 +421,8 @@ public class GameView implements IGameView {
         if (m_Context == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
-        drawNumbers();
+        drawGameFieldNumbers();
+        drawPowerUpTextAnimation();
         m_Toolbar.draw2d();
     }
 
@@ -422,6 +477,56 @@ public class GameView implements IGameView {
     @Override
     public void startScoreAnimation(int playerId, Vector4f colour) {
         m_Toolbar.startScoreAnimation(playerId, colour);
+    }
+
+    @Override
+    public void startPowerUpAnimation(int playerId, PowerUp.Type powerUpType) {
+        if (m_PowerUpTextTimeoutId != 0) {
+            m_Context.removeTimeout(m_PowerUpTextTimeoutId);
+            m_PowerUpTextTimeoutId = 0;
+        }
+
+        Vector2i location = m_Snakes[playerId].getBodyParts().getFirst().m_Location;
+
+        float startX = GameField.WIDTH / 2.0f * -s_CellSize;
+        float startZ = GameField.HEIGHT / 2.0f * -s_CellSize;
+        float cellOffsetX = (startX + location.m_X * s_CellSize) + s_HalfCellSize;
+        float cellOffsetZ = (-startZ - location.m_Z * s_CellSize) - s_HalfCellSize;
+        m_PowerUpAnimationPosition = new Vector3f(cellOffsetX, s_ObjectYPosition * 10.0f, cellOffsetZ);
+
+        switch (powerUpType) {
+            case INC_SPEED:
+                m_PowerUpTextPolyhedron.getPiece(0).setDiffuseTexture(m_PowerUpTextTextures[0]);
+                break;
+            case DEC_SPEED:
+                m_PowerUpTextPolyhedron.getPiece(0).setDiffuseTexture(m_PowerUpTextTextures[1]);
+                break;
+            case INC_LIVES:
+                m_PowerUpTextPolyhedron.getPiece(0).setDiffuseTexture(m_PowerUpTextTextures[2]);
+                break;
+            case DEC_LIVES:
+                m_PowerUpTextPolyhedron.getPiece(0).setDiffuseTexture(m_PowerUpTextTextures[3]);
+                break;
+            case INC_POINTS:
+                m_PowerUpTextPolyhedron.getPiece(0).setDiffuseTexture(m_PowerUpTextTextures[4]);
+                break;
+            case DEC_POINTS:
+                m_PowerUpTextPolyhedron.getPiece(0).setDiffuseTexture(m_PowerUpTextTextures[5]);
+                break;
+            case DEC_LENGTH:
+                m_PowerUpTextPolyhedron.getPiece(0).setDiffuseTexture(m_PowerUpTextTextures[6]);
+                break;
+        }
+
+        m_PowerUpScale = s_PowerUpScaleStart;
+        m_PowerUpAnimationActive = true;
+        m_PowerUpFadeOut = 1.0f;
+
+        m_PowerUpTextTimeoutId = m_Context.addTimeout(2000, (callCount) -> {
+            m_PowerUpAnimationActive = false;
+            m_PowerUpTextTimeoutId = 0;
+            return TimeoutManager.CallbackResult.REMOVE_THIS_CALLBACK;
+        });
     }
 
     @Override
@@ -565,6 +670,29 @@ public class GameView implements IGameView {
     @Override
     public GLSpecularDirectionalLightClipPlaneProgram getSpecularDirectionalLightClipPlaneProgram() {
         return m_SpecularDirectionalLightClipPlaneProgram;
+    }
+
+
+    private void drawPowerUpTextAnimation() {
+        if (!m_PowerUpAnimationActive || m_PowerUpFadeOut <= 0.0f) {
+            return;
+        }
+
+
+        Vector4f worldPosition = new Vector4f(m_PowerUpAnimationPosition.x, m_PowerUpAnimationPosition.y, m_PowerUpAnimationPosition.z, 1.0f);
+
+        m_ModelMatrix.identity().translate(m_PowerUpAnimationPosition).scale(m_PowerUpScale);
+        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
+        Vector4f screenPosition = m_ProjectionMatrix.mul(m_ViewMatrix).mul(m_ModelMatrix).transform(worldPosition);
+        screenPosition = screenPosition.div(screenPosition.w);
+
+        if (screenPosition.z >= 0.0f) {
+            m_ModelMatrix.identity().translate(screenPosition.x, screenPosition.y, 0.5f);
+            m_MvpMatrix.identity().mul(m_ProjectionMatrix).mul(m_ModelMatrix);
+            m_DiffuseTexturedProgram.setDiffuseColour(new Vector4f(1.0f, 1.0f, 1.0f, m_PowerUpFadeOut));
+            m_DiffuseTexturedProgram.activate(m_MvpMatrix);
+            m_PowerUpTextPolyhedron.draw();
+        }
     }
 
     private GLTexture loadDiffuseTexture(ArrayList<MtlFile> materialFiles, ObjFile.Piece piece) throws IOException {
@@ -724,7 +852,7 @@ public class GameView implements IGameView {
         }
     }
 
-    private void drawNumbers() {
+    private void drawGameFieldNumbers() {
         float startX = GameField.WIDTH / 2.0f * -s_CellSize;
         float startZ = GameField.HEIGHT / 2.0f * -s_CellSize;
 
@@ -735,7 +863,7 @@ public class GameView implements IGameView {
                 float cellDrawX = (startX + cellXIndex * s_CellSize) + s_HalfCellSize;
 
                 if (m_GameField.getCellType(cellXIndex, cellZIndex) == GameField.CellType.NUMBER) {
-                    drawNumber(cellXIndex, cellZIndex, cellDrawX, cellDrawZ);
+                    drawGameFieldNumber(cellXIndex, cellZIndex, cellDrawX, cellDrawZ);
                 }
             }
         }
@@ -809,13 +937,14 @@ public class GameView implements IGameView {
         m_ApplePolyhedron.draw();
     }
 
-    private void drawNumber(int cellXIndex, int cellZIndex, float cellDrawX, float cellDrawZ) {
+    private void drawGameFieldNumber(int cellXIndex, int cellZIndex, float cellDrawX, float cellDrawZ) {
         m_ModelMatrix
                 .identity()
                 .translate(cellDrawX, s_ObjectYPosition + m_ItemBobOffset, cellDrawZ)
                 .scale(s_AppleNumberScale);
 
         Vector4f worldPosition = new Vector4f(cellDrawX, s_ObjectYPosition + m_ItemBobOffset, cellDrawZ, 1.0f);
+        m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
         Vector4f screenPosition = m_ProjectionMatrix.mul(m_ViewMatrix).mul(m_ModelMatrix).transform(worldPosition);
         screenPosition = screenPosition.div(screenPosition.w);
 
