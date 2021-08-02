@@ -271,7 +271,6 @@ public class Application implements IAppStateContext {
         }
     }
 
-    // This is here for convenience.
     public static void main(String[] args) {
         Application app = null;
         try {
