@@ -60,9 +60,7 @@ public class TimeoutManager {
     }
 
     private void performPendingAdditions() {
-        for (var timeout : m_PendingAdditions.entrySet()) {
-            m_CurrentTimeouts.put(timeout.getKey(), timeout.getValue());
-        }
+        m_CurrentTimeouts.putAll(m_PendingAdditions);
         m_PendingAdditions.clear();
     }
 

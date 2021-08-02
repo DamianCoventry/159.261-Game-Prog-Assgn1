@@ -22,6 +22,7 @@ import com.jme3.math.Transform;
 import com.snakegame.application.IAppStateContext;
 import com.snakegame.opengl.*;
 import com.snakegame.rules.*;
+import com.snakegame.rules.Number;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -54,6 +55,8 @@ public class GameView implements IGameView {
     private static final float s_LightShininess = 32.0f;
     private static final float s_SnakeGibletHalfSize = 0.25f;
     private static final long s_MaxRandomPowerUpTypeTime = 250;
+    private static final float s_AppleNumberScale = 0.05f;
+    private static final Vector4f s_Yellow = new Vector4f(1.0f, 1.0f, 0.0f, 1.0f);
 
     private final Matrix4f m_MvMatrix;
     private final Matrix4f m_MvpMatrix;
@@ -383,7 +386,7 @@ public class GameView implements IGameView {
         }
 
         if (m_Toolbar != null) {
-            m_Toolbar.think(nowMs);
+            m_Toolbar.think();
         }
     }
 
@@ -403,7 +406,8 @@ public class GameView implements IGameView {
         if (m_Context == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
-        m_Toolbar.draw2d(nowMs);
+        drawNumbers();
+        m_Toolbar.draw2d();
     }
 
     @Override
@@ -779,8 +783,25 @@ public class GameView implements IGameView {
                         drawGameFieldPowerUp(cellXIndex, cellZIndex, cellDrawX, cellDrawZ);
                         break;
                     case NUMBER:
-                        drawGameFieldNumber(cellDrawX, cellDrawZ);
+                        drawGameFieldApple(cellDrawX, cellDrawZ);
                         break;
+                }
+            }
+        }
+    }
+
+    private void drawNumbers() {
+        float startX = GameField.WIDTH / 2.0f * -s_CellSize;
+        float startZ = GameField.HEIGHT / 2.0f * -s_CellSize;
+
+        for (int cellZIndex = 0; cellZIndex < GameField.HEIGHT; ++cellZIndex) {
+            float cellDrawZ = (-startZ - cellZIndex * s_CellSize) - s_HalfCellSize;
+
+            for (int cellXIndex = 0; cellXIndex < GameField.WIDTH; ++cellXIndex) {
+                float cellDrawX = (startX + cellXIndex * s_CellSize) + s_HalfCellSize;
+
+                if (m_GameField.getCellType(cellXIndex, cellZIndex) == GameField.CellType.NUMBER) {
+                    drawNumber(cellXIndex, cellZIndex, cellDrawX, cellDrawZ);
                 }
             }
         }
@@ -841,7 +862,7 @@ public class GameView implements IGameView {
         }
     }
 
-    private void drawGameFieldNumber(float cellDrawX, float cellDrawZ) {
+    private void drawGameFieldApple(float cellDrawX, float cellDrawZ) {
         m_ModelMatrix
                 .identity()
                 .translate(cellDrawX, s_ObjectYPosition + m_ItemBobOffset, cellDrawZ)
@@ -851,38 +872,26 @@ public class GameView implements IGameView {
         m_MvMatrix.set(m_ViewMatrix).mul(m_ModelMatrix);
         m_ProjectionMatrix.set(m_Context.getPerspectiveMatrix());
         m_SpecularDirectionalLightProgram.activate(m_MvMatrix, m_ProjectionMatrix);
-
         m_ApplePolyhedron.draw();
-//        Number number = m_GameField.getNumber(x, y);
-//        switch (number.getType()) {
-//            case NUM_1:
-//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[0]);
-//                break;
-//            case NUM_2:
-//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[1]);
-//                break;
-//            case NUM_3:
-//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[2]);
-//                break;
-//            case NUM_4:
-//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[3]);
-//                break;
-//            case NUM_5:
-//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[4]);
-//                break;
-//            case NUM_6:
-//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[5]);
-//                break;
-//            case NUM_7:
-//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[6]);
-//                break;
-//            case NUM_8:
-//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[7]);
-//                break;
-//            case NUM_9:
-//                drawSingleImage(cellOffsetX, cellOffsetY, s_CellSize, s_CellSize, m_NumberTextures[8]);
-//                break;
-//        }
+    }
+
+    private void drawNumber(int cellXIndex, int cellZIndex, float cellDrawX, float cellDrawZ) {
+        m_ModelMatrix
+                .identity()
+                .translate(cellDrawX, s_ObjectYPosition + m_ItemBobOffset, cellDrawZ)
+                .scale(s_AppleNumberScale);
+
+        Vector4f worldPosition = new Vector4f(cellDrawX, s_ObjectYPosition + m_ItemBobOffset, cellDrawZ, 1.0f);
+        Vector4f screenPosition = m_ProjectionMatrix.mul(m_ViewMatrix).mul(m_ModelMatrix).transform(worldPosition);
+        screenPosition = screenPosition.div(screenPosition.w);
+
+        if (screenPosition.z >= 0.0f) {
+            int number = Number.toInteger(m_GameField.getNumber(cellXIndex, cellZIndex).getType());
+            float width = m_Toolbar.getNumberFont().calculateWidth(number, false);
+            screenPosition.x -= width / 2.0f;
+            screenPosition.y += width;
+            m_Toolbar.getNumberFont().drawNumber(m_ProjectionMatrix, number, screenPosition.x, screenPosition.y, 1.0f, s_Yellow);
+        }
     }
 
     private void drawSnakes() {

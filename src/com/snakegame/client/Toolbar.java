@@ -1,3 +1,16 @@
+//
+// Snake Game
+// https://en.wikipedia.org/wiki/Snake_(video_game_genre)
+//
+// Based on the 1976 arcade game Blockade, and the 1991 game Nibbles
+// https://en.wikipedia.org/wiki/Blockade_(video_game)
+// https://en.wikipedia.org/wiki/Nibbles_(video_game)
+//
+// This implementation is Copyright (c) 2021, Damian Coventry
+// All rights reserved
+// Written for Massey University course 159.261 Game Programming (Assignment 1)
+//
+
 package com.snakegame.client;
 
 import com.snakegame.application.IAppStateContext;
@@ -93,7 +106,11 @@ public class Toolbar {
         y = m_Context.getWindowHeight() - toolbarTexture.getHeight();
         m_Gradient = m_View.createPolyhedron(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
     }
-    
+
+    public NumberFont getNumberFont() {
+        return m_NumberFont;
+    }
+
     void freeNativeResources() {
         if (m_AnimatedText != null) {
             m_AnimatedText.freeNativeResources();
@@ -122,14 +139,14 @@ public class Toolbar {
         m_TextAnimations[i].setColour(colour);
     }
 
-    public void think(long nowMs) {
+    public void think() {
         m_ScrollOffsetX += s_HorizontalScrollSpeed * s_MsPerFrame;
         if (m_ScrollOffsetX >= m_Context.getWindowWidth()) {
             m_ScrollOffsetX -= m_Context.getWindowWidth();
         }
     }
 
-    public void draw2d(long nowMs) {
+    public void draw2d() {
         updateTextAnimations();
 
         glDepthMask(false);

@@ -92,10 +92,6 @@ public class Snake {
         return m_Id;
     }
 
-    public Direction getStartDirection() {
-        return m_StartDirection;
-    }
-
     public void setDead() {
         m_Alive = false; // This only affects painting
     }

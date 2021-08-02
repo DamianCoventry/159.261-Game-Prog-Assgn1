@@ -22,8 +22,6 @@ import org.joml.Vector4f;
 import java.io.IOException;
 import java.util.function.BiConsumer;
 
-import static org.lwjgl.glfw.GLFW.glfwSetCursor;
-
 // https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller
 public interface IGameView {
     void setAppStateContext(IAppStateContext context) throws IOException;

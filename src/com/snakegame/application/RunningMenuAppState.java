@@ -103,6 +103,8 @@ public class RunningMenuAppState implements IAppState {
         m_FadingOutBackgroundAlpha = s_BackgroundAlpha;
         m_FadingOutAlpha = 1.0f;
 
+        setInitialScrollOffsetY(m_MenuPagePolyhedra[1].getPiece(0).getDiffuseTexture().getHeight());
+
         m_View.activateArrowMouseCursor();
     }
 
@@ -236,8 +238,6 @@ public class RunningMenuAppState implements IAppState {
 
         GLTexture helpMenuTexture = new GLTexture(ImageIO.read(new File("images\\HelpMenu.png")));
         m_MenuPagePolyhedra[1] = m_View.createPolyhedron(0, 0, helpMenuTexture.getWidth(), helpMenuTexture.getHeight(), helpMenuTexture);
-
-        setInitialScrollOffsetY(m_MenuPagePolyhedra[1].getPiece(0).getDiffuseTexture().getHeight());
     }
 
     private void loadButtons() throws IOException {

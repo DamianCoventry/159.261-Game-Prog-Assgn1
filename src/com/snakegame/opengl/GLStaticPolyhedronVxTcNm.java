@@ -40,10 +40,6 @@ public class GLStaticPolyhedronVxTcNm {
         }
     }
 
-    public int getNumPieces() {
-        return m_Pieces.size();
-    }
-
     public GLStaticPolyhedronPieceVxTcNm getPiece(int i) {
         return m_Pieces.get(i);
     }

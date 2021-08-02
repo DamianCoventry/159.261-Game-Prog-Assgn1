@@ -47,10 +47,10 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - ~~make the menu buttons clickable with the mouse cursor~~
 - ~~add a focus animation to the menu buttons~~
 - ~~add a click animation to the menu buttons~~
-- add a background image to the loading state
-- animate the loading state either with a 3d mesh, or progress bar
+- ~~add a background image to the loading state~~
+- ~~animate the loading state either with a 3d mesh, or progress bar~~
 - create a sprite class
-- add numbers to the apples when rendering
+- ~~add numbers to the apples when rendering~~
 - create a particle emitter class
 - create a particle class
 - create a sprite particle
@@ -88,4 +88,3 @@ https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
 - create the normal Matrix and pass it into the shaders
 - put a point light source on a power ups and apples
 - test that the apples are being placed away from the snake at the beginning of the level.
-- 
