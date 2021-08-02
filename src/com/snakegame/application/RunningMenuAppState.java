@@ -61,7 +61,7 @@ public class RunningMenuAppState implements IAppState {
     private Button m_ExitGameButton;
     private Button m_BackGameButton;
 
-    private enum Page {MAIN, HELP }
+    private enum Page { MAIN, HELP }
     private Page m_Page;
 
     private float m_Angle;
@@ -90,7 +90,7 @@ public class RunningMenuAppState implements IAppState {
     public void begin(long nowMs) throws Exception {
         m_View.unloadResources();
 
-        m_AppleDisplayMesh = m_View.loadDisplayMeshWithNormals("meshes\\AppleHiResDisplayMesh.obj");
+        m_AppleDisplayMesh = m_View.loadDisplayMesh("meshes\\AppleHiResDisplayMesh.obj");
 
         loadMenuBackground();
         loadButtons();

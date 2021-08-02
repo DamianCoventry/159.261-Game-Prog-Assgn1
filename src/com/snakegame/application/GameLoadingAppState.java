@@ -77,7 +77,7 @@ public class GameLoadingAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws Exception {
-        m_AppleDisplayMesh = m_View.loadDisplayMeshWithNormals("meshes\\AppleHiResDisplayMesh.obj");
+        m_AppleDisplayMesh = m_View.loadDisplayMesh("meshes\\AppleHiResDisplayMesh.obj");
 
         GLTexture backgroundTexture = new GLTexture(ImageIO.read(new File("images\\MainMenuBackground.png")));
         m_BackgroundPolyhedron = m_View.createPolyhedron(0, 0, backgroundTexture.getWidth(), backgroundTexture.getHeight(), backgroundTexture);

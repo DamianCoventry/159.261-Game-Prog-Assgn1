@@ -144,11 +144,17 @@ public class Toolbar {
         if (m_ScrollOffsetX >= m_Context.getWindowWidth()) {
             m_ScrollOffsetX -= m_Context.getWindowWidth();
         }
+        updateTextAnimations();
     }
 
     public void draw2d() {
-        updateTextAnimations();
+        drawBackground();
+        drawLevelState();
+        drawPlayer1State();
+        drawPlayer2State();
+    }
 
+    private void drawBackground() {
         glDepthMask(false);
         m_ModelMatrix.identity();
         m_View.drawOrthographicPolyhedron(m_Gradient, m_ModelMatrix);
@@ -162,7 +168,9 @@ public class Toolbar {
         m_ModelMatrix.identity();
         m_View.drawOrthographicPolyhedron(m_Plaques, m_ModelMatrix);
         glDepthMask(true);
+    }
 
+    private void drawLevelState() {
         int level = m_Controller.getCurrentLevel() + 1;
         Matrix4f projectionMatrix = m_Context.getOrthographicMatrix();
 
@@ -174,24 +182,34 @@ public class Toolbar {
             m_NumberFont.drawNumber(projectionMatrix, level, s_CurrentLevel.m_X - 8.0f, s_CurrentLevel.m_Z, 1.0f, s_Yellow);
         }
         m_NumberFont.drawNumber(projectionMatrix, m_Controller.getLevelCount(), s_NumLevels.m_X, s_NumLevels.m_Z, 1.0f, s_Yellow);
+    }
 
-        // Draw player 1's state
+    private void drawPlayer1State() {
+        Matrix4f projectionMatrix = m_Context.getOrthographicMatrix();
+
         Animation animation = m_TextAnimations[s_P1RemainingSnakesAnimation];
         m_NumberFont.drawNumber(projectionMatrix, m_Controller.getSnakes()[0].getNumLives(), s_P1Snakes.m_X, s_P1Snakes.m_Z,
                 animation.getValue(), animation.getColour());
+
         animation = m_TextAnimations[s_P1ScoreAnimation];
         m_NumberFont.drawNumber(projectionMatrix, m_Controller.getSnakes()[0].getPoints(), s_P1Score.m_X, s_P1Score.m_Z,
                 animation.getValue(), animation.getColour());
+    }
 
-        if (m_Controller.getSnakes().length > 1) {
-            // Draw player 2's state
-            animation = m_TextAnimations[s_P2RemainingSnakesAnimation];
-            m_NumberFont.drawNumber(projectionMatrix, m_Controller.getSnakes()[1].getNumLives(), s_P2Snakes.m_X, s_P2Snakes.m_Z,
-                    animation.getValue(), animation.getColour());
-            animation = m_TextAnimations[s_P2ScoreAnimation];
-            m_NumberFont.drawNumber(projectionMatrix, m_Controller.getSnakes()[1].getPoints(), s_P2Score.m_X, s_P2Score.m_Z,
-                    animation.getValue(), animation.getColour());
+    private void drawPlayer2State() {
+        if (m_Controller.getSnakes().length < 2) {
+            return;
         }
+
+        Matrix4f projectionMatrix = m_Context.getOrthographicMatrix();
+
+        Animation animation = m_TextAnimations[s_P2RemainingSnakesAnimation];
+        m_NumberFont.drawNumber(projectionMatrix, m_Controller.getSnakes()[1].getNumLives(), s_P2Snakes.m_X, s_P2Snakes.m_Z,
+                animation.getValue(), animation.getColour());
+
+        animation = m_TextAnimations[s_P2ScoreAnimation];
+        m_NumberFont.drawNumber(projectionMatrix, m_Controller.getSnakes()[1].getPoints(), s_P2Score.m_X, s_P2Score.m_Z,
+                animation.getValue(), animation.getColour());
     }
 
     private void updateTextAnimations() {

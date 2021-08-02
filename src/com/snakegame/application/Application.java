@@ -52,7 +52,7 @@ public class Application implements IAppStateContext {
     private long m_DebugFrameTime;
 
     public Application() throws Exception {
-        File directory = new File("../Libbulletjme/dist"); // TODO: determine the correct path at runtime
+        File directory = new File("../Libbulletjme/dist");
         boolean success = NativeLibraryLoader.loadLibbulletjme(true, directory, "Release", "Dp");
         if (!success) {
             throw new RuntimeException("Failed to load the Bullet run-time library");
