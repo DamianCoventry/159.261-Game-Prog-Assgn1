@@ -182,16 +182,23 @@ public class MtlFile {
 
     public MtlFile(String fileName) throws Exception {
         m_Materials = new ArrayList<>();
-
-        File file = new File(fileName);
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
-        String line = bufferedReader.readLine();
-        while (line != null) {
-            line = line.trim();
-            if (!line.isEmpty() && !line.startsWith("#")) {
-                parseLine(line);
-            }
-            line = bufferedReader.readLine();
+        BufferedReader bufferedReader = null;
+        try {
+	        File file = new File(fileName);
+	        bufferedReader = new BufferedReader(new FileReader(file));
+	        String line = bufferedReader.readLine();
+	        while (line != null) {
+	            line = line.trim();
+	            if (!line.isEmpty() && !line.startsWith("#")) {
+	                parseLine(line);
+	            }
+	            line = bufferedReader.readLine();
+	        }
+		}
+        finally {
+        	if (bufferedReader != null) {
+        		bufferedReader.close();
+        	}
         }
     }
 
@@ -199,7 +206,7 @@ public class MtlFile {
         return m_Materials;
     }
 
-    private void parseLine(String line) throws Exception {
+    private void parseLine(String line) {
         String[] words = line.split("\\s");
         if (words[0].equals("newmtl")) {
             parseNewMaterial(words);

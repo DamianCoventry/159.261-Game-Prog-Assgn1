@@ -107,15 +107,23 @@ public class ObjFile {
         m_TexCoordinates = new ArrayList<>();
         m_Normals = new ArrayList<>();
 
-        File file = new File(fileName);
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
-        String line = bufferedReader.readLine();
-        while (line != null) {
-            line = line.trim();
-            if (!line.isEmpty() && !line.startsWith("#")) {
-                parseLine(line);
-            }
-            line = bufferedReader.readLine();
+        BufferedReader bufferedReader = null;
+        try {
+	        File file = new File(fileName);
+	        bufferedReader = new BufferedReader(new FileReader(file));
+	        String line = bufferedReader.readLine();
+	        while (line != null) {
+	            line = line.trim();
+	            if (!line.isEmpty() && !line.startsWith("#")) {
+	                parseLine(line);
+	            }
+	            line = bufferedReader.readLine();
+	        }
+        }
+        finally {
+        	if (bufferedReader != null) {
+        		bufferedReader.close();
+        	}
         }
     }
 
