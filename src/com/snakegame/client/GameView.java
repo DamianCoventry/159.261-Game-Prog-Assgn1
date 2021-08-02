@@ -55,7 +55,7 @@ public class GameView implements IGameView {
     private static final float s_PowerUpScaleStart = 0.03f;
     private static final float s_PowerUpScaleInc = 0.00005f;
     private static final float s_PowerUpVerticalMovement = 0.03222f;
-    private static final float s_PowerUpFadeOutInc = 0.008f;
+    private static final float s_PowerUpFadeOutInc = 0.004f;
     private static final Vector4f s_Yellow = new Vector4f(1.0f, 1.0f, 0.0f, 1.0f);
 
     private final Matrix4f m_MvMatrix;
