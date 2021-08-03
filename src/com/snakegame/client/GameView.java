@@ -516,6 +516,8 @@ public class GameView implements IGameView {
             case DEC_LENGTH:
                 m_PowerUpTextPolyhedron.getPiece(0).setDiffuseTexture(m_PowerUpTextTextures[6]);
                 break;
+			default:
+				break;
         }
 
         m_PowerUpScale = s_PowerUpScaleStart;
@@ -847,6 +849,8 @@ public class GameView implements IGameView {
                     case NUMBER:
                         drawGameFieldApple(cellDrawX, cellDrawZ);
                         break;
+					default:
+						break;
                 }
             }
         }

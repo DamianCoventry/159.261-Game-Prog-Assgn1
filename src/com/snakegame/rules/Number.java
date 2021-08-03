@@ -57,6 +57,8 @@ public class Number {
                 return new Result(Type.NUM_8);
             case NUM_8:
                 return new Result(Type.NUM_9);
+			default:
+				break;
         }
         return new Result();
     }
@@ -71,6 +73,8 @@ public class Number {
             case NUM_6: return 6;
             case NUM_7: return 7;
             case NUM_8: return 8;
+			default:
+				break;
         }
         return 9;
     }

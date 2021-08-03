@@ -188,6 +188,8 @@ public class Snake {
             case DEC_POINTS:
                 decrementPoints(s_PowerUpPointsBonus);
                 break;
+			default:
+				break;
         }
     }
 
@@ -265,6 +267,8 @@ public class Snake {
             case Left: return new Vector2i(-1, 0);
             case Right: return new Vector2i(1, 0);
             case Up: return new Vector2i(0, 1);
+			default:
+				break;
         }
         return new Vector2i(0, -1);
     }
@@ -275,6 +279,8 @@ public class Snake {
             case Left: return Direction.Right;
             case Right: return Direction.Left;
             case Up: return Direction.Down;
+			default:
+				break;
         }
         return Direction.Up;
     }
