@@ -1082,6 +1082,8 @@ public class GameView implements IGameView {
                 return nextDirection == Snake.Direction.Left ? Classification.ELBOW_TL : Classification.ELBOW_TR;
             case Right:
                 return nextDirection == Snake.Direction.Up ? Classification.ELBOW_TR : Classification.ELBOW_BR;
+			default:
+				break;
         }
         return nextDirection == Snake.Direction.Left ? Classification.ELBOW_BL : Classification.ELBOW_BR;
     }
