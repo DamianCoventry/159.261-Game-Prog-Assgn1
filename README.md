@@ -14,8 +14,9 @@ This implementation is more closely modelled upon [nibbles.bas](https://en.wikip
 This is an assignment for Massey University course 159.261. Under no circumstances is it to be copied and submitted anywhere as plagiarised work. It is work created solely by me as original work. It has been submitted for 159.261 Game Programming S2 2021.  
 
 ## Game Features
- - Simple menuing system
+ - Simple menu system
  - Single player and two players support
+ - Application state machine: get ready, playing game, level complete, etc
  - Apples that must be be collected in sequence 1-9
  - 10 levels
  - Walls randomly inserted during the map
@@ -39,32 +40,42 @@ I built this will IntelliJ, but it also builds with Eclipse.
 ### Setup
 I created a local directory named `C:\Development\159.261-Game-Prog-Assgn1`. I created a subdirectory within this directory named `lib`.
 
+The JDK I'm using is `openjdk-16`.
+
 ### Libbulletjme
-Go to this link https://github.com/stephengold/Libbulletjme/releases/tag/10.5.0
-Download these files. Store them in the directory **lib**.
-`Libbulletjme-10.5.0.jar`
-`Libbulletjme-10.5.0-javadoc.jar`
-`Libbulletjme-10.5.0-sources.jar`
-`Windows32DebugDp_bulletjme.dll`
-`Windows32DebugSp_bulletjme.dll`
-`Windows32ReleaseDp_bulletjme.dll`
-`Windows32ReleaseSp_bulletjme.dll`
-`Windows64DebugDp_bulletjme.dll`
-`Windows64DebugSp_bulletjme.dll`
-`Windows64ReleaseDp_bulletjme.dll`
-`Windows64ReleaseSp_bulletjme.dll`
+Go to this link https://github.com/stephengold/Libbulletjme/releases/tag/10.5.0  
+Download these files. Store them in the directory `lib`.  
+`Libbulletjme-10.5.0.jar`  
+`Libbulletjme-10.5.0-javadoc.jar`  
+`Libbulletjme-10.5.0-sources.jar`  
+`Windows32DebugDp_bulletjme.dll`  
+`Windows32DebugSp_bulletjme.dll`  
+`Windows32ReleaseDp_bulletjme.dll`  
+`Windows32ReleaseSp_bulletjme.dll`  
+`Windows64DebugDp_bulletjme.dll`  
+`Windows64DebugSp_bulletjme.dll`  
+`Windows64ReleaseDp_bulletjme.dll`  
+`Windows64ReleaseSp_bulletjme.dll`  
 
 ### LWJGL
-Go to this link https://github.com/LWJGL/lwjgl3/releases
-Download the file `lwjgl-3.2.3.zip`
-Unzip it into the directory **lib**.
+Go to this link https://github.com/LWJGL/lwjgl3/releases  
+Download the file `lwjgl-3.2.3.zip`.  
+Unzip it into the directory `lib`. It will make 38 subdirectories.  
  
 ### JOML
-Go to this link https://github.com/JOML-CI/JOML/releases/tag/1.10.1
-Download these files. Store them in the directory **lib**.
-`joml-1.10.1-sources.jar`
-`joml-1.10.1.jar`
-`joml-jdk8-1.10.1.jar`
+Go to this link https://github.com/JOML-CI/JOML/releases/tag/1.10.1  
+Download these files. Store them in the directory `lib`.  
+`joml-1.10.1-sources.jar`  
+`joml-1.10.1.jar`  
+`joml-jdk8-1.10.1.jar`  
 
 ### Setup dependencies
-Within IntelliJ, I used File -> Project Structure -> Libraries to add the directory `lib` as a dependency, and also, each of the lwjglXXX directories as dependencies.
+#### IntelliJ
+Click `File` -> `Project Structure` to open a dialog. From within the `Libraries` item, add the directory `lib` as a dependency, and also each of the `lwjglXXX` subdirectories within `lib` as dependencies.
+
+Add a `Run/Debug Configuration` of type `Application`. Specify `com.snakegame.application.Application` as the entry point.
+
+A this point the project should build and run.
+
+#### Eclipse
+Click `File` -> `New` -> `New Project`. A dialog opens. I called the project `Snake`, and used the location `C:\Development\159.261-Game-Prog-Assgn1`. Click `Finish`.
