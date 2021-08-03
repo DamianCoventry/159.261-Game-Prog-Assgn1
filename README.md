@@ -10,6 +10,10 @@ The snake game type has subsequently spawned many, many clones, and even spawned
 
 This implementation is more closely modelled upon [nibbles.bas](https://en.wikipedia.org/wiki/Nibbles_(video_game)) from Rick Raddatz in 1991 than the classic game Blockade.
 
+![Main Menu](/ScreenShot0.png "Main Menu")
+![Loading Screen](/ScreenShot1.png "Loading Screen")
+![In Game](/ScreenShot2.png "In Game")
+
 ## Massey University Disclaimer
 This is an assignment for Massey University course 159.261. Under no circumstances is it to be copied and submitted anywhere as plagiarised work. It is work created solely by me as original work. It has been submitted for 159.261 Game Programming S2 2021.  
 
