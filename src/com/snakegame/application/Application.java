@@ -11,6 +11,23 @@
 // Written for Massey University course 159.261 Game Programming (Assignment 1)
 //
 
+/*
+  Game Features
+  - Simple menu system
+  - Single player and two players support
+  - Apples that must be collected in sequence 1-9
+  - 10 levels
+  - Walls randomly inserted during the map
+  - Power ups (inc speed, dec speed, inc points, dec points, inc snakes, dec snakes, dec length, random)
+
+  Engine Features
+  - LWJGL integration
+  - OpenGL 4.5, with GLSL shaders
+  - Directional specular lighting
+  - Mix of 2D and 3D graphics
+  - Bullet3 integration (used for Snake deaths)
+ */
+
 package com.snakegame.application;
 
 import com.jme3.bullet.PhysicsSpace;

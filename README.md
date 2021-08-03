@@ -1,90 +1,70 @@
 # 159.261 Game Programming (Assignment 1)
-## Graphics sources
-https://icon-icons.com/icon/snake/100855
+**Copyright (c) 2021, Damian Coventry**
 
-https://icons8.com/icon/LPo-oYep4SZR/green-apple
+**All rights reserved**
 
-https://www.iconfinder.com/icons/3288673/armor_defense_powerup_shield_icon
+## Brief
+This is an implementation of a classic "snake game". The idea of a snake game originated in 1976 within an arcade game named [Blockade](https://en.wikipedia.org/wiki/Blockade_(video_game)).
 
-## TO DO
-- ~~complete the 3d world mesh~~
-- ~~make the cinder block building 'dirty'~~
-- ~~animate the menu background~~
-- ~~create a directional light shader with specular lighting~~
-- ~~add a light to the main menu that will shine upon the apple~~
-- ~~create a directional light shader~~
-- ~~add a light to the levels that will shine upon the world~~
-- ~~adjust the snake speed~~
-- ~~display the fps on the screen~~
-- ~~display the core loop timings on the screen~~
-- ~~the last level is too difficult~~
-- ~~put 3, 2, 1 onto the get ready dialog~~
-- ~~create the barn sides out of individual planks of wood~~
-- ~~add doors to the barn~~
-- ~~recreate the diffuse texture for the in-game apples~~
-- ~~animate the in-game apples by rotating around the y-axis and bobbing up and down~~
-- ~~animate the toolbar text by increasing the text size when:~~
-  - ~~awarding a life or removing a life~~
-  - ~~adding points or removing points~~
-- ~~create the power-up meshes~~
-- ~~don't show power ups that will make no difference~~
-- ~~implement the 'random' power up~~
-- ~~change the colour of a few of the power ups~~
-- ~~animate the power-ups by rotating around the y-axis and bobbing up and down~~
-- ~~update the toolbar background texture by adding a gradient similar to the menu~~
-- ~~animate the toolbar background~~
-- ~~correct the glow around panel graphics~~
-- ~~create final meshes for the snakes:~~
-  - ~~head mesh (1 blue, 1 red)~~
-  - ~~corner mesh (1 blue, 1 red)~~
-  - ~~straight mesh (1 blue, 1 red)~~
-  - ~~tail mesh (1 blue, 1 red)~~
-- ~~add code for choosing the correct mesh and rotation when rendering the snake~~
-- ~~create an animation to use when a snake is dying~~
-- ~~make the help page~~
-- ~~allow the help page to be scrolled vertically~~
-- ~~indicate on the help page that the scroll wheel and arrow keys can be used to scroll the text~~
-- ~~make the menu buttons clickable with the mouse cursor~~
-- ~~add a focus animation to the menu buttons~~
-- ~~add a click animation to the menu buttons~~
-- ~~add a background image to the loading state~~
-- ~~animate the loading state either with a 3d mesh, or progress bar~~
-- create a sprite class
-- ~~add numbers to the apples when rendering~~
-- create a particle emitter class
-- create a particle class
-- create a sprite particle
-- create a mesh particle
-- display the players keys above the snake
-- display either player one or player two above each snake
-- create an animation for use when spawning an apple
-- create an animation for use when spawning a power-up
-- create an animation for use when collecting an apple
-- create an animation base for use when collecting a power-up
-- create an animation for use when collecting an INC_SPEED power-up
-- create an animation for use when collecting a DEC_SPEED power-up
-- create an animation for use when collecting an INC_LIVES power-up
-- create an animation for use when collecting a DEC_LIVES power-up
-- create an animation for use when collecting an INC_POINTS power-up
-- create an animation for use when collecting a DEC_POINTS power-up
-- create an animation for use when collecting a DEC_LENGTH power-up
-- create an animation for use when inserting a wall into the field
-- ~~combine the .obj mesh -> display mesh conversion code~~ 
-- initialise the sound system
-- play sound samples
-- stream an MP3 file for the menu
-- stream an MP3 file for the levels
-- ~~initialise bullet~~
-- ~~create a collision shape for the world~~
-- create a collision shape for the walls
-- create a collision shape for snake body parts
-- create a rigid body for mesh particles (the rigid bodies must be removed when at rest)
-- create a few display meshes for random world items
-- create a rigid bodies for random world items(the rigid bodies must be removed when at rest)
-- add a shadow map for the levels to use
-- implement tangent space mapping for bumps
-- do the smoothing groups need to be loaded from the object file?
-- change the lighting to be in world space, not camera space.
-- create the normal Matrix and pass it into the shaders
-- put a point light source on a power ups and apples
-- ~~test that the apples are being placed away from the snake at the beginning of the level.~~
+The snake game type has subsequently spawned many, many clones, and even spawned its own [genre](https://en.wikipedia.org/wiki/Snake_(video_game_genre)). 
+
+This implementation is more closely modelled upon [nibbles.bas](https://en.wikipedia.org/wiki/Nibbles_(video_game)) from Rick Raddatz in 1991 than the classic game Blockade.
+
+## Massey University Disclaimer
+This is an assignment for Massey University course 159.261. Under no circumstances is it to be copied and submitted anywhere as plagiarised work. It is work created solely by me as original work. It has been submitted for 159.261 Game Programming S2 2021.  
+
+## Game Features
+ - Simple menuing system
+ - Single player and two players support
+ - Apples that must be be collected in sequence 1-9
+ - 10 levels
+ - Walls randomly inserted during the map
+ - Power ups (inc speed, dec speed, inc points, dec points, inc snakes, dec snakes, dec length, random)
+
+## Engine Features
+ - LWJGL integration
+ - OpenGL 4.5, with GLSL shaders
+ - Directional specular lighting
+ - Mix of 2D and 3D graphics
+ - Bullet3 integration (used for Snake deaths)
+
+## Building and running the project
+I built this will IntelliJ, but it also builds with Eclipse.
+
+### Dependencies
+ - [Libbulletjme](https://github.com/stephengold/Libbulletjme). This project provides the ability to use the Bullet Physics engine within Java.
+ - [LWJGL - Lightweight Java Game Library 3](https://github.com/LWJGL/lwjgl3/releases). This project provides access to OpenGL and GLSL shaders.
+ - [JOML – Java OpenGL Math Library](https://github.com/JOML-CI/JOML). This project provides Vector and Matrix maths routines that slot in well to LWJGL.
+
+### Setup
+I created a local directory named `C:\Development\159.261-Game-Prog-Assgn1`. I created a subdirectory within this directory named `lib`.
+
+### Libbulletjme
+Go to this link https://github.com/stephengold/Libbulletjme/releases/tag/10.5.0
+Download these files. Store them in the directory **lib**.
+`Libbulletjme-10.5.0.jar`
+`Libbulletjme-10.5.0-javadoc.jar`
+`Libbulletjme-10.5.0-sources.jar`
+`Windows32DebugDp_bulletjme.dll`
+`Windows32DebugSp_bulletjme.dll`
+`Windows32ReleaseDp_bulletjme.dll`
+`Windows32ReleaseSp_bulletjme.dll`
+`Windows64DebugDp_bulletjme.dll`
+`Windows64DebugSp_bulletjme.dll`
+`Windows64ReleaseDp_bulletjme.dll`
+`Windows64ReleaseSp_bulletjme.dll`
+
+### LWJGL
+Go to this link https://github.com/LWJGL/lwjgl3/releases
+Download the file `lwjgl-3.2.3.zip`
+Unzip it into the directory **lib**.
+ 
+### JOML
+Go to this link https://github.com/JOML-CI/JOML/releases/tag/1.10.1
+Download these files. Store them in the directory **lib**.
+`joml-1.10.1-sources.jar`
+`joml-1.10.1.jar`
+`joml-jdk8-1.10.1.jar`
+
+### Setup dependencies
+Within IntelliJ, I used File -> Project Structure -> Libraries to add the directory `lib` as a dependency, and also, each of the lwjglXXX directories as dependencies.
