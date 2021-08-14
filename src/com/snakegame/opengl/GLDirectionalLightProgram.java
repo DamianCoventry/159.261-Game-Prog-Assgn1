@@ -36,8 +36,8 @@ public class GLDirectionalLightProgram extends GLProgram {
     private float m_LightIntensity;
 
     public GLDirectionalLightProgram() throws IOException {
-        super(Files.readString(Paths.get("shaders\\DiffuseDirectionalLight.vert"), StandardCharsets.US_ASCII),
-              Files.readString(Paths.get("shaders\\DiffuseDirectionalLight.frag"), StandardCharsets.US_ASCII));
+        super(Files.readString(Paths.get("shaders/DiffuseDirectionalLight.vert"), StandardCharsets.US_ASCII),
+              Files.readString(Paths.get("shaders/DiffuseDirectionalLight.frag"), StandardCharsets.US_ASCII));
 
         m_MvMatrixLocation = getUniformLocation("mvMatrix");
         m_ProjectionMatrixLocation = getUniformLocation("projectionMatrix");

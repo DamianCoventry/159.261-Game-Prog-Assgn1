@@ -90,7 +90,7 @@ public class RunningMenuAppState implements IAppState {
     public void begin(long nowMs) throws Exception {
         m_View.unloadResources();
 
-        m_AppleDisplayMesh = m_View.loadDisplayMesh("meshes\\AppleHiResDisplayMesh.obj");
+        m_AppleDisplayMesh = m_View.loadDisplayMesh("meshes/AppleHiResDisplayMesh.obj");
 
         loadMenuBackground();
         loadButtons();
@@ -225,18 +225,18 @@ public class RunningMenuAppState implements IAppState {
     }
 
     private void loadMenuBackground() throws IOException {
-        GLTexture backgroundTexture = new GLTexture(ImageIO.read(new File("images\\MainMenuBackground.png")));
+        GLTexture backgroundTexture = new GLTexture(ImageIO.read(new File("images/MainMenuBackground.png")));
         m_BackgroundPolyhedron = m_View.createPolyhedron(0, 0, backgroundTexture.getWidth(), backgroundTexture.getHeight(), backgroundTexture);
 
-        GLTexture backgroundTextTexture = new GLTexture(ImageIO.read(new File("images\\MainMenuBackgroundText.png")));
+        GLTexture backgroundTextTexture = new GLTexture(ImageIO.read(new File("images/MainMenuBackgroundText.png")));
         m_BackgroundTextPolyhedron = m_View.createPolyhedron(0, 0, backgroundTextTexture.getWidth(), backgroundTextTexture.getHeight(), backgroundTextTexture);
 
         m_MenuPagePolyhedra = new GLStaticPolyhedronVxTc[2];
 
-        GLTexture mainMenuTexture = new GLTexture(ImageIO.read(new File("images\\MainMenu.png")));
+        GLTexture mainMenuTexture = new GLTexture(ImageIO.read(new File("images/MainMenu.png")));
         m_MenuPagePolyhedra[0] = m_View.createCenteredPolyhedron(mainMenuTexture.getWidth(), mainMenuTexture.getHeight(), mainMenuTexture);
 
-        GLTexture helpMenuTexture = new GLTexture(ImageIO.read(new File("images\\HelpMenu.png")));
+        GLTexture helpMenuTexture = new GLTexture(ImageIO.read(new File("images/HelpMenu.png")));
         m_MenuPagePolyhedra[1] = m_View.createPolyhedron(0, 0, helpMenuTexture.getWidth(), helpMenuTexture.getHeight(), helpMenuTexture);
     }
 
@@ -245,9 +245,9 @@ public class RunningMenuAppState implements IAppState {
         float y = m_Context.getWindowHeight() - 384.0f;
 
         m_SinglePlayerGameButton = new Button(m_View,
-                "images\\SinglePlayerNP.png",
-                "images\\SinglePlayerNPF.png",
-                "images\\SinglePlayerP.png");
+                "images/SinglePlayerNP.png",
+                "images/SinglePlayerNPF.png",
+                "images/SinglePlayerP.png");
         float x = oneThird - (m_SinglePlayerGameButton.getWidth() / 2.0f) - 22.0f;
         m_SinglePlayerGameButton.setPosition(x, y);
         m_SinglePlayerGameButton.setOnClickFunction(
@@ -255,33 +255,33 @@ public class RunningMenuAppState implements IAppState {
         y -= m_SinglePlayerGameButton.getHeight();
 
         m_TwoPlayersGameButton = new Button(m_View,
-                "images\\TwoPlayersNP.png",
-                "images\\TwoPlayersNPF.png",
-                "images\\TwoPlayersP.png");
+                "images/TwoPlayersNP.png",
+                "images/TwoPlayersNPF.png",
+                "images/TwoPlayersP.png");
         m_TwoPlayersGameButton.setPosition(x, y);
         m_TwoPlayersGameButton.setOnClickFunction(
                 (value) -> startNewGame(IGameController.Mode.TWO_PLAYERS));
         y -= m_TwoPlayersGameButton.getHeight();
 
         m_HelpGameButton = new Button(m_View,
-                "images\\HelpNP.png",
-                "images\\HelpNPF.png",
-                "images\\HelpP.png");
+                "images/HelpNP.png",
+                "images/HelpNPF.png",
+                "images/HelpP.png");
         m_HelpGameButton.setPosition(x, y);
         m_HelpGameButton.setOnClickFunction((value) -> m_Page = Page.HELP);
         y -= m_HelpGameButton.getHeight();
 
         m_ExitGameButton = new Button(m_View,
-                "images\\ExitNP.png",
-                "images\\ExitNPF.png",
-                "images\\ExitP.png");
+                "images/ExitNP.png",
+                "images/ExitNPF.png",
+                "images/ExitP.png");
         m_ExitGameButton.setPosition(x, y);
         m_ExitGameButton.setOnClickFunction((value) -> m_Context.exitApplication());
 
         m_BackGameButton = new Button(m_View,
-                "images\\BackNP.png",
-                "images\\BackNPF.png",
-                "images\\BackP.png");
+                "images/BackNP.png",
+                "images/BackNPF.png",
+                "images/BackP.png");
         float halfWindowWidth = m_Context.getWindowWidth() / 2.0f;
         float halfButtonWidth = m_BackGameButton.getWidth() / 2.0f;
         m_BackGameButton.setPosition(halfWindowWidth - halfButtonWidth, -10.0f);

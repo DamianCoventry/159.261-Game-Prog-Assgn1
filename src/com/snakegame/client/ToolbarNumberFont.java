@@ -22,6 +22,6 @@ public class ToolbarNumberFont extends NumberFont {
     public static final float s_FrameHeight = 37.0f;
 
     public ToolbarNumberFont(GLDiffuseTextureProgram program) throws IOException {
-        super(program, s_FrameWidth, s_FrameHeight, "images\\Numbers.png");
+        super(program, s_FrameWidth, s_FrameHeight, "images/Numbers.png");
     }
 }

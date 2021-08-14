@@ -94,15 +94,15 @@ public class Toolbar {
             m_TextAnimations[i].setColour(s_Yellow);
         }
 
-        GLTexture toolbarTexture = new GLTexture(ImageIO.read(new File("images\\ToolbarBackgroundText.png")));
+        GLTexture toolbarTexture = new GLTexture(ImageIO.read(new File("images/ToolbarBackgroundText.png")));
         float y = m_Context.getWindowHeight() - toolbarTexture.getHeight();
         m_AnimatedText = m_View.createPolyhedron(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
 
-        toolbarTexture = new GLTexture(ImageIO.read(new File("images\\ToolbarPlaques.png")));
+        toolbarTexture = new GLTexture(ImageIO.read(new File("images/ToolbarPlaques.png")));
         y = m_Context.getWindowHeight() - toolbarTexture.getHeight();
         m_Plaques = m_View.createPolyhedron(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
 
-        toolbarTexture = new GLTexture(ImageIO.read(new File("images\\ToolbarBackgroundGradient.png")));
+        toolbarTexture = new GLTexture(ImageIO.read(new File("images/ToolbarBackgroundGradient.png")));
         y = m_Context.getWindowHeight() - toolbarTexture.getHeight();
         m_Gradient = m_View.createPolyhedron(0.0f, y, toolbarTexture.getWidth(), toolbarTexture.getHeight(), toolbarTexture);
     }

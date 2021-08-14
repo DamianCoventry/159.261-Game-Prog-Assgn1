@@ -144,7 +144,7 @@ public class ObjFile {
     }
 
     private void parseLine(String line) throws Exception {
-        String[] words = line.split("\\s");
+        String[] words = line.split(" ");
         if (words[0].equals("mtllib")) {
             parseMaterial(words);
         }

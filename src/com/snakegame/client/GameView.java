@@ -149,7 +149,7 @@ public class GameView implements IGameView {
         m_DirectionalLightProgram.setLightIntensity(s_LightIntensity);
 
         m_DiffuseTextureAlphaFadeProgram = new GLDiffuseTextureAlphaFadeProgram();
-        m_SpecularDirectionalLightClipPlaneProgram = new GLSpecularDirectionalLightClipPlaneProgram("meshes\\Noise64x64.png");
+        m_SpecularDirectionalLightClipPlaneProgram = new GLSpecularDirectionalLightClipPlaneProgram("meshes/Noise64x64.png");
 
         m_PowerUpTypes = new PowerUp.Type[] {
                 PowerUp.Type.INC_SPEED, PowerUp.Type.DEC_SPEED,
@@ -182,81 +182,81 @@ public class GameView implements IGameView {
         progress.accept(numLoaded, numberOfThingsToLoad);
 
         m_SnakeBodyPolyhedra = new GLStaticPolyhedronVxTcNm[2];
-        m_SnakeBodyPolyhedra[0] = loadDisplayMesh("meshes\\SnakeBodyPartHoriz.obj");
+        m_SnakeBodyPolyhedra[0] = loadDisplayMesh("meshes/SnakeBodyPartHoriz.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_SnakeBodyPolyhedra[1] = loadDisplayMesh("meshes\\SnakeBodyPartVert.obj");
+        m_SnakeBodyPolyhedra[1] = loadDisplayMesh("meshes/SnakeBodyPartVert.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
 
         m_SnakeHeadPolyhedra = new GLStaticPolyhedronVxTcNm[4];
-        m_SnakeHeadPolyhedra[0] = loadDisplayMesh("meshes\\SnakeBodyPartHeadLeft.obj");
+        m_SnakeHeadPolyhedra[0] = loadDisplayMesh("meshes/SnakeBodyPartHeadLeft.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_SnakeHeadPolyhedra[1] = loadDisplayMesh("meshes\\SnakeBodyPartHeadTop.obj");
+        m_SnakeHeadPolyhedra[1] = loadDisplayMesh("meshes/SnakeBodyPartHeadTop.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_SnakeHeadPolyhedra[2] = loadDisplayMesh("meshes\\SnakeBodyPartHeadRight.obj");
+        m_SnakeHeadPolyhedra[2] = loadDisplayMesh("meshes/SnakeBodyPartHeadRight.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_SnakeHeadPolyhedra[3] = loadDisplayMesh("meshes\\SnakeBodyPartHeadBottom.obj");
+        m_SnakeHeadPolyhedra[3] = loadDisplayMesh("meshes/SnakeBodyPartHeadBottom.obj");
 
         m_SnakeTailPolyhedra = new GLStaticPolyhedronVxTcNm[4];
-        m_SnakeTailPolyhedra[0] = loadDisplayMesh("meshes\\SnakeBodyPartTailLeft.obj");
+        m_SnakeTailPolyhedra[0] = loadDisplayMesh("meshes/SnakeBodyPartTailLeft.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_SnakeTailPolyhedra[1] = loadDisplayMesh("meshes\\SnakeBodyPartTailTop.obj");
+        m_SnakeTailPolyhedra[1] = loadDisplayMesh("meshes/SnakeBodyPartTailTop.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_SnakeTailPolyhedra[2] = loadDisplayMesh("meshes\\SnakeBodyPartTailRight.obj");
+        m_SnakeTailPolyhedra[2] = loadDisplayMesh("meshes/SnakeBodyPartTailRight.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_SnakeTailPolyhedra[3] = loadDisplayMesh("meshes\\SnakeBodyPartTailBottom.obj");
+        m_SnakeTailPolyhedra[3] = loadDisplayMesh("meshes/SnakeBodyPartTailBottom.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
 
         m_SnakeElbowPolyhedra = new GLStaticPolyhedronVxTcNm[4];
-        m_SnakeElbowPolyhedra[0] = loadDisplayMesh("meshes\\SnakeBodyPartElbowTL.obj");
+        m_SnakeElbowPolyhedra[0] = loadDisplayMesh("meshes/SnakeBodyPartElbowTL.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_SnakeElbowPolyhedra[1] = loadDisplayMesh("meshes\\SnakeBodyPartElbowTR.obj");
+        m_SnakeElbowPolyhedra[1] = loadDisplayMesh("meshes/SnakeBodyPartElbowTR.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_SnakeElbowPolyhedra[2] = loadDisplayMesh("meshes\\SnakeBodyPartElbowBL.obj");
+        m_SnakeElbowPolyhedra[2] = loadDisplayMesh("meshes/SnakeBodyPartElbowBL.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_SnakeElbowPolyhedra[3] = loadDisplayMesh("meshes\\SnakeBodyPartElbowBR.obj");
+        m_SnakeElbowPolyhedra[3] = loadDisplayMesh("meshes/SnakeBodyPartElbowBR.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
 
-        m_SnakeGibPolyhedron = loadDisplayMesh("meshes\\SnakeGib.obj");
+        m_SnakeGibPolyhedron = loadDisplayMesh("meshes/SnakeGib.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
 
         m_BlueSnakeSkinTexture = m_SnakeBodyPolyhedra[0].getPiece(0).getDiffuseTexture();
-        m_RedSnakeSkinTexture = new GLTexture(ImageIO.read(new File("meshes\\SnakeSkinRed.png")));
+        m_RedSnakeSkinTexture = new GLTexture(ImageIO.read(new File("meshes/SnakeSkinRed.png")));
         progress.accept(++numLoaded, numberOfThingsToLoad);
 
-        m_WorldDisplayMesh = loadDisplayMesh("meshes\\LevelDisplayMesh.obj");
+        m_WorldDisplayMesh = loadDisplayMesh("meshes/LevelDisplayMesh.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_ApplePolyhedron = loadDisplayMesh("meshes\\AppleLoResDisplayMesh.obj");
+        m_ApplePolyhedron = loadDisplayMesh("meshes/AppleLoResDisplayMesh.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
 
         m_WallPolyhedra = new GLStaticPolyhedronVxTcNm[s_NumWallMeshes];
         for (int i = 0; i < s_NumWallMeshes; ++i) {
-            m_WallPolyhedra[i] = loadDisplayMesh(String.format("meshes\\WallDisplayMesh%d.obj", i));
+            m_WallPolyhedra[i] = loadDisplayMesh(String.format("meshes/WallDisplayMesh%d.obj", i));
             progress.accept(++numLoaded, numberOfThingsToLoad);
         }
 
-        m_PowerUpIncreaseSpeedPolyhedron = loadDisplayMesh("meshes\\PowerUpIncreaseSpeed.obj");
+        m_PowerUpIncreaseSpeedPolyhedron = loadDisplayMesh("meshes/PowerUpIncreaseSpeed.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_PowerUpDecreaseSpeedPolyhedron = loadDisplayMesh("meshes\\PowerUpDecreaseSpeed.obj");
+        m_PowerUpDecreaseSpeedPolyhedron = loadDisplayMesh("meshes/PowerUpDecreaseSpeed.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_PowerUpIncreasePointsPolyhedron = loadDisplayMesh("meshes\\PowerUpIncreasePoints.obj");
+        m_PowerUpIncreasePointsPolyhedron = loadDisplayMesh("meshes/PowerUpIncreasePoints.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_PowerUpDecreasePointsPolyhedron = loadDisplayMesh("meshes\\PowerUpDecreasePoints.obj");
+        m_PowerUpDecreasePointsPolyhedron = loadDisplayMesh("meshes/PowerUpDecreasePoints.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_PowerUpIncreaseLivesPolyhedron = loadDisplayMesh("meshes\\PowerUpIncreaseLives.obj");
+        m_PowerUpIncreaseLivesPolyhedron = loadDisplayMesh("meshes/PowerUpIncreaseLives.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_PowerUpDecreaseLivesPolyhedron = loadDisplayMesh("meshes\\PowerUpDecreaseLives.obj");
+        m_PowerUpDecreaseLivesPolyhedron = loadDisplayMesh("meshes/PowerUpDecreaseLives.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
-        m_PowerUpDecreaseLengthPolyhedron = loadDisplayMesh("meshes\\PowerUpDecreaseLength.obj");
+        m_PowerUpDecreaseLengthPolyhedron = loadDisplayMesh("meshes/PowerUpDecreaseLength.obj");
         progress.accept(++numLoaded, numberOfThingsToLoad);
 
         m_PowerUpTextTextures = new GLTexture[PowerUp.s_NumPowerUps];
-        m_PowerUpTextTextures[0] = new GLTexture(ImageIO.read(new File("images\\PowerUpTextSpeedUp.png")));
-        m_PowerUpTextTextures[1] = new GLTexture(ImageIO.read(new File("images\\PowerUpTextSpeedDown.png")));
-        m_PowerUpTextTextures[2] = new GLTexture(ImageIO.read(new File("images\\PowerUpTextExtraSnake.png")));
-        m_PowerUpTextTextures[3] = new GLTexture(ImageIO.read(new File("images\\PowerUpTextLoseASnake.png")));
-        m_PowerUpTextTextures[4] = new GLTexture(ImageIO.read(new File("images\\PowerUpText1kPoints.png")));
-        m_PowerUpTextTextures[5] = new GLTexture(ImageIO.read(new File("images\\PowerUpText-1kPoints.png")));
-        m_PowerUpTextTextures[6] = new GLTexture(ImageIO.read(new File("images\\PowerUpTextDecreaseLength.png")));
+        m_PowerUpTextTextures[0] = new GLTexture(ImageIO.read(new File("images/PowerUpTextSpeedUp.png")));
+        m_PowerUpTextTextures[1] = new GLTexture(ImageIO.read(new File("images/PowerUpTextSpeedDown.png")));
+        m_PowerUpTextTextures[2] = new GLTexture(ImageIO.read(new File("images/PowerUpTextExtraSnake.png")));
+        m_PowerUpTextTextures[3] = new GLTexture(ImageIO.read(new File("images/PowerUpTextLoseASnake.png")));
+        m_PowerUpTextTextures[4] = new GLTexture(ImageIO.read(new File("images/PowerUpText1kPoints.png")));
+        m_PowerUpTextTextures[5] = new GLTexture(ImageIO.read(new File("images/PowerUpText-1kPoints.png")));
+        m_PowerUpTextTextures[6] = new GLTexture(ImageIO.read(new File("images/PowerUpTextDecreaseLength.png")));
         m_PowerUpTextPolyhedron = createPolyhedron(
                 -m_PowerUpTextTextures[0].getWidth() / 2.0f, -m_PowerUpTextTextures[0].getHeight() / 2.0f,
                 m_PowerUpTextTextures[0].getWidth(), m_PowerUpTextTextures[0].getHeight(), m_PowerUpTextTextures[0]);
@@ -633,7 +633,7 @@ public class GameView implements IGameView {
 
         final ArrayList<MtlFile> materialFiles = new ArrayList<>();
         for (var materialFileName : objFile.getMaterialFileNames()) {
-            materialFiles.add(new MtlFile("meshes\\" + materialFileName));
+            materialFiles.add(new MtlFile("meshes/" + materialFileName));
         }
 
         GLStaticPolyhedronVxTcNm displayMesh = new GLStaticPolyhedronVxTcNm();
@@ -708,7 +708,7 @@ public class GameView implements IGameView {
                     if (material.getDiffuseTexture() == null) {
                         throw new RuntimeException("Material [" + material.getName() + "] does not have a diffuse texture");
                     }
-                    diffuseTexture = new GLTexture(ImageIO.read(new File("meshes\\" + material.getDiffuseTexture())));
+                    diffuseTexture = new GLTexture(ImageIO.read(new File("meshes/" + material.getDiffuseTexture())));
                 }
             }
         }
@@ -791,7 +791,7 @@ public class GameView implements IGameView {
         if (m_Context == null) {
             throw new RuntimeException("Application state context hasn't been set");
         }
-        final ObjFile objFile = new ObjFile("meshes\\LevelCollisionMesh.obj");
+        final ObjFile objFile = new ObjFile("meshes/LevelCollisionMesh.obj");
         if (objFile.getObjects() == null || objFile.getObjects().isEmpty()) {
             throw new RuntimeException("Object file has no objects");
         }

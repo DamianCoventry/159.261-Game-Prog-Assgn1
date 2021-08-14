@@ -51,8 +51,8 @@ public class GLSpecularDirectionalLightClipPlaneProgram extends GLProgram {
     private float m_Shininess;
 
     public GLSpecularDirectionalLightClipPlaneProgram(String noiseTextureFileName) throws IOException {
-        super(Files.readString(Paths.get("shaders\\SpecularDirectionalLightClipPlane.vert"), StandardCharsets.US_ASCII),
-              Files.readString(Paths.get("shaders\\SpecularDirectionalLightClipPlane.frag"), StandardCharsets.US_ASCII));
+        super(Files.readString(Paths.get("shaders/SpecularDirectionalLightClipPlane.vert"), StandardCharsets.US_ASCII),
+              Files.readString(Paths.get("shaders/SpecularDirectionalLightClipPlane.frag"), StandardCharsets.US_ASCII));
 
         m_NoiseTexture = new GLTexture(ImageIO.read(new File(noiseTextureFileName)));
 

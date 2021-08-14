@@ -37,7 +37,7 @@ public class LevelCompleteAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        GLTexture levelCompleteTexture = new GLTexture(ImageIO.read(new File("images\\LevelComplete.png")));
+        GLTexture levelCompleteTexture = new GLTexture(ImageIO.read(new File("images/LevelComplete.png")));
         m_Polyhedron = m_View.createCenteredPolyhedron(levelCompleteTexture.getWidth(), levelCompleteTexture.getHeight(), levelCompleteTexture);
 
         m_Context.addTimeout(2000, (callCount) -> {
