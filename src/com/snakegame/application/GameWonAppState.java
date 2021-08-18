@@ -53,22 +53,22 @@ public class GameWonAppState implements IAppState {
                 long p0 = m_Context.getController().getSnakes()[0].getPoints();
                 long p1 = m_Context.getController().getSnakes()[1].getPoints();
                 if (p0 > p1) {
-                    gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
+                    gameWonTexture = new GLTexture(ImageIO.read(new File("images/GameWonByPlayer1.png")));
                 }
                 else if (p1 > p0) {
-                    gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer2.png")));
+                    gameWonTexture = new GLTexture(ImageIO.read(new File("images/GameWonByPlayer2.png")));
                 }
                 else {
-                    gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByBothPlayers.png")));
+                    gameWonTexture = new GLTexture(ImageIO.read(new File("images/GameWonByBothPlayers.png")));
                 }
             } else if (m_Player == 0) {
-                gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
+                gameWonTexture = new GLTexture(ImageIO.read(new File("images/GameWonByPlayer1.png")));
             } else {
-                gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer2.png")));
+                gameWonTexture = new GLTexture(ImageIO.read(new File("images/GameWonByPlayer2.png")));
             }
         }
         else {
-            gameWonTexture = new GLTexture(ImageIO.read(new File("images\\GameWonByPlayer1.png")));
+            gameWonTexture = new GLTexture(ImageIO.read(new File("images/GameWonByPlayer1.png")));
         }
 
         m_Polyhedron = m_View.createCenteredPolyhedron(gameWonTexture.getWidth(), gameWonTexture.getHeight(), gameWonTexture);

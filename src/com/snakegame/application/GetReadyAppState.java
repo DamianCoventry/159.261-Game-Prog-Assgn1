@@ -39,11 +39,11 @@ public class GetReadyAppState implements IAppState {
     public void begin(long nowMs) throws IOException {
         m_GetReadyPolyhedra = new GLStaticPolyhedronVxTc[3];
 
-        GLTexture getReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady3.png")));
+        GLTexture getReadyTexture = new GLTexture(ImageIO.read(new File("images/GetReady3.png")));
         m_GetReadyPolyhedra[0] = m_View.createCenteredPolyhedron(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
-        getReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady2.png")));
+        getReadyTexture = new GLTexture(ImageIO.read(new File("images/GetReady2.png")));
         m_GetReadyPolyhedra[1] = m_View.createCenteredPolyhedron(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
-        getReadyTexture = new GLTexture(ImageIO.read(new File("images\\GetReady1.png")));
+        getReadyTexture = new GLTexture(ImageIO.read(new File("images/GetReady1.png")));
         m_GetReadyPolyhedra[2] = m_View.createCenteredPolyhedron(getReadyTexture.getWidth(), getReadyTexture.getHeight(), getReadyTexture);
 
         if (m_ResetState) {

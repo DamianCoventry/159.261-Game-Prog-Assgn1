@@ -50,15 +50,15 @@ public class GameOverAppState implements IAppState {
         GLTexture gameOverTexture;
         if (m_Context.getController().getMode() == IGameController.Mode.TWO_PLAYERS) {
             if (m_BothSnakes) {
-                gameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverBothPlayersLost.png")));
+                gameOverTexture = new GLTexture(ImageIO.read(new File("images/GameOverBothPlayersLost.png")));
             } else if (m_Player == 0) {
-                gameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverPlayer1Lost.png")));
+                gameOverTexture = new GLTexture(ImageIO.read(new File("images/GameOverPlayer1Lost.png")));
             } else {
-                gameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOverPlayer2Lost.png")));
+                gameOverTexture = new GLTexture(ImageIO.read(new File("images/GameOverPlayer2Lost.png")));
             }
         }
         else {
-            gameOverTexture = new GLTexture(ImageIO.read(new File("images\\GameOver.png")));
+            gameOverTexture = new GLTexture(ImageIO.read(new File("images/GameOver.png")));
         }
 
         m_Polyhedron = m_View.createCenteredPolyhedron(gameOverTexture.getWidth(), gameOverTexture.getHeight(), gameOverTexture);

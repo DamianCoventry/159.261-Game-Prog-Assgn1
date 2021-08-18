@@ -207,7 +207,7 @@ public class MtlFile {
     }
 
     private void parseLine(String line) {
-        String[] words = line.split("\\s");
+        String[] words = line.split(" ");
         if (words[0].equals("newmtl")) {
             parseNewMaterial(words);
         }

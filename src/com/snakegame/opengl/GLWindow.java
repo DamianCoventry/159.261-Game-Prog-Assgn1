@@ -215,21 +215,21 @@ public class GLWindow {
     }
 
     private void loadMouseCursors() throws IOException {
-        var image = loadImageFileAsGlfwImage("images\\ArrowMouseCursor.png");
+        var image = loadImageFileAsGlfwImage("images/ArrowMouseCursor.png");
         m_ArrowMouseCursor = glfwCreateCursor(image, 0, 0);
         image.free();
         if (m_ArrowMouseCursor == NULL) {
             throw new RuntimeException("Unable to create a mouse cursor");
         }
 
-        image = loadImageFileAsGlfwImage("images\\HandMouseCursor.png");
+        image = loadImageFileAsGlfwImage("images/HandMouseCursor.png");
         m_HandMouseCursor = glfwCreateCursor(image, 19, 3);
         image.free();
         if (m_HandMouseCursor == NULL) {
             throw new RuntimeException("Unable to create a mouse cursor");
         }
 
-        image = loadImageFileAsGlfwImage("images\\GrabMouseCursor.png");
+        image = loadImageFileAsGlfwImage("images/GrabMouseCursor.png");
         m_GrabMouseCursor = glfwCreateCursor(image, 23, 10);
         if (m_GrabMouseCursor == NULL) {
             throw new RuntimeException("Unable to create a mouse cursor");
@@ -239,10 +239,10 @@ public class GLWindow {
 
     private void loadIcons() throws IOException {
         final String[] fileNames = {
-                "images\\Snake64x64.png",
-                "images\\Snake32x32.png",
-                "images\\Snake24x24.png",
-                "images\\Snake16x16.png"
+                "images/Snake64x64.png",
+                "images/Snake32x32.png",
+                "images/Snake24x24.png",
+                "images/Snake16x16.png"
         };
 
         GLFWImage.Buffer images = GLFWImage.malloc(4);

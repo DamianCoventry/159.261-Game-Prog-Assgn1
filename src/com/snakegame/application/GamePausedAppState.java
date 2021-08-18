@@ -36,7 +36,7 @@ public class GamePausedAppState implements IAppState {
 
     @Override
     public void begin(long nowMs) throws IOException {
-        GLTexture gamePausedTexture = new GLTexture(ImageIO.read(new File("images\\GamePaused.png")));
+        GLTexture gamePausedTexture = new GLTexture(ImageIO.read(new File("images/GamePaused.png")));
         m_Polyhedron = m_View.createCenteredPolyhedron(gamePausedTexture.getWidth(), gamePausedTexture.getHeight(), gamePausedTexture);
     }
 

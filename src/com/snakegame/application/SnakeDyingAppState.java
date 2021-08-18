@@ -54,13 +54,13 @@ public class SnakeDyingAppState implements IAppState {
     public void begin(long nowMs) throws IOException {
         m_Polyhedra = new GLStaticPolyhedronVxTc[3];
 
-        GLTexture player1DiedTexture = new GLTexture(ImageIO.read(new File("images\\Player1Died.png")));
+        GLTexture player1DiedTexture = new GLTexture(ImageIO.read(new File("images/Player1Died.png")));
         m_Polyhedra[0] = m_View.createCenteredPolyhedron(player1DiedTexture.getWidth(), player1DiedTexture.getHeight(), player1DiedTexture);
 
-        GLTexture layer2DiedTexture = new GLTexture(ImageIO.read(new File("images\\Player2Died.png")));
+        GLTexture layer2DiedTexture = new GLTexture(ImageIO.read(new File("images/Player2Died.png")));
         m_Polyhedra[1] = m_View.createCenteredPolyhedron(layer2DiedTexture.getWidth(), layer2DiedTexture.getHeight(), layer2DiedTexture);
 
-        GLTexture bothPlayersDiedTexture = new GLTexture(ImageIO.read(new File("images\\BothSnakesDied.png")));
+        GLTexture bothPlayersDiedTexture = new GLTexture(ImageIO.read(new File("images/BothSnakesDied.png")));
         m_Polyhedra[2] = m_View.createCenteredPolyhedron(bothPlayersDiedTexture.getWidth(), bothPlayersDiedTexture.getHeight(), bothPlayersDiedTexture);
 
         if (m_BothSnakes) {

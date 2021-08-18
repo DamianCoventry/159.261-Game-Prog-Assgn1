@@ -30,8 +30,8 @@ public class GLDiffuseTextureAlphaFadeProgram extends GLProgram {
     private float m_FadeRange;
 
     public GLDiffuseTextureAlphaFadeProgram() throws IOException {
-        super(Files.readString(Paths.get("shaders\\DiffuseTextureAlphaFade.vert"), StandardCharsets.US_ASCII),
-              Files.readString(Paths.get("shaders\\DiffuseTextureAlphaFade.frag"), StandardCharsets.US_ASCII));
+        super(Files.readString(Paths.get("shaders/DiffuseTextureAlphaFade.vert"), StandardCharsets.US_ASCII),
+              Files.readString(Paths.get("shaders/DiffuseTextureAlphaFade.frag"), StandardCharsets.US_ASCII));
 
         m_MvpMatrixLocation = getUniformLocation("mvpMatrix");
         m_DiffuseTextureLocation = getUniformLocation("diffuseTexture");

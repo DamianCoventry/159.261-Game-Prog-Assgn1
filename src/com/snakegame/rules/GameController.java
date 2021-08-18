@@ -185,7 +185,7 @@ public class GameController implements IGameController {
     }
 
     private void loadLevelFile(int level) throws IOException {
-        GameFieldFile file = new GameFieldFile("levels\\" + m_LevelFileNames.get(level), m_Mode == Mode.TWO_PLAYERS);
+        GameFieldFile file = new GameFieldFile("levels/" + m_LevelFileNames.get(level), m_Mode == Mode.TWO_PLAYERS);
         m_GameField = file.getGameField();
 
         moveSnakesToNewStartPositions();
