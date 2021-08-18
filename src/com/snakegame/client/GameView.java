@@ -719,7 +719,7 @@ public class GameView implements IGameView {
     }
 
     private float[] loadVertices(ObjFile objFile, ObjFile.Piece piece) {
-        int numFloats = piece.getFaces().size() * objFile.getVertices().size() * 3;
+        int numFloats = piece.getFaces().size() * 3 * 3;
         int floatCount = 0;
 
         float[] vertices = new float[numFloats];
@@ -743,7 +743,7 @@ public class GameView implements IGameView {
     }
 
     private float[] loadTexCoordinates(ObjFile objFile, ObjFile.Piece piece) {
-        int numFloats = piece.getFaces().size() * objFile.getTexCoordinates().size() * 2;
+        int numFloats = piece.getFaces().size() * 3 * 2;
         int floatCount = 0;
 
         float[] texCoordinates = new float[numFloats];
@@ -764,7 +764,7 @@ public class GameView implements IGameView {
     }
 
     private float[] loadNormals(ObjFile objFile, ObjFile.Piece piece) {
-        int numFloats = piece.getFaces().size() * objFile.getNormals().size() * 3;
+        int numFloats = piece.getFaces().size() * 3 * 3;
         int floatCount = 0;
 
         float[] normals = new float[numFloats];
